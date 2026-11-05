@@ -94,6 +94,10 @@ function sendError(res: ServerResponse, status: number, message: string): void {
 }
 
 const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+  // API responses and TURN credentials must not be retained by browser caches.
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
   // CORS headers on all responses
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -107,7 +111,7 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount }));
+    res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount, strictProximity: true }));
     return;
   }
 
@@ -245,4 +249,5 @@ httpServer.listen(PORT, () => {
   // process resolved its proxy trust to, rather than inferring it from behaviour.
   console.log(`proxchat-server trust-proxy: ${describeProxyTrust(PROXY_TRUST)}`);
 });
+
 

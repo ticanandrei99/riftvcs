@@ -45,6 +45,7 @@ export interface VolumeRequest {
 // v0.2 request shape — peers are read from server-side room state instead
 // of being shipped in the request. See computeVolumesFromRoom() below.
 export interface VolumeRequestV2 {
+  strictProximity?: boolean;
   myPosition: { x: number; y: number };
   roomId: string;
   name: string;
@@ -70,6 +71,7 @@ export interface VolumeRequestV2 {
 }
 
 export interface VolumeResponse {
+  strictProximity?: boolean;
   myBlob: string;   // v0.1 path only; v0.2 returns "" since there's nothing to broadcast
   peerVolumes: Record<string, number>;
 }
@@ -372,6 +374,7 @@ export function computeTieredVolumes(
   if (typeof body.roomId !== 'string' || !body.roomId) throw new Error('Invalid roomId');
   if (typeof body.name !== 'string' || !body.name) throw new Error('Invalid name');
 
+  const strict = body.strictProximity === true;
   const clients = getRoomClients(body.roomId);
   const me = clients.find(c => c.name === body.name);
   if (!me) {
@@ -380,7 +383,7 @@ export function computeTieredVolumes(
         ' NOT FOUND in room ' + body.roomId + ' (known: ' +
         clients.map(c => JSON.stringify(c.name)).join(',') + ')');
     }
-    return { myBlob: '', peerVolumes: {} };
+    return { myBlob: '', peerVolumes: {}, ...(strict ? { strictProximity: true } : {}) };
   }
 
   // Cross-team peers are audible out to MAX_HEARING_RANGE (≈ vision range),
@@ -393,8 +396,9 @@ export function computeTieredVolumes(
   const cutoff = now - STALE_POSITION_MS;
   // Our own camera, read from room state rather than from the request. A
   // stale one counts as absent, the same as a stale position.
-  const myCamera = me.camera && me.camera.updatedMs >= cutoff ? me.camera : undefined;
+  const myCamera = !strict && me.camera && me.camera.updatedMs >= cutoff ? me.camera : undefined;
   const peerVolumes: Record<string, number> = {};
+  if (strict && (!me.position || me.position.updatedMs < cutoff)) return { myBlob: '', peerVolumes, strictProximity: true };
   const trace: string[] = [];
 
   for (const peer of clients) {
@@ -405,9 +409,9 @@ export function computeTieredVolumes(
       if (DEBUG_VOLUMES) trace.push(peer.name + '[team=' + peer.team + ' ALLIES-ONLY]=skip');
       continue;
     }
-    const anchor = ally ? allyAnchor(peer, now) : undefined;
+    const anchor = ally && !strict ? allyAnchor(peer, now) : undefined;
     const allyUnplaced = ally && !anchor;
-    if (ally && (!body.allyProximity || allyUnplaced)) {
+    if (!strict && ally && (!body.allyProximity || allyUnplaced)) {
       // Global ally voice (ally proximity off): always full volume, no
       // proximity. We even skip the staleness check — an ally in SCANNING /
       // long-hold hasn't reported coords recently but is still actively
@@ -494,5 +498,5 @@ export function computeTieredVolumes(
       ' | ' + (trace.length ? trace.join(' ') : '(no peers)'));
   }
 
-  return { myBlob: '', peerVolumes };
+  return { myBlob: '', peerVolumes, ...(strict ? { strictProximity: true } : {}) };
 }
