@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: riftvoice-server
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: TRUSTED_PROXIES
+        value: private
