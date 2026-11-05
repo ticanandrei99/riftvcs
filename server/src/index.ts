@@ -3,7 +3,7 @@ import { WebSocketServer } from 'ws';
 import { RoomManager } from './rooms.js';
 import { handleConnection } from './ws-handler.js';
 import { Heartbeat, DEFAULT_HEARTBEAT_MS, MIN_HEARTBEAT_MS } from './heartbeat.js';
-import { generateTurnCredentials, generateCloudflareIceServers } from './turn.js';
+import { generateTurnCredentials, generateCloudflareIceServers, generateStaticIceServers } from './turn.js';
 import { computeVolumes, computeTieredVolumes } from './volumes.js';
 import {
   TokenBucket,
@@ -39,6 +39,9 @@ const TURN_KEY_API_TOKEN = process.env.TURN_KEY_API_TOKEN || '';
 // Self-hosted coturn fallback (optional). Used only when the Cloudflare vars
 // above are unset — lets operators who'd rather run their own coturn keep
 // the existing HMAC flow without code changes.
+const TURN_URLS = process.env.TURN_URLS || '';
+const TURN_USERNAME = process.env.TURN_USERNAME || '';
+const TURN_PASSWORD = process.env.TURN_PASSWORD || '';
 const TURN_SERVER = process.env.TURN_SERVER || '';
 const TURN_SECRET = process.env.TURN_SECRET || '';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
@@ -178,7 +181,9 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     // HMAC; otherwise return empty iceServers (client falls back to public STUN).
     const credsPromise = TURN_KEY_ID && TURN_KEY_API_TOKEN
       ? generateCloudflareIceServers(TURN_KEY_ID, TURN_KEY_API_TOKEN)
-      : generateTurnCredentials(TURN_SERVER, TURN_SECRET);
+      : TURN_URLS
+        ? Promise.resolve(generateStaticIceServers(TURN_URLS, TURN_USERNAME, TURN_PASSWORD))
+        : generateTurnCredentials(TURN_SERVER, TURN_SECRET);
     credsPromise.then((data) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(data));
@@ -240,3 +245,4 @@ httpServer.listen(PORT, () => {
   // process resolved its proxy trust to, rather than inferring it from behaviour.
   console.log(`proxchat-server trust-proxy: ${describeProxyTrust(PROXY_TRUST)}`);
 });
+

@@ -129,3 +129,19 @@ describe('generateCloudflareIceServers', () => {
     expect(result).toEqual({ iceServers: [] });
   });
 });
+
+describe('static TURN credentials', () => {
+  it('uses the configured username and password without generating an HMAC credential', async () => {
+    const { generateStaticIceServers } = await import('../src/turn.js');
+    expect(generateStaticIceServers('turn:relay.example:3478?transport=udp,turn:relay.example:3478?transport=tcp', 'test-user', 'test-password')).toEqual({
+      iceServers: [{ urls: ['turn:relay.example:3478?transport=udp', 'turn:relay.example:3478?transport=tcp'], username: 'test-user', credential: 'test-password' }],
+    });
+  });
+  it('rejects incomplete credentials, non-TURN URLs and embedded credentials', async () => {
+    const { generateStaticIceServers } = await import('../src/turn.js');
+    for (const [urls,user,password] of [
+      ['turn:relay.example:3478','','password'], ['turn:relay.example:3478','user',''],
+      ['https://relay.example','user','password'], ['turn:user:password@relay.example','user','password'],
+    ]) expect(generateStaticIceServers(urls,user,password)).toEqual({iceServers:[]});
+  });
+});

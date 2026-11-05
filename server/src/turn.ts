@@ -113,3 +113,11 @@ export async function generateCloudflareIceServers(
     return { iceServers: [] };
   }
 }
+
+/** Static long-term credentials, e.g. ExpressTURN Free. Never commit real values. */
+export function generateStaticIceServers(urlList: string, username: string, password: string): { iceServers: IceServer[] } {
+  const urls = urlList.split(',').map(url => url.trim()).filter(Boolean);
+  const valid = /^(turn|turns):[a-zA-Z0-9.\-\[\]:]+(?:\?transport=(udp|tcp))?$/;
+  if (!username || !password || urls.length === 0 || urls.length > 8 || urls.some(url => !valid.test(url))) return { iceServers: [] };
+  return { iceServers: [{ urls, username, credential: password }] };
+}
