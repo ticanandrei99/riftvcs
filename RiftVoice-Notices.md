@@ -22,7 +22,7 @@ Modification notice updated: 2026-11-05.
   connections. Server and relay operators can still see connection metadata,
   including connection IP addresses.
 - Configurable voice server, with the RiftVoice Render service as the default,
-  and server support for ExpressTURN credentials supplied through environment
+  and server support for TURN credentials supplied through environment
   variables.
 - Simplified English/Romanian interface, black-and-red theme, Rift-style header
   symbol, microphone application icon, taskbar minimization and full exit.
