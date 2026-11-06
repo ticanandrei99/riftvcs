@@ -3,6 +3,7 @@
 RiftVoice este un fork AGPL din LoLProxChat, cu interfață română/engleză și efecte Natural/Robotic locale, opționale. Nu este aprobat sau susținut de Riot și nu garantează protecție de la sancțiuni.
 
 Pentru versiunea curentă:
+- Panou cu parolă, moderatori nominali, înscriere înainte de meci, echipe și mute cu istoric: [Organizare și moderare](organizer.ro.md).
 - Configurare camere, invitații, roluri și OBS: [Caster Mode](caster-mode.ro.md).
 - Verificări automate la pornire și notificări: [Actualizări](UPDATES.ro.md).
 - Remedieri și limite: [Audit de securitate](security-review.ro.md).

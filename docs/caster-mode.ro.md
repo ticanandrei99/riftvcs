@@ -1,10 +1,12 @@
 # Caster Mode, invitații și OBS
 
+Din 0.3.0 există panou de administrator/moderator cu parolă, invitație comună pentru 10 jucători, înscriere înainte de start, repartizare pe echipe și moderare cu istoric nominal. Pentru utilizarea curentă urmează [ghidul de organizare](organizer.ro.md). Instrucțiunile de invitații statice de mai jos rămân disponibile pentru operatorii care folosesc configurarea manuală.
+
 ## Utilizare
 
 Producția folosește invitații și separă rutele directe pe echipe. Din 0.2.0, organizatorul poate activa vocea adversarilor apropiați în cameră, exclusiv prin filtrul media al serverului; vezi [configurarea și limitele](enemy-camera.ro.md). Caster Mode are propriul canal și build; nu transmite către jucători și nu primește vocea acestora. Rolul spectator este audio, fără detectarea automată a spectatorului LoL.
 
-În aplicația de jucător, introdu invitația în Setări → Invitație custom. Ea este păstrată doar în sesiunea aplicației; trebuie introdusă din nou după închiderea aplicației. În Caster Mode, introdu invitația și apasă Conectează. Organizatorul stabilește rolul, camera și echipa, nu clientul. Un server vechi fără sesiuni securizate este refuzat de clientul normal.
+În aplicația de jucător, introdu codul în Setări → Cod vocal RiftVoice. Pentru înscriere înainte de meci, completează și Riot ID-ul, apoi așteaptă aprobarea organizatorului. Codul personal este păstrat numai în sesiunea aplicației. În Caster Mode, autentifică-te și folosește conectarea cu rolul propriu, ori introdu invitația separată de caster/spectator și apasă Conectează. Un server vechi fără sesiuni securizate este refuzat de clientul normal.
 
 Mute individual oprește persoana doar pentru tine; unmute o reactivează. Mute All are prioritate. Mute-ul se păstrează la reconectarea persoanei în același meci; în canalul caster este păstrat în memoria aplicației până la închidere. Pentru streamer, mute-ul influențează și mixul local capturat din RiftVoice, nu înregistrările făcute de alte persoane.
 
@@ -30,7 +32,7 @@ roster.json este o listă ca aceasta, fără secrete:
 
 ID-ul camerei jucătorilor este generat din lista completă a numelor afișate/reconstruite de client; nu este un secret și nu autorizează accesul. Pentru un custom 5v5, opțiunea --derive-room calculează același ID din cele zece intrări player, folosind exact numele complete din client. Include toate cele zece persoane chiar dacă unele nu vor folosi voice. Nu folosi această opțiune pentru o listă parțială sau identități ascunse/neclare.
 
-Fișierul event.private.json conține valorile de configurat pentru cele două variabile server. Nu suprascrie fișiere existente; este exclus din source archives și git. Distribuie fiecărui participant doar propriul token. Setează durata minimă practică pentru eveniment (generatorul permite maximum 24h). Pentru revocare, scoate invitația din configurație și repornește serverul; nu există încă dashboard de moderare.
+Fișierul event.private.json conține valorile de configurat pentru cele două variabile server. Nu suprascrie fișiere existente; este exclus din source archives și git. Distribuie fiecărui participant doar propriul token. Setează durata minimă practică pentru eveniment (generatorul permite maximum 24h). Pentru revocarea unei invitații statice, scoate-o din configurație și repornește serverul. Camerele generate din panoul 0.3.0 au revocare, mute de moderare și închidere direct din aplicație.
 
 Fără invitații valide serverul refuză accesul. /compute-volumes și /turn-credentials cer sesiune autentificată, legată de socket. Un caster nu poate folosi endpointul de volume al jucătorilor. ALLOWED_WEB_ORIGINS adaugă explicit originul unui frontend HTTPS/localhost pentru test în browser. Pagina nativă Tauri este deja permisă. RIFTVOICE_INSECURE_TEST_MODE nu trebuie configurat pe host; este exclusiv pentru testele locale și forțează ascultarea pe loopback.
 

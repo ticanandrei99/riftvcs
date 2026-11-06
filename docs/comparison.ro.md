@@ -1,6 +1,12 @@
-# Comparație: LoLProxChat și RiftVoice 0.2.0
+# Comparație: LoLProxChat și RiftVoice 0.3.0
 
-În 0.2.0, vocea adversarilor apropiați în cameră a fost reintrodusă ca funcție opțională de eveniment: invitații, acordul ambelor persoane, icon vizibil identificat, cameră lizibilă și distanță sub 1.350 unități. Un filtru media pe server elimină pachetele nepermise; nu există legătură directă între adversari. Casterii rămân izolați. Ambele installere și pachetele GitHub/release au versiunea 0.2.0.
+În 0.3.0, diferența principală este administrarea evenimentelor din aplicație: parolă de administrator, conturi nominale pentru moderatori, cod comun pentru 10 persoane, înscriere înainte de meci, repartizare/schimb de locuri și blocarea echipelor după start. Mute-ul de moderare revocă accesul vocal, administratorul autentificat este protejat de comenzile moderatorilor, iar istoricul arată cine a acționat și asupra cui. Acestea se adaugă izolării casterilor și filtrului adversarilor din 0.2.0.
+
+RiftVoice refolosește în continuare infrastructura LoLProxChat și păstrează creditul/licența. Nu este demonstrată o îmbunătățire a latenței sau recunoașterii în meciuri reale. Identitățile și echipele depind de confirmarea organizatorului și de raportările clientului; nu există autentificare Riot sau aprobare nouă. Vezi [fluxul actual](organizer.ro.md) și [rezultatele 0.3.0](verification-results.ro.md). Comparația cu proiectul original rămâne limitată la arhiva locală descrisă mai jos.
+
+## Etapa anterioară RiftVoice 0.2.0
+
+În 0.2.0, vocea adversarilor apropiați în cameră a fost reintrodusă ca funcție opțională de eveniment: invitații, acordul ambelor persoane, icon vizibil identificat, cameră lizibilă și distanță sub 1.350 unități. Un filtru media pe server elimină pachetele nepermise; nu există legătură directă între adversari. Casterii rămân izolați. Installerele acelei etape au versiunea 0.2.0.
 
 Această rută este mai restrictivă decât simpla proximitate după distanță din arhiva originală. Introduce însă un operator media de încredere și păstrează o limită importantă: un client modificat poate falsifica raportul vizual. Nu există atestare Riot sau dovadă de superioritate în tracking/latență. [Configurare și limite](enemy-camera.ro.md), [verificări curente](verification-results.ro.md).
 

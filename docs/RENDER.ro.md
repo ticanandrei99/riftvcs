@@ -1,6 +1,6 @@
-# RiftVoice 0.2.0 — configurarea hostului / Render
+# RiftVoice 0.3.0 — configurarea hostului / Render
 
-Publică sursele complete extrase din arhiva GitHub în rădăcina repository-ului. Păstrează server/, src/, src-tauri/, configurațiile și fișierele de licență. Nu înlocui doar trei fișiere din server: 0.2.0 are și module media noi plus package-lock actualizat. Nu publica .env, chei, invitații sau capturi.
+Publică sursele complete extrase din arhiva GitHub în rădăcina repository-ului. Păstrează server/, src/, src-tauri/, configurațiile și fișierele de licență. Nu înlocui doar trei fișiere din server: 0.3.0 are și module media noi plus package-lock actualizat. Nu publica .env, chei, invitații sau capturi.
 
 render.yaml definește serviciul Node cu root server, build npm ci --include=dev && npm run build, start npm start și /health. Configurează versiunea Node cerută de package.json, HTTPS și proxy-ul conform hostului. Invitațiile PLAYER_GRANTS_JSON și CASTER_GRANTS_JSON se introduc numai în mediul serverului. ALLOWED_WEB_ORIGINS permite explicit originile suplimentare de browser; originile native Tauri sunt incluse.
 
@@ -13,3 +13,8 @@ Cu funcția activă, /health indică authenticationRequired=true, teamIsolation=
 Pentru validare: două calculatoare în același custom, audio în ambele sensuri, apropiere și îndepărtare, icon dispărut, cameră mutată, alt-tab, moarte/respawn, expirare, reconnect și un Caster separat. Urmează testul cu zece jucători. Vezi [configurarea și limitele vocii adversarilor](enemy-camera.ro.md), [invitații și OBS](caster-mode.ro.md), [rezultatele locale](verification-results.ro.md).
 
 Rapoartele vizuale sunt furnizate de client și pot fi falsificate. Serverul media are acces tehnic la audio-ul adversarilor și trebuie considerat de încredere. Nu este o atestare Riot. Serverul public existent nu a fost actualizat în această sesiune; aceste instrucțiuni și pachetele sunt pregătire pentru testare, fără deploy automat.
+## Administrare și moderatori în 0.3.0
+
+ORGANIZER_PASSWORD activează panoul cu parolă. MODERATOR_ACCOUNTS_JSON permite conturi nominale cu parole distincte; implicit este []. Nu pune aceste valori în .env frontend sau în surse. După restart, /health arată organizerAvailable=true. Fără parolă de administrator, rutele obișnuite bazate pe invitațiile statice continuă să funcționeze, iar generarea din Caster rămâne dezactivată.
+
+Camerele generate și istoricul de moderare sunt temporare în lipsa ORGANIZER_STORE_PATH. Pentru persistență, calea .private.json trebuie să fie pe un volum persistent și protejat al hostului; un disc temporar nu păstrează datele după redeploy. Operatorii sunt de încredere, iar numele înscris nu este o identitate verificată Riot. Configurare completă, înscriere înainte de start și reguli de moderare: [ghidul de organizare](organizer.ro.md).

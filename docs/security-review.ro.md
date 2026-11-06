@@ -23,6 +23,10 @@ Data: 6 noiembrie 2026. Copie de lucru: RiftVoice-Caster, pornită din D:\Rift-v
 | Arhive cu date locale / secrete | Excludere .private.json, chei, profiluri, rapoarte locale și dependențe; documentație și canal de raportare specifice fork-ului |
 | Componente native vechi | Cargo.lock actualizat, inclusiv TLS, rădăcini certificate, Tauri/Wry și zip; scanare RustSec refăcută |
 | Dependențe dev cu probleme moderate | glob/minimatch actualizate prin overrides explicite, fără downgrade forțat la o versiune veche de Jest |
+| Generarea codurilor fără rol de organizator | Panou 0.3.0 cu parolă server, sesiuni limitate, verificatori scrypt și rate limits; rolurile/numele declarate de client sunt ignorate |
+| Înscriere înainte de meci cu acces prematur la voce | Rezervare personală fără sesiune media; aprobare manuală, maximum 10 locuri / 5 pe echipă, validare din nou la intrarea în meci |
+| Mutare pe echipă adversă în timpul meciului | Repartizare/schimb de locuri numai înainte de legarea camerei de meci; echipa detectată trebuie să corespundă aprobării |
+| Moderator care poate opri administratorul sau ascunde autorul unui mute | Identitate staff personală impusă de server, refuz mute/unmute contra administratorului, istoric nominal privat vizibil administratorului |
 
 ## Limite care rămân
 
@@ -30,7 +34,7 @@ Nu este o enumerare garantată a tuturor vulnerabilităților. Auditul este de s
 
 În 0.2.0, adversarii apropiați, identificați în imaginea curentă din cameră, pot fi auziți dacă organizatorul activează ENEMY_CAMERA_VOICE. Conexiunile sunt terminate și filtrate la fiecare pachet pe server; adversarii nu primesc direct SDP/ICE unul de la altul. Vizibilitatea rămâne raportată de client și poate fi falsificată. Nu se declară o garanție anti-cheat sau aprobare Riot. Configurare, model de încredere al operatorului și limite: [enemy-camera.ro.md](enemy-camera.ro.md).
 
-Invitațiile nu dovedesc identitatea Riot sau participarea într-un custom; organizatorul trebuie să le distribuie corect. Nu există încă un dashboard administrativ de moderare. Revocarea se face în configurația operatorului urmată de restart; clienții oficiali închid sesiunile. Clienții modificați pot păstra media deja negociată între participanți care aveau acces; vezi threat-model.md.
+Invitațiile nu dovedesc identitatea Riot sau participarea într-un custom; organizatorul trebuie să verifice manual lobby-ul. Din 0.3.0, camerele create în aplicație au panou de moderare și revocare fără restart. Mute de moderare suspendă transmisia și ascultarea, cu reconectare manuală după reactivare. Camerele și istoricul sunt temporare dacă nu există stocare privată persistentă. Invitațiile statice se revocă în configurația operatorului urmată de restart. Clienții modificați pot păstra media P2P deja negociată între participanți care aveau acces; vezi threat-model.md și organizer.ro.md.
 
 Scanarea npm pentru codul livrat și scanarea RustSec sunt consemnate separat de avertismentele dependențelor de dezvoltare și de cele pentru alte platforme. Un rezultat zero nu este o certificare de securitate. Nu se ascund sau ignoră advisories pentru a obține un rezultat favorabil.
 

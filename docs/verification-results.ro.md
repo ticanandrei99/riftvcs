@@ -1,43 +1,50 @@
-# Verificări RiftVoice 0.2.0 — 6 noiembrie 2026
+# Verificări RiftVoice 0.3.0 — 6 noiembrie 2026
 
-Rezultatele se referă la copia locală RiftVoice-Caster și la installerele 0.2.0 pregătite aici. Nu s-a făcut deploy pe serverul public și nu s-a înlocuit proiectul/instalarea din D:\Rift-voice. Pachetele sunt candidați pentru testare în custom, fără aprobare Riot sau certificat Windows.
+Rezultatele privesc copia locală RiftVoice-Caster. Serverul public nu a fost actualizat, iar proiectul și instalarea din D:\Rift-voice au rămas nemodificate. Această versiune este un candidat pentru testare în custom, fără aprobare Riot sau certificat Windows.
 
-| Verificare finală | Rezultat |
+| Verificare | Rezultat |
 |---|---|
-| Typecheck client și arborele testelor | Trecut |
-| Client | 768 trecute, 2 omise; 47 suite active trecute |
-| Server | 279 trecute, 16 fișiere trecute |
+| Typecheck client și arbore teste | Trecut |
+| Client complet | 774 trecute, 2 omise; 49 suite active trecute |
+| Server final | 302 trecute, 20 fișiere trecute |
 | Integrare end-to-end | 19 trecute, 2 suite trecute |
-| Native Rust release/locked 0.2.0 | 45 trecute, 1 test hardware ignored în rularea implicită |
-| Natural/Robotic și transmisie WebRTC | Trecut în Edge; bypass și schimbare live a efectului, fără schimbarea pistei, context audio reluat |
-| Filtru adversari: WebRTC real pe loopback | 15 scenarii trecute, două sesiuni autentificate, tonuri sintetice |
-| Filtru adversari: TURN extern real | 15 scenarii trecute; politica relay și candidați relay la ambele capete confirmați din statistici, fără microfon |
-| Recunoaștere vizuală strictă nouă | Trecut prin TrackingService pe imagini generate cu portrete publice; icon dispărut și cameră ilizibilă retrag snapshot-ul |
-| Build Windows player 0.2.0 | Compilare și NSIS x64 trecute |
-| Build Windows Caster 0.2.0 | Compilare și NSIS x64 trecute |
-| Instalare Caster 0.2.0 | Instalare izolată cu versiune 0.2.0 în registru; interfața nativă inspectată prin arborele de accesibilitate; dezinstalare și eliminare a executabilului/înregistrării trecute |
-| npm audit producție după adăugarea werift | 0 vulnerabilități raportate pentru dependențele serverului |
+| Native Rust release/locked | 45 trecute, 1 test hardware ignored în rularea implicită |
+| Interfață organizare, server local real | 10 verificări trecute în Edge headless, cu credențiale fictive și două înscrieri înainte de meci |
+| Zece participanți vocali | Admitere și conexiuni WebSocket autentificate pentru 10 clienți de test; nu este o probă cu 10 microfoane/calculatoare |
+| Moderatori nominali / administrator | Test de server real cu Dani/Maria fictivi, refuz rol falsificat, refuz mute contra administratorului, revocare sesiune, istoric nominal și reactivare |
+| Link Riot introdus de organizator | Format HTTPS strict validat, domenii/credențiale/câmpuri suplimentare refuzate, fără apel Riot; invitația copiată conține linkul și codul vocal separat |
+| Natural/Robotic și WebRTC | Trecut în Edge, tonuri sintetice, bypass, schimbare live, context audio reluat |
+| Filtru media adversari pe loopback | 15 scenarii trecute cu WebRTC real și raportare sintetică, fără microfon |
+| npm audit producție client și server | 0 vulnerabilități raportate |
+| npm audit complet | Server: 0; client/dezvoltare: 6 alerte low în lanțul deepmerge/Jest/ts-jest |
+| RustSec, baza actualizată | 0 vulnerabilități în lista principală; avertismente informative proc-macro-error (unmaintained) și glib (unsound, componentă GTK pentru altă platformă) |
 
-Rularea clientului complet este în verification/camera-final-verify.log. După corectarea compatibilității formei camerelor vechi, serverul și end-to-end au fost rerulate integral în verification/camera-final-backend.log. Verificarea suplimentară a signaling-ului final a trecut (18 teste, camera-signaling-final.log). Au fost actualizate și simulatoarele de test la capabilitatea nouă; clienții reali nu au primit un fallback nesecurizat.
+Rularea completă este în verification/organizer-final-verify.log. După completarea câmpului pentru linkul Riot, serverul a fost rerulat integral (organizer-final-backend.log), împreună cu typecheck-ul arborelui testelor și cele 25 de verificări client afectate (organizer-client-final.log), proba de interfață și integrarea end-to-end (organizer-final-e2e.log). Nu s-au modificat recunoașterea vizuală sau efectele audio după rularea lor completă.
 
-Probele media verifică: lipsa acordului, acord unilateral, adversar apropiat în cameră, sensul invers, ieșire din cameră, icon dispărut cu unmute forțat în client, distanță prea mare chiar în cameră, revenirea vizibilității, repetarea unui frame expirat, oprirea capturii/raportării, moartea ascultătorului/vorbitorului, respawn și oprirea opțiunii. În cazurile blocate nu au fost recepționați octeți RTP audio noi în fereastra măsurată, iar semnalul a fost zero. Raportarea vizuală din aceste probe este sintetică, nu un custom LoL real.
+Proba de interfață confirmă: generare blocată înainte de autentificare; parolă greșită refuzată și ștearsă din câmp; rol nominal de moderator; cod comun pentru zece; copiere combinată link LoL/cod vocal; cereri și aprobări înainte de meci; mutare/schimb de locuri; invitație personală de caster; istoric vizibil numai administratorului; buton de administrator protejat; eliminarea codurilor/istoricului din pagină la logout. Unele verificări sunt grupate în aceleași cazuri. S-au inspectat capturile paginii QA; nu s-au introdus parole reale și nu s-a cerut microfon.
 
-## Hardware și probe anterioare reutilizate
+Testele de server verifică suplimentar maximum cinci pe echipă și zece total, respingere, rotație cod, expirare/limite de input, stocare privată, blocarea altui meci, nume sau echipe diferite, imposibilitatea schimbării echipelor după legarea meciului, lipsa accesului media înainte de aprobare și păstrarea istoricului după închiderea camerei. Mutarea unei persoane în panou nu schimbă lobby-ul Riot. Numele și echipa rămân informații raportate de client și confirmate de organizator, fără autentificare Riot.
 
-În aceeași sesiune, componentele audio Windows au fost verificate pe dispozitive Realtek reale: microfon mono 48 kHz, semnal detectat, mixerul nativ pornit/mutat/oprit, 0 underruns/dropped în proba integrată. Testul Rust hardware ignored a fost pornit separat în etapa 0.1.0 și a trecut (5 underruns inițiale, 0 dropped). Codul audio nativ nu a fost schimbat pentru 0.2.0; nu declarăm o nouă probă hardware ignored în rularea implicită 0.2.0.
+## Windows și hardware
 
-OBS 33.0.1 portabil a înregistrat local tonul nativ de 440 Hz și liniștea după oprire. Microfonul și Desktop Audio nu au fost înregistrate și nu s-a pornit streaming. Varianta normală a fost instalată/dezinstalată anterior cu nume/identificator QA separat, fără a înlocui instalarea utilizatorului. În 0.2.0 s-au construit ambele installere și s-a repetat instalarea/dezinstalarea Caster; nu s-a făcut un upgrade peste instalarea normală din D: sau o instalare pe Windows curat. Detaliile etapei anterioare sunt în verification-0.1.0.ro.md.
+Ambele build-uri finale Windows NSIS x64 0.3.0 sunt consemnate în organizer-player-build.log și organizer-caster-build.log. S-au păstrat avertismentele webpack de dimensiune pentru modelele/fișierele ONNX; compilarea reușește.
 
-Din cele 27 de cazuri vizuale anterior omise, 25 au fost activate folosind imagini publice și au trecut. Noul caz strict pentru camera adversarilor este suplimentar. Cele două cazuri rămase cer înregistrări reale: fixtures-games/index.json cu decupaje etichetate, respectiv CAMERA_EVAL cu eval.json și debug frames. Utilizatorul a confirmat că nu are încă aceste date. Nu au fost fabricate rezultate din meciuri reale. Fixture-urile descărcate/generate rămân locale și sunt excluse din arhiva GitHub.
+Executabilul de producție Caster 0.3.0 a fost pornit cu profil WebView separat și inspectat prin arborele de accesibilitate: panou de administrare prezent, generator ascuns înainte de autentificare, câmp pentru cont nominal/parolă, canal audio separat, microfon oprit și PTT disponibil. Procesul de probă a fost închis. Nu s-a autentificat cu date reale și nu s-a modificat aplicația normală deschisă din D:. În sistem există înregistrarea unei instalări Caster 0.2.0, care a fost păstrată; nu s-a făcut upgrade sau test de instalare/dezinstalare 0.3.0 peste ea. Înainte de distribuție sunt verificate compilarea și hash-urile, nu o instalare pe Windows curat.
 
-## Limite înainte de folosire în eveniment
+Probele Realtek, testul hardware ignored executat separat și captura OBS 33.0.1 cu ton de 440 Hz aparțin etapelor 0.1/0.2. Codul audio nativ este păstrat, dar nu declarăm o nouă probă hardware/OBS în 0.3.0. Proba TURN extern cu 15 scenarii a trecut în 0.2.0; în 0.3.0 s-a repetat proba media pe loopback. Detalii și limite ale probelor anterioare: [0.2.0](verification-0.2.0.ro.md) și [0.1.0](verification-0.1.0.ro.md).
 
-Vizibilitatea este furnizată de client și poate fi falsificată de un participant modificat. Filtrul media oprește pachetele fără permisiune, dar nu poate atesta sinceritatea pixelilor. Operatorul media are acces tehnic la audio-ul adversarilor. Funcția nu este o garanție anti-cheat sau aprobare Riot. Configurare și model de încredere: enemy-camera.ro.md.
+## Ce rămâne de probat într-un custom real
 
-Sunt necesare customuri reale pe calculatoare și rețele diferite, test cu zece jucători, fog of war/tufișuri și suprapuneri reale, verificarea poziției proprii, panning și alt-tab, mute/PTT, moarte/respawn, reconnect, Bluetooth/USB și deconectare fizică de dispozitive. Mai trebuie validate delay-ul spectator/stream, Caster cu OBS într-un eveniment și actualizarea între două release-uri publicate. Installerele nu sunt semnate, iar instalarea automată semnată nu este configurată.
+Cele două teste vizuale omise cer înregistrări reale: fixtures-games/index.json cu imagini etichetate, respectiv CAMERA_EVAL cu eval.json/debug frames. Utilizatorul a confirmat că nu are încă aceste date. Celelalte 25 de cazuri anterior omise au trecut cu imagini publice în etapa precedentă și rămân activate local; acestea nu au fost prezentate ca meciuri reale.
 
-## Arhive și confidențialitate
+Sunt necesare zece persoane pe calculatoare/rețele diferite, numele exact furnizat de clientul curent LoL, echipele din lobby, deconectare/reintrare, administrare nominală, mute/reactivare, camera/ceața războiului și suprapuneri reale, moarte/respawn, alt-tab, microfon/dispozitive USB/Bluetooth și un Caster cu OBS/delay de spectator. Mai trebuie un upgrade real între release-uri publicate și instalare pe Windows curat.
 
-Pachetul GitHub conține sursele complete, configurațiile, testele și licențele. Pachetul release conține ambele installere, sursele și ghidurile. Se verifică SHA-256 și absența profilurilor, cheilor, .private.json, .env, capturilor, dependențelor instalate și cache-urilor de build. Verificările de secrete sunt bazate pe tipare selectate și nu constituie o garanție că nu există alte forme de informații sensibile. Rapoartele brute și credențialele temporare nu sunt incluse.
+Mute de moderare suspendă transmisia și ascultarea; nu controlează alte aplicații sau microfonul separat OBS. Doi clienți modificați pot păstra media P2P deja negociată. Filtrul adversarilor verifică sesiuni și permisiuni la fiecare pachet, dar vizibilitatea raportată poate fi falsificată. Niciun test de aici nu certifică securitate completă, conformitate sau aprobare Riot.
 
-Pentru debug după custom: activează Diagnostic înainte de meci și lasă aplicația să finalizeze arhiva. ZIP-ul este în %LOCALAPPDATA%\com.riftvoice.desktop\games. Conține jurnale și imagini ale minimapei, posibil numele participanților; verifică-l înainte de a-l distribui. Replay-ul .rofl singur nu înlocuiește aceste imagini pentru testele vizuale.
+## Stocare, arhive și confidențialitate
+
+Conturile nominale și parolele se configurează numai pe server. Camerele, invitațiile și istoricul sunt temporare în lipsa unui ORGANIZER_STORE_PATH privat pe volum persistent. Istoricul numește moderatorii și participanții, păstrează 1.000 de acțiuni și afișează ultimele 200 administratorului. Nu este un registru extern imuabil. Vezi [organizare și moderare](organizer.ro.md).
+
+Arhivele de distribuție conțin sursele corespunzătoare, licența, ghidurile și hash-uri SHA-256. Sunt excluse credențialele private, capturile, profilurile, rapoartele brute, dependențele instalate și cache-urile. Filtrarea se bazează pe liste și tipare verificate; nu este o garanție că orice formă posibilă de secret este identificată. Pentru GitHub browser există loturi cu mai puțin de 100 de fișiere, fără schimbarea structurii serverului.
+
+Pentru debug în meci: activează Diagnostic înainte de custom și lasă arhiva să se finalizeze. ZIP-ul se găsește în %LOCALAPPDATA%\com.riftvoice.desktop\games. Poate conține numele participanților și cadre de minimapă; verifică-l înainte de distribuire. Un replay .rofl singur nu înlocuiește datele vizuale necesare.

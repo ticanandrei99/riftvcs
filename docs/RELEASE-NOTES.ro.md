@@ -1,9 +1,13 @@
-# RiftVoice 0.2.0 — candidat local pentru testare în custom
+# RiftVoice 0.3.0 — organizare custom și moderare
 
-Adaugă voce pentru adversarii apropiați, identificați vizibil în dreptunghiul camerei. Sunt necesare sub 1.350 unități distanță, imagine recentă, poziție proprie identificată, ambii jucători în viață și acordul ambelor persoane. Caster Mode rămâne izolat.
+Adaugă în Caster autentificare de administrator și conturi nominale de moderator, invitație vocală comună pentru 10 persoane, înscriere înainte de meci cu Riot ID declarat, aprobare manuală și lista conexiunilor. Organizatorul poate muta locurile Albastru/Roșu sau schimba doi jucători înainte de start; după identificarea meciului echipele sunt blocate. Aceste operații nu mută persoanele în lobby-ul LoL și nu autentifică identitatea Riot.
 
-Vocea adversarilor trece printr-un filtru media pe server. Permisiunile expiră rapid; dispariția iconului, oprirea capturii, ieșirea din cameră sau raza de apropiere opresc livrarea pachetelor audio. Pentru activare sunt necesare sursele noi de server, TURN funcțional și ENEMY_CAMERA_VOICE=1. Serverul public existent nu a fost actualizat.
+Mute-ul de moderare suspendă transmisia și ascultarea, revocă sesiunea și oprește reconectarea automată. Moderatorii nu pot modifica vocea administratorului autentificat. Administratorul vede autorul nominal, ținta și ora fiecărui mute/reactivări sau încercări refuzate. Mute pentru mine rămâne separat. Camerele și istoricul se păstrează numai în memorie dacă operatorul nu configurează stocare privată persistentă.
 
-Păstrează invitațiile organizatorului, mute individual/Mute All, PTT și efectele locale Natural/Robotic. Există installere separate pentru jucători și comentatori, documentație OBS și o arhivă curată pentru GitHub.
+Pe serverul actualizat configurează ORGANIZER_PASSWORD și MODERATOR_ACCOUNTS_JSON; vezi ORGANIZARE-MODERARE.ro.md. Canalul caster rămâne izolat, iar setările OBS, PTT/deafen, voice effects Natural/Robotic și vocea opțională a adversarilor din apropierea camerei sunt păstrate. ENEMY_CAMERA_VOICE=1 și TURN sunt necesare pentru ultima funcție.
 
-Limite: vizibilitatea vine din client și poate fi falsificată; filtrul nu este o atestare Riot. Operatorul media este de încredere și are acces tehnic la audio. Testele cu tonuri/rapoarte sintetice nu înlocuiesc un custom real. Vezi verificările exacte și limitările în VERIFICARI.ro.md / docs/verification-results.ro.md. Nu există aprobare Riot, semnare Windows sau instalare automată semnată. Nu s-a publicat un release în această sesiune.
+Poți lipi în panou linkul lobby-ului copiat din clientul LoL. Invitația completă copiată include atât acel link, cât și codul vocal RiftVoice. Aplicația nu generează coduri Riot, nu deschide automat linkul și nu verifică disponibilitatea lobby-ului. Tournament API nu este integrat în această versiune.
+
+Testele și build-urile exacte sunt în VERIFICARI.ro.md. Nu există aprobare Riot sau certificat Windows. Identitățile și vizibilitatea sunt raportate de client și nu reprezintă atestare Riot. Mute-ul nu poate revoca o rută P2P deja negociată între doi clienți modificați. Sunt necesare customuri reale, verificarea identităților/echipelor, zece calculatoare/rețele, OBS și delay de spectator. Update-ul afișează notificare și link; instalarea automată semnată nu este configurată.
+
+Pentru GitHub folosește tag-ul exact v0.3.0 și atașează separat RiftVoice_0.3.0_x64-setup.exe și RiftVoice Caster_0.3.0_x64-setup.exe, împreună cu sursele, licența și ghidurile. Pregătirea pachetelor locale nu actualizează automat repository-ul, release-ul sau hostul public.
