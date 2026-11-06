@@ -102,7 +102,7 @@ describe('SignalingService', () => {
 
     sockets()[0].emitOpen();
     expect(JSON.parse(sockets()[0].sent[0])).toEqual({
-      type: 'join', room: 'room-7', name: 'Alice', team: 'ORDER', enemyCameraProtocol: 1, sharedReset: false,
+      type: 'join', room: 'room-7', name: 'Alice', team: 'ORDER', enemyCameraProtocol: 1, eventInviteProtocol:1, sharedReset: false,
     });
   });
 
@@ -343,5 +343,20 @@ describe('production signaling does not fall back to unprotected servers', () =>
     socket.emitMessage({type:'camera_challenge',nonce:'n'.repeat(22)});service.sendEnemyCamera(false,null);
     expect(JSON.parse(socket.sent[socket.sent.length-1])).toEqual({type:'enemy_camera',nonce:'n'.repeat(22),enabled:false,report:null});
     service.leaveRoom();expect(service.hasEnemyCameraVoice()).toBe(false);
+  });
+  test('shared invitation stays pending until approval and the full player handshake',()=>{
+    const original=(globalThis as any).sessionStorage,values=new Map<string,string>();
+    (globalThis as any).sessionStorage={getItem:(key:string)=>values.get(key)||null,setItem:(key:string,value:string)=>values.set(key,value),removeItem:(key:string)=>values.delete(key)};
+    try{
+      values.set('riftvoice.invitation','RV-'+'r'.repeat(43));const service=new SignalingService();const joined=jest.fn();join(service,'room-7','Alice',{onPeerJoined:joined});const socket=sockets()[0];socket.emitOpen();
+      socket.emitMessage({type:'join_approved',invitation:'p'.repeat(43)});expect(socket.sent).toHaveLength(1);
+      socket.emitMessage({type:'join_pending'});service.sendCoords(10,20);expect(socket.sent).toHaveLength(1);expect(joined).not.toHaveBeenCalled();
+      socket.emitMessage({type:'join_approved',invitation:'p'.repeat(43)});expect(JSON.parse(socket.sent[1]).invitation).toBe('p'.repeat(43));
+      expect(values.get('riftvoice.invitation')).toBe('p'.repeat(43));expect(joined).not.toHaveBeenCalled();
+      socket.emitMessage({type:'room_state',sessionToken:'s'.repeat(43),role:'player',teamIsolation:true,peers:['Bob']});expect(joined).toHaveBeenCalledWith('Bob');service.leaveRoom();
+    }finally{(globalThis as any).sessionStorage=original;}
+  });
+  test('organizer rejection is terminal instead of repeatedly rejoining the approval queue',()=>{
+    jest.useFakeTimers();try{const service=new SignalingService();join(service);const socket=sockets()[0];socket.emitOpen();socket.emitClose(4003);jest.advanceTimersByTime(60000);expect(sockets()).toHaveLength(1);}finally{jest.useRealTimers();}
   });
 });
