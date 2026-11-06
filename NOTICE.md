@@ -8,9 +8,12 @@ Project license: GNU Affero General Public License, version 3 or later
 
 ## Current RiftVoice modifications
 
-Modification notice updated: 2026-11-05.
+Modification notice updated: 2026-11-06.
 
 - Manual Natural and Robotic voice options using local audio processing.
+- Isolated Caster Mode, organizer grants and server-filtered nearby enemy camera voice.
+- Enemy media gateway uses werift 0.26.0 (MIT); see docs/third-party/werift-LICENSE.txt.
+- Enemy visibility is client-reported minimap recognition, not trusted Riot visibility attestation.
 - Local processed-microphone preview, with an automatic 30-second stop.
 - Nearby voice by default, with optional camera listening and team modes restored.
 - In nearby mode, playback is muted when the listener's position cannot be established or the

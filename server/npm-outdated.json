@@ -1,0 +1,23 @@
+{
+  "@types/ws": {
+    "current": "8.18.1",
+    "wanted": "8.18.2",
+    "latest": "8.18.2",
+    "dependent": "server",
+    "location": "C:\\Users\\tican\\Documents\\ChatGPT\\Voice chat proxy league\\RiftVoice-Caster\\server\\node_modules\\@types\\ws"
+  },
+  "tsx": {
+    "current": "4.21.0",
+    "wanted": "4.23.15",
+    "latest": "4.23.15",
+    "dependent": "server",
+    "location": "C:\\Users\\tican\\Documents\\ChatGPT\\Voice chat proxy league\\RiftVoice-Caster\\server\\node_modules\\tsx"
+  },
+  "typescript": {
+    "current": "5.9.3",
+    "wanted": "5.9.3",
+    "latest": "7.0.2",
+    "dependent": "server",
+    "location": "C:\\Users\\tican\\Documents\\ChatGPT\\Voice chat proxy league\\RiftVoice-Caster\\server\\node_modules\\typescript"
+  }
+}

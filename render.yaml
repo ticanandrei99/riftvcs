@@ -14,3 +14,12 @@ services:
         value: production
       - key: TRUSTED_PROXIES
         value: private
+
+      - key: PLAYER_GRANTS_JSON
+        sync: false
+      - key: CASTER_GRANTS_JSON
+        sync: false
+      - key: ALLOWED_WEB_ORIGINS
+        value: ""
+      - key: ENEMY_CAMERA_VOICE
+        value: "0"
