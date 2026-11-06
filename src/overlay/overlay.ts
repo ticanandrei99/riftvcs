@@ -1,4 +1,5 @@
-import { saveVoiceInvitation } from '../services/voice-access';
+import { saveVoiceInvitation, voiceInvitation, voiceInvitationError } from '../services/voice-access';
+import { registerLobby } from '../services/lobby-registration';
 import { getEnemyCameraEnabled, setEnemyCameraEnabled } from '../core/enemy-camera';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { mountVoicePanel } from '../voice/panel';
@@ -958,9 +959,11 @@ document.getElementById('btn-minimize')!.addEventListener('click', async () => {
 // Session-only invitation: never persisted across app restarts or copied into logs.
 document.getElementById('voice-invitation-save')!.onclick = () => {
   const field = document.getElementById('voice-invitation') as HTMLInputElement;
-  const token = field.value.trim();
+  const token = field.value.trim()||voiceInvitation();
+  const formatError=voiceInvitationError(token);
+  if(formatError){document.getElementById('voice-invitation-status')!.textContent=formatError;return;}
   if (!saveVoiceInvitation(token)) {
-    document.getElementById('voice-invitation-status')!.textContent = 'Invitație invalidă sau stocare indisponibilă.';
+    document.getElementById('voice-invitation-status')!.textContent = 'Codul nu poate fi păstrat în sesiunea aplicației. Repornește RiftVoice.';
     return;
   }
   field.value = '';
@@ -969,3 +972,22 @@ document.getElementById('voice-invitation-save')!.onclick = () => {
 window.addEventListener('riftvoice:join-error', ((event: CustomEvent<string>) => {
   document.getElementById('voice-invitation-status')!.textContent = event.detail;
 }) as EventListener);
+window.addEventListener('riftvoice:join-status', ((event: CustomEvent<string>) => {
+  document.getElementById('voice-invitation-status')!.textContent = event.detail;
+}) as EventListener);
+let stopRegistration: (()=>void)|undefined;
+const lobbyName=document.getElementById('lobby-riot-id') as HTMLInputElement;
+const lobbyStatus=(text:string)=>{document.getElementById('lobby-registration-status')!.textContent=text;};
+const enroll=(name:string,code:string)=>{
+  stopRegistration?.();
+  stopRegistration=registerLobby(name,code,lobbyStatus,()=>window.location.reload());
+};
+document.getElementById('lobby-register')!.onclick=()=>{
+  const field=document.getElementById('voice-invitation') as HTMLInputElement;
+  const name=lobbyName.value.trim(),code=field.value.trim()||voiceInvitation(),error=voiceInvitationError(code);
+  if(error){lobbyStatus(error);return;}
+  if(!name||name.length>64||/[\x00-\x1f\x7f]/.test(name)){lobbyStatus('Introdu Riot ID-ul complet pentru verificarea organizatorului.');return;}
+  field.value='';enroll(name,code);
+};
+try{const saved=sessionStorage.getItem('riftvoice.lobby-name'),reservation=sessionStorage.getItem('riftvoice.lobby-reservation');if(saved&&reservation){lobbyName.value=saved;enroll(saved,reservation);}}catch{}
+window.addEventListener('beforeunload',()=>stopRegistration?.(),{once:true});

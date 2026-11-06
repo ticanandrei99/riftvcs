@@ -34,10 +34,14 @@
     </div>
     <div id="settings-panel" class="settings-panel hidden">
       <div style="padding:8px">
-        <label for="voice-invitation">Invitație custom (organizator)</label>
+        <label for="voice-invitation">Cod vocal RiftVoice</label>
         <input id="voice-invitation" type="password" autocomplete="off" maxlength="256" style="width:95%">
-        <button id="voice-invitation-save" class="icon-btn">Conectează cu invitație</button>
-        <p id="voice-invitation-status" role="status" style="font-size:11px">Canalul jucătorilor este separat pe echipe.</p>
+        <label for="lobby-riot-id">Riot ID pentru înscriere (Nume#EUNE)</label>
+        <input id="lobby-riot-id" autocomplete="off" maxlength="64" style="width:95%">
+        <button id="lobby-register" class="icon-btn">Înscrie-te înainte de meci</button>
+        <p id="lobby-registration-status" role="status" style="font-size:11px">Numele este declarat de tine și verificat manual de organizator. Nu introdu parola Riot.</p>
+        <button id="voice-invitation-save" class="icon-btn">Conectează vocea în meci</button>
+        <p id="voice-invitation-status" role="status" style="font-size:11px">Primești codul din Caster, separat de linkul LoL. Poți trimite înscrierea din aplicație înainte de start.</p>
       </div>
       <section id="voice-panel" aria-label="Champion Voice Engine"></section>
       <div class="setting-row">

@@ -15,6 +15,11 @@ export function voiceAuthorization(): Record<string, string> {
 export function voiceInvitation(): string {
   try { return sessionStorage.getItem('riftvoice.invitation') || ''; } catch { return ''; }
 }
+export function voiceInvitationError(token:string):string|null{
+  if(/^(?:https?:\/\/)?gg\.riotgames\.com\//i.test(token)||/joinCode=/i.test(token))return 'Acesta este un link de lobby LoL. Introdu codul vocal RiftVoice generat în Caster.';
+  if(!token||!/^[A-Za-z0-9_-]{32,256}$/.test(token))return 'Cod vocal invalid. Copiază codul RiftVoice din invitația organizatorului, fără text suplimentar.';
+  return null;
+}
 export function saveVoiceInvitation(token: string): boolean {
   if (token && !/^[A-Za-z0-9_-]{32,256}$/.test(token)) return false;
   try {

@@ -1,4 +1,4 @@
-import { voiceInvitation, setVoiceSessionToken } from './voice-access';
+import { voiceInvitation, setVoiceSessionToken, saveVoiceInvitation } from './voice-access';
 import type { EnemyCameraReport } from '../core/enemy-camera';
 import { WS_URL } from '../core/config';
 
@@ -56,6 +56,7 @@ export class SignalingService {
   private authenticated = false;
   private enemyCameraVoice = false;
   private cameraNonce = '';
+  private awaitingApproval = false;
   /** Legacy is enabled explicitly by local test fixtures only; production never falls back. */
   constructor(private readonly permitLegacyTestProtocol = false) {}
   private localName: string = '';
@@ -111,6 +112,7 @@ export class SignalingService {
     this.authenticated = false;
     this.enemyCameraVoice = false;
     this.cameraNonce = '';
+    this.awaitingApproval = false;
 
     const team = this.currentTeam;
 
@@ -125,7 +127,7 @@ export class SignalingService {
       // v0.3: include team in join. Older servers ignore the extra field.
       // sharedReset re-declares the opt-in on every (re)connect: the server
       // keeps it per connection, never carrying it over from an earlier one.
-      ws.send(JSON.stringify({ type: 'join', room: roomId, name: localName, team, enemyCameraProtocol: 1, sharedReset: this.sharedReset, ...(voiceInvitation() ? { invitation: voiceInvitation() } : {}) }));
+      ws.send(JSON.stringify({ type: 'join', room: roomId, name: localName, team, enemyCameraProtocol: 1, eventInviteProtocol:1, sharedReset: this.sharedReset, ...(voiceInvitation() ? { invitation: voiceInvitation() } : {}) }));
     });
 
     ws.addEventListener('message', (event) => {
@@ -139,8 +141,19 @@ export class SignalingService {
       }
 
       if (!msg || typeof msg !== 'object') return;
-      if (!this.authenticated && msg.type !== 'room_state' && msg.type !== 'error') return;
+      if (!this.authenticated && !['room_state','error','join_pending','join_approved'].includes(msg.type)) return;
       switch (msg.type) {
+        case 'join_pending': {
+          this.awaitingApproval=true;
+          if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-status',{detail:'Cerere trimisă. Așteaptă aprobarea organizatorului în Caster.'}));
+          break;
+        }
+        case 'join_approved': {
+          if(!this.awaitingApproval||typeof msg.invitation!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(msg.invitation)||!saveVoiceInvitation(msg.invitation))return;
+          this.awaitingApproval=false;
+          ws.send(JSON.stringify({type:'join',room:roomId,name:localName,team,enemyCameraProtocol:1,eventInviteProtocol:1,sharedReset:this.sharedReset,invitation:msg.invitation}));
+          break;
+        }
         case 'camera_challenge': {
           if (this.enemyCameraVoice && typeof msg.nonce === 'string' && /^[A-Za-z0-9_-]{22}$/.test(msg.nonce)) this.cameraNonce=msg.nonce;
           break;
@@ -152,6 +165,8 @@ export class SignalingService {
             return;
           }
           this.authenticated = true;
+          this.awaitingApproval = false;
+          if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-status',{detail:'Conectat la camera vocală aprobată.'}));
           this.enemyCameraVoice = msg.enemyCameraVoice === true && !this.permitLegacyTestProtocol;
           if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:enemy-camera-availability', { detail: this.enemyCameraVoice }));
           setVoiceSessionToken(msg.sessionToken);
@@ -244,9 +259,10 @@ export class SignalingService {
       console.log('[Signaling] WebSocket disconnected (code ' + event.code +
         (event.reason ? ', ' + event.reason : '') + ')');
       if (this.intentionallyClosed) return;
-      if (event.code === TAKEOVER_CLOSE_CODE) {
-        console.error('[Signaling] Another connection took over this room as "' +
-          this.localName + '" — not reconnecting. Is LoLProxChat already running?');
+      if (event.code === TAKEOVER_CLOSE_CODE || event.code === 4003) {
+        const reason=event.code===4003?'Acces vocal oprit de organizator. Cere reactivarea sau aprobarea și reconectează manual.':'Această identitate s-a conectat din altă sesiune. Reconectează manual.';
+        console.error('[Signaling] '+reason);
+        if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-status',{detail:reason}));
         this.intentionallyClosed = true;
         if (this.reconnectTimer !== null) {
           clearTimeout(this.reconnectTimer);
@@ -390,6 +406,7 @@ export class SignalingService {
   }
 
   leaveRoom(): void {
+    this.awaitingApproval = false;
     this.authenticated = false;
     this.enemyCameraVoice = false;
     this.cameraNonce = '';

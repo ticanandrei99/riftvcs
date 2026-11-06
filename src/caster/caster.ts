@@ -1,4 +1,5 @@
 import { isTauri } from '@tauri-apps/api/core';
+import { mountOrganizer } from './organizer';
 import { AppAudioOutput, type AppTap } from '../services/app-audio-output';
 import { setVoiceSessionToken } from '../services/voice-access';
 import { checkForUpdate, openUpdateDownloads, startStartupUpdateCheck, type UpdateInfo } from '../services/updater';
@@ -80,7 +81,7 @@ input('join').onclick = async () => {
   if (epoch !== generation) return;
   const socket = new WebSocket(WS_URL.replace(/\/ws$/, '/caster')); ws = socket;
   socket.onopen = () => socket.send(JSON.stringify({ type: 'caster_join', token: input('token').value }));
-  socket.onclose = () => { if (ws === socket) leave(); };
+  socket.onclose = event => { if (ws === socket) { leave(); if(event.code===4003)status('Acces vocal oprit de organizator. Reconectează manual după reactivare.'); } };
   socket.onerror = () => status('Conexiune eșuată');
   // Serialize async messages so ICE cannot overtake the authenticated media setup.
   let queue = Promise.resolve();
@@ -123,11 +124,12 @@ input('join').onclick = async () => {
 };
 input('leave').onclick = leave;
 for (const id of ['mute','deafen','ptt','tx','rx','monitor','commentary']) input(id).oninput = update;
-window.onkeydown = e => { if (e.code === 'Space' && !(e.target instanceof HTMLInputElement) && !e.repeat) { e.preventDefault(); held = true; update(); } };
+window.onkeydown = e => { if (e.code === 'Space' && !(e.target instanceof HTMLElement && e.target.closest('input,textarea,select,button,[contenteditable]')) && !e.repeat) { e.preventDefault(); held = true; update(); } };
 window.onkeyup = e => { if (e.code === 'Space') { held = false; update(); } };
 window.onblur = () => { held = false; update(); };
 document.onvisibilitychange = () => { if (document.hidden) { held = false; update(); } };
 window.addEventListener('beforeunload', leave);
+mountOrganizer(invitation=>{input('token').value=invitation;input('join').click();});
 
 setInterval(() => { for (const peer of peers.values()) peer.stepVolume(performance.now()); }, 50);
 

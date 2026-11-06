@@ -1,10 +1,12 @@
 <!doctype html><html lang="ro"><meta charset="utf-8"><title>RiftVoice Caster</title>
-<style>body{background:#171321;color:#f3eaf3;font:16px system-ui;max-width:720px;margin:32px auto;padding:20px}label{display:block;margin:18px 0}button,input,select{font:inherit;padding:8px}button{margin:8px}#status{color:#ffcb78}</style>
+<style>body{background:#171321;color:#f3eaf3;font:16px system-ui;max-width:720px;margin:32px auto;padding:20px}label{display:block;margin:18px 0}button,input,select{font:inherit;padding:8px;max-width:100%;box-sizing:border-box}button{margin:8px;cursor:pointer}button:disabled{cursor:default;opacity:.5}input[type=password],input[type=url]{width:100%}fieldset{border:1px solid #64526e;border-radius:8px;padding:14px}.organizer-person{border-top:1px solid #64526e;padding:8px 0}#organizer-invite{width:100%;font-size:13px}#status,#organizer-status{color:#ffcb78}</style>
 <div id="caster-update" role="status" hidden><span id="caster-update-text"></span> <button id="caster-download">Actualizează</button> <button id="caster-later">Mai târziu</button></div>
 <button id="caster-check-update">Verifică actualizările</button><span id="caster-update-status" role="status"></span>
 <h1>RiftVoice · Caster Mode</h1><p>Canal izolat pentru custom games. Jucătorii nu primesc acest audio. Nu se colectează date de spectator sau poziții.</p>
+<section id="organizer-panel" aria-label="Administrare custom"></section>
+<h2>Canal comentatori</h2>
 <label><input id="native-output" type="checkbox" checked> Ieșire audio dedicată OBS (aplicația Windows; alegerea se aplică la conectare)</label>
-<label>Invitație de la organizator <input id="token" type="password" autocomplete="off"></label>
+<label>Cod vocal de caster / spectator <input id="token" type="password" autocomplete="off"></label>
 <button id="join">Conectează</button><button id="leave">Deconectează</button><p id="status" role="status">Deconectat</p>
 <label><input id="mute" type="checkbox" checked> Microfon oprit</label>
 <label><input id="deafen" type="checkbox"> Deafen — oprește ascultarea și microfonul</label>
