@@ -1,0 +1,150 @@
+import { isTauri } from '@tauri-apps/api/core';
+import { AppAudioOutput, type AppTap } from '../services/app-audio-output';
+import { setVoiceSessionToken } from '../services/voice-access';
+import { checkForUpdate, openUpdateDownloads, startStartupUpdateCheck, type UpdateInfo } from '../services/updater';
+import { casterTransmitAllowed } from './routing';
+import { PeerConnection } from '../services/peer-connection';
+import { WS_URL } from '../core/config';
+const input = (id: string) => document.getElementById(id) as HTMLInputElement;
+const status = (s: string) => { document.getElementById('status')!.textContent = s; };
+let ws: WebSocket | null = null, ctx: AudioContext | null = null;
+let mic: MediaStream | null = null, output: MediaStreamAudioDestinationNode | null = null;
+let tx: GainNode | null = null, monitor: GainNode | null = null;
+let name = '', role = '', held = false, generation = 0;
+const peers = new Map<string, PeerConnection>();
+let appOut: AppAudioOutput | null = null, commentaryTap: AppTap | null = null;
+let audioCleanup: Promise<void> = Promise.resolve();
+if (!isTauri()) { input('native-output').checked = false; input('native-output').disabled = true; }
+const pending = new Map<string, Promise<PeerConnection>>();
+const roster = new Map<string, { role: string }>();
+const mutedPeers = new Set<string>();
+const peerVolumes = new Map<string, number>();
+function renderRoster(): void {
+  const list = document.getElementById('caster-peers')!;
+  list.replaceChildren();
+  for (const [remote, entry] of roster) {
+    const row = document.createElement('div');
+    const label = document.createElement('span'); label.textContent = remote + ' · ' + entry.role;
+    const button = document.createElement('button');
+    const relabel = () => { button.textContent = mutedPeers.has(remote) ? 'Reactivează' : 'Mute pentru mine'; button.setAttribute('aria-pressed', String(mutedPeers.has(remote))); };
+    button.onclick = () => { if (mutedPeers.has(remote)) mutedPeers.delete(remote); else mutedPeers.add(remote); relabel(); update(); };
+    const volume = document.createElement('input'); volume.type = 'range'; volume.min = '0'; volume.max = '1'; volume.step = '0.01'; volume.value = String(peerVolumes.get(remote) ?? 1);
+    volume.setAttribute('aria-label', 'Volum ' + remote);
+    volume.oninput = () => { peerVolumes.set(remote, Number(volume.value)); update(); };
+    relabel(); row.append(label, button, volume); list.append(row);
+  }
+}
+function update() {
+  const audible = casterTransmitAllowed(role, input('mute').checked, input('deafen').checked, input('ptt').checked, held);
+  if (tx) tx.gain.value = audible ? Number(input('tx').value) : 0;
+  if (monitor) monitor.gain.value = !appOut && audible && input('monitor').checked ? Number(input('commentary').value) : 0;
+  commentaryTap?.setGain(audible && input('monitor').checked ? Number(input('commentary').value) : 0);
+  for (const [remote, peer] of peers) {
+    peer.setVolume(input('deafen').checked ? 0 : Number(input('rx').value) * (peerVolumes.get(remote) ?? 1));
+    if (input('deafen').checked || mutedPeers.has(remote)) peer.mute(); else peer.unmute();
+  }
+}
+function leave() {
+  setVoiceSessionToken(null);
+  commentaryTap?.disconnect(); commentaryTap = null;
+  const oldOutput = appOut; appOut = null;
+  if (oldOutput) audioCleanup = audioCleanup.then(() => oldOutput.stop()).catch(() => {});
+  generation++; held = false; ws?.close(); ws = null;
+  for (const peer of peers.values()) peer.close(); peers.clear(); pending.clear(); roster.clear(); renderRoster();
+  mic?.getTracks().forEach(t => t.stop()); mic = null;
+  void ctx?.close(); ctx = null; tx = monitor = output = null;
+  input('mute').checked = true; input('monitor').checked = false; status('Deconectat');
+}
+function send(to: string, type: string, payload: unknown) {
+  if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'caster_signal', to, payload: { type, payload } }));
+}
+async function peerFor(remote: string): Promise<PeerConnection> {
+  if (peers.has(remote)) return peers.get(remote)!;
+  if (pending.has(remote)) return pending.get(remote)!;
+  const epoch = generation;
+  const entry = roster.get(remote);
+  if (!entry) throw Error('Participant neautorizat');
+  const promise = PeerConnection.create(remote).then(peer => {
+    if (epoch !== generation || roster.get(remote) !== entry) { peer.close(); throw Error('Sesiune închisă'); }
+    if (appOut) peer.setAppOutput(appOut);
+    peer.onIceCandidate = candidate => send(remote, 'ice-candidate', candidate.toJSON());
+    if (role === 'caster' && output) peer.addLocalStream(output.stream);
+    else peer.addReceiveOnlyAudio();
+    peers.set(remote, peer); pending.delete(remote); update(); return peer;
+  });
+  pending.set(remote, promise); return promise;
+}
+input('join').onclick = async () => {
+  leave(); const epoch = generation;
+  await audioCleanup;
+  if (epoch !== generation) return;
+  const socket = new WebSocket(WS_URL.replace(/\/ws$/, '/caster')); ws = socket;
+  socket.onopen = () => socket.send(JSON.stringify({ type: 'caster_join', token: input('token').value }));
+  socket.onclose = () => { if (ws === socket) leave(); };
+  socket.onerror = () => status('Conexiune eșuată');
+  // Serialize async messages so ICE cannot overtake the authenticated media setup.
+  let queue = Promise.resolve();
+  socket.onmessage = event => { queue = queue.then(async () => {
+    if (epoch !== generation) return;
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'error') { status(msg.message); return; }
+    if (msg.type === 'caster_ready') {
+      setVoiceSessionToken(msg.sessionToken);
+      name = msg.name; role = msg.role; input('token').value = '';
+      if (isTauri() && input('native-output').checked) {
+        const out = new AppAudioOutput(() => { leave(); status('Ieșirea OBS s-a oprit. Verifică dispozitivul și reconectează.'); });
+        if (!await out.start(null)) throw Error('Ieșire OBS indisponibilă');
+        if (epoch !== generation) { await out.stop(); return; }
+        appOut = out;
+      }
+      if (role === 'caster') {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (epoch !== generation) { stream.getTracks().forEach(t => t.stop()); return; }
+        mic = stream;
+        if (appOut) commentaryTap = appOut.attach(mic);
+        ctx = new AudioContext(); await ctx.resume();
+        output = ctx.createMediaStreamDestination(); tx = ctx.createGain(); monitor = ctx.createGain();
+        tx.gain.value = monitor.gain.value = 0;
+        const source = ctx.createMediaStreamSource(mic); source.connect(tx).connect(output); source.connect(monitor).connect(ctx.destination);
+      }
+      for (const remote of msg.peers) roster.set(remote.name, { role: remote.role });
+      renderRoster();
+      update(); status(`Conectat: ${name} · ${role} · canal izolat`);
+      for (const remote of msg.peers) { const peer = await peerFor(remote.name); send(remote.name, 'offer', await peer.createOffer()); }
+    } else if (msg.type === 'caster_peer') {
+      roster.set(msg.name, { role: msg.role }); renderRoster();
+    } else if (msg.type === 'caster_signal') {
+      const peer = await peerFor(msg.from);
+      if (msg.payload.type === 'offer') send(msg.from, 'answer', await peer.handleOffer(msg.payload.payload));
+      if (msg.payload.type === 'answer') await peer.handleAnswer(msg.payload.payload);
+      if (msg.payload.type === 'ice-candidate') await peer.addIceCandidate(msg.payload.payload);
+    } else if (msg.type === 'caster_left') { peers.get(msg.name)?.close(); peers.delete(msg.name); pending.delete(msg.name); roster.delete(msg.name); renderRoster(); }
+  }).catch(() => { leave(); status('Sesiune oprită: eroare audio/conexiune. Reconectează manual.'); }); };
+};
+input('leave').onclick = leave;
+for (const id of ['mute','deafen','ptt','tx','rx','monitor','commentary']) input(id).oninput = update;
+window.onkeydown = e => { if (e.code === 'Space' && !(e.target instanceof HTMLInputElement) && !e.repeat) { e.preventDefault(); held = true; update(); } };
+window.onkeyup = e => { if (e.code === 'Space') { held = false; update(); } };
+window.onblur = () => { held = false; update(); };
+document.onvisibilitychange = () => { if (document.hidden) { held = false; update(); } };
+window.addEventListener('beforeunload', leave);
+
+setInterval(() => { for (const peer of peers.values()) peer.stepVolume(performance.now()); }, 50);
+
+function showUpdate(info: UpdateInfo): void {
+  const available = info.update_available && info.channel_ready !== false;
+  document.getElementById('caster-update')!.hidden = !available;
+  document.getElementById('caster-update-text')!.textContent = available ? 'Versiune nouă disponibilă: RiftVoice Caster ' + info.latest_version + '.' : '';
+  document.getElementById('caster-update-status')!.textContent = available ? '' : info.channel_ready === false ? 'Canalul Caster nu are încă un installer publicat.' : 'Ești la zi: ' + info.current_version;
+}
+const stopUpdateCheck = startStartupUpdateCheck(info => { if (info.update_available) showUpdate(info); });
+window.addEventListener('beforeunload', stopUpdateCheck, { once: true });
+document.getElementById('caster-later')!.onclick = () => { document.getElementById('caster-update')!.hidden = true; };
+document.getElementById('caster-download')!.onclick = () => {
+  void openUpdateDownloads().catch(() => { document.getElementById('caster-update-status')!.textContent = 'Descărcările nu pot fi deschise. Încearcă din nou.'; });
+};
+document.getElementById('caster-check-update')!.onclick = async () => {
+  document.getElementById('caster-update-status')!.textContent = 'Se verifică…';
+  try { showUpdate(await checkForUpdate()); }
+  catch { document.getElementById('caster-update-status')!.textContent = 'Actualizările nu pot fi verificate acum.'; }
+};

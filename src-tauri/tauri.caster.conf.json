@@ -1,0 +1,19 @@
+{
+  "productName": "RiftVoice Caster",
+  "identifier": "com.riftvoice.caster",
+  "app": {
+    "windows": [
+      {
+        "label": "caster",
+        "title": "RiftVoice Caster",
+        "url": "caster/caster.html",
+        "width": 800,
+        "height": 900,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false
+      }
+    ]
+  }
+}

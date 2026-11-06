@@ -1,0 +1,26 @@
+{
+  "productName": "RiftVoice Hardware QA",
+  "identifier": "com.riftvoice.hardware-qa",
+  "build": {
+    "beforeBuildCommand": "node scripts/build-hardware-qa.cjs",
+    "frontendDist": "../verification/native-qa-dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "caster",
+        "title": "RiftVoice Hardware QA",
+        "url": "index.html",
+        "width": 850,
+        "height": 850,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "additionalBrowserArgs": "--autoplay-policy=no-user-gesture-required"
+      }
+    ]
+  },
+  "bundle": {
+    "active": false
+  }
+}

@@ -1,0 +1,19 @@
+<!doctype html><html lang="ro"><meta charset="utf-8"><title>RiftVoice Caster</title>
+<style>body{background:#171321;color:#f3eaf3;font:16px system-ui;max-width:720px;margin:32px auto;padding:20px}label{display:block;margin:18px 0}button,input,select{font:inherit;padding:8px}button{margin:8px}#status{color:#ffcb78}</style>
+<div id="caster-update" role="status" hidden><span id="caster-update-text"></span> <button id="caster-download">Actualizează</button> <button id="caster-later">Mai târziu</button></div>
+<button id="caster-check-update">Verifică actualizările</button><span id="caster-update-status" role="status"></span>
+<h1>RiftVoice · Caster Mode</h1><p>Canal izolat pentru custom games. Jucătorii nu primesc acest audio. Nu se colectează date de spectator sau poziții.</p>
+<label><input id="native-output" type="checkbox" checked> Ieșire audio dedicată OBS (aplicația Windows; alegerea se aplică la conectare)</label>
+<label>Invitație de la organizator <input id="token" type="password" autocomplete="off"></label>
+<button id="join">Conectează</button><button id="leave">Deconectează</button><p id="status" role="status">Deconectat</p>
+<label><input id="mute" type="checkbox" checked> Microfon oprit</label>
+<label><input id="deafen" type="checkbox"> Deafen — oprește ascultarea și microfonul</label>
+<label><input id="ptt" type="checkbox" checked> Push-to-talk: ține Space (doar cu această fereastră activă)</label>
+<label>Microfon către co-casteri <input id="tx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+<label>Ascultare co-casteri / mix OBS <input id="rx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+<label>Monitor local comentariu pentru OBS <input id="monitor" type="checkbox"> Activează numai cu căști și captură audio dedicată în OBS</label>
+<label>Comentariu local / mix OBS <input id="commentary" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+<section aria-label="Participanți"><h2>Participanți</h2><p>Mute oprește persoana doar pentru tine și mixul capturat din aplicația ta.</p><div id="caster-peers"></div></section>
+<p>Team voice: OPRIT · Proximity: OPRIT · Transmisie către jucători: INTERZISĂ</p>
+<p>Aliniază manual comentariul cu imaginea spectatorului. Configurează delay-ul final în OBS; RiftVoice nu sincronizează automat jocul și streamul.</p>
+<script src="caster.js"></script></html>
