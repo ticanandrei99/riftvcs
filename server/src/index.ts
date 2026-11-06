@@ -1,4 +1,6 @@
 import { loadGrants, SessionRegistry } from './access.js';
+import { OrganizerEvents } from './organizer-events.js';
+import { OrganizerController, OrganizerPassword, moderatorAccounts } from './organizer.js';
 import { CameraMedia } from './camera-media.js';
 import { enemyCameraVolume } from './enemy-camera.js';
 import { handleCasterConnection, type CasterGrant } from './caster.js';
@@ -60,6 +62,13 @@ const playerGrants = loadGrants(process.env.PLAYER_GRANTS_JSON, ['player']);
 const casterGrants = loadGrants(process.env.CASTER_GRANTS_JSON, ['caster', 'spectator']) as CasterGrant[];
 const sessions = new SessionRegistry();
 const rooms = new RoomManager(!development, cameraEnabled);
+const organizerEvents = !development && process.env.ORGANIZER_PASSWORD
+  ? new OrganizerEvents(playerGrants,casterGrants,sessions,rooms,process.env.ORGANIZER_STORE_PATH) : undefined;
+const configuredModerators=moderatorAccounts(process.env.MODERATOR_ACCOUNTS_JSON,process.env.ORGANIZER_PASSWORD||'',process.env.MODERATOR_PASSWORD);
+if(configuredModerators.length&&!process.env.ORGANIZER_PASSWORD)throw Error('Configure ORGANIZER_PASSWORD before moderator accounts');
+const organizerController = organizerEvents
+  ? new OrganizerController(new OrganizerPassword(process.env.ORGANIZER_PASSWORD!),organizerEvents,sessions,
+    configuredModerators) : undefined;
 const iceCredentials = () => TURN_KEY_ID && TURN_KEY_API_TOKEN
   ? generateCloudflareIceServers(TURN_KEY_ID, TURN_KEY_API_TOKEN)
   : TURN_URLS ? Promise.resolve(generateStaticIceServers(TURN_URLS, TURN_USERNAME, TURN_PASSWORD))
@@ -137,7 +146,7 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, protocolVersion: 2 }));
+    res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, protocolVersion: 2 }));
     return;
   }
 
@@ -262,7 +271,7 @@ wss.on('connection', (ws, req) => {
   // and every room in it.
   ws.on('error', (err) => console.warn('[ws] socket error:', (err as Error).message));
 
-  if (req.url !== '/ws' && req.url !== '/caster' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
+  if (req.url !== '/ws' && req.url !== '/caster' && req.url !== '/organizer' && req.url !== '/registration' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
   if (wss.clients.size > 500) { ws.close(1013, 'Server capacity reached'); return; }
   const origin = req.headers.origin;
   const allowedOrigins = ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost', ...(process.env.ALLOWED_WEB_ORIGINS || '').split(',')];
@@ -286,8 +295,25 @@ wss.on('connection', (ws, req) => {
     ws.on('close', () => clearTimeout(authDeadline));
   }
   ws.on('pong', () => heartbeat.markAlive(ws));
-  if (req.url === '/caster') { handleCasterConnection(ws, casterGrants, sessions); return; }
-  handleConnection(ws, rooms, heartbeat, (reason) => rejections.bump(reason), development ? undefined : { grants: playerGrants, sessions }, cameraMedia);
+  if (req.url === '/registration') {
+    const limiter = new TokenBucket({capacity:4,refillPerSec:0.1});
+    ws.on('message', raw => {
+      try {
+        if (!limiter.tryConsume('registration')) { ws.close(1008,'Registration rate limit');return; }
+        if (!organizerEvents) throw Error('Înscrierile nu sunt activate pe server.');
+        const msg = JSON.parse(raw.toString());
+        if (!msg || msg.type !== 'lobby_register') throw Error('Comandă de înscriere invalidă.');
+        organizerEvents.registerLobby(ws,msg);
+      } catch (err) { if(ws.readyState===ws.OPEN)ws.send(JSON.stringify({type:'error',message:err instanceof Error?err.message:'Înscriere indisponibilă.'})); }
+    });
+    ws.once('close',()=>sessions.revoke(ws));return;
+  }
+  if (req.url === '/organizer') {
+    if(!organizerController){ws.close(1008,'Administratorul nu este configurat pe server. Configurează ORGANIZER_PASSWORD.');return;}
+    organizerController.handle(ws,ip);return;
+  }
+  if (req.url === '/caster') { handleCasterConnection(ws, casterGrants, sessions,()=>organizerEvents?.playerChanged()); return; }
+  handleConnection(ws, rooms, heartbeat, (reason) => rejections.bump(reason), development ? undefined : { grants: playerGrants, sessions, events: organizerEvents }, cameraMedia);
 });
 
 // Reap half-open connections. Without this a client that vanished without a

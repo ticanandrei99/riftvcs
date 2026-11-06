@@ -3,6 +3,7 @@ import type { EnemyCameraState } from './enemy-camera.js';
 
 // Client → Server messages
 export interface ClientMessage {
+  eventInviteProtocol?: number;
   enemyCameraProtocol?: number;
   nonce?: string;
   enabled?: boolean;
@@ -59,7 +60,8 @@ export interface ClientMessage {
 
 // Server → Client messages
 export interface ServerMessage {
-  type: 'peer_joined' | 'peer_left' | 'signal' | 'position' | 'room_state' | 'error' | 'reset' | 'camera_challenge';
+  type: 'peer_joined' | 'peer_left' | 'signal' | 'position' | 'room_state' | 'error' | 'reset' | 'camera_challenge' | 'join_pending' | 'join_approved';
+  invitation?: string;
   nonce?: string;
   name?: string;    // for peer_joined/peer_left
   from?: string;    // for signal/position/reset (who sent it)

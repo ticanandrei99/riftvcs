@@ -6,13 +6,13 @@ import { RoomManager } from './rooms.js';
 import { validateJoin } from './validate.js';
 import { TokenBucket, LIMITS } from './rate-limit.js';
 
-export interface CasterGrant { token: string; room: string; name: string; role: 'caster' | 'spectator'; expiresAt: number }
+export interface CasterGrant { token: string; room: string; name: string; role: 'caster' | 'spectator'; expiresAt: number; voiceMuted?: boolean; authority?: 'organizer'|'moderator'; subjectId?: string }
 export function authorizeCaster(grants: CasterGrant[], token: unknown, now = Date.now()): CasterGrant | undefined {
   if (typeof token !== 'string' || token.length < 32 || token.length > 256) return;
   return grants.find(g => typeof g.token === 'string' && g.token.length >= 32 &&
     Buffer.byteLength(g.token) === Buffer.byteLength(token) &&
     timingSafeEqual(Buffer.from(g.token), Buffer.from(token)) &&
-    Number.isFinite(g.expiresAt) && g.expiresAt > now &&
+    Number.isFinite(g.expiresAt) && g.expiresAt > now && g.voiceMuted !== true &&
     (g.role === 'caster' || g.role === 'spectator') && validateJoin(g.room, g.name).ok);
 }
 export function spectatorSdpAllowed(payload: any): boolean {
@@ -25,7 +25,7 @@ export function spectatorSdpAllowed(payload: any): boolean {
 }
 // This manager is deliberately inaccessible to normal player signaling and volumes.
 const rooms = new RoomManager();
-export function handleCasterConnection(ws: WebSocket, grants: CasterGrant[], sessions?: SessionRegistry): void {
+export function handleCasterConnection(ws: WebSocket, grants: CasterGrant[], sessions?: SessionRegistry, onRosterChange?: () => void): void {
   let grant: CasterGrant | undefined;
   let expiry: ReturnType<typeof setTimeout> | undefined;
   const limiter = new TokenBucket(LIMITS.WS_MESSAGES);
@@ -48,9 +48,11 @@ export function handleCasterConnection(ws: WebSocket, grants: CasterGrant[], ses
         send(ws, { type: 'caster_ready', name: grant.name, role: grant.role, ...(sessions ? { sessionToken: sessions.create(grant, ws) } : {}), peers: peers.map(name => ({ name, role: roleOf(name) })) });
         for (const peer of rooms.getOthersInRoom(ws)) send(peer.ws, { type: 'caster_peer', name: grant.name, role: grant.role });
         expiry = setTimeout(() => ws.close(1008, 'Invitation expired'), Math.min(2147483647, grant.expiresAt - Date.now()));
+        onRosterChange?.();
         return;
       }
       if (grant.expiresAt <= Date.now()) return ws.close(1008, 'Invitation expired');
+      if (sessions && !sessions.has(ws)) return ws.close(4003, 'Voice access revoked');
       // No coords, position, team voice, reset, room switch or arbitrary payload types.
       if (msg.type !== 'caster_signal' || !['offer', 'answer', 'ice-candidate'].includes(msg.payload?.type)) throw Error('Caster message denied');
       const payload = audioSignal(msg.payload);
@@ -68,5 +70,6 @@ export function handleCasterConnection(ws: WebSocket, grants: CasterGrant[], ses
     sessions?.revoke(ws);
     const gone = rooms.leave(ws);
     if (gone) for (const peer of gone.remaining) send(peer.ws, { type: 'caster_left', name: gone.name });
+    onRosterChange?.();
   });
 }

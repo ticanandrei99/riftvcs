@@ -12,6 +12,8 @@ Modification notice updated: 2026-11-06.
 
 - Manual Natural and Robotic voice options using local audio processing.
 - Isolated Caster Mode, organizer grants and server-filtered nearby enemy camera voice.
+- Password-protected administration, named moderator accounts, ten-player pregame check-in, team planning and isolated staff credentials.
+- Server-revoked moderation voice suspension, administrator protection and a bounded private named audit trail; check-ins do not authenticate Riot accounts.
 - Enemy media gateway uses werift 0.26.0 (MIT); see docs/third-party/werift-LICENSE.txt.
 - Enemy visibility is client-reported minimap recognition, not trusted Riot visibility attestation.
 - Local processed-microphone preview, with an automatic 30-second stop.

@@ -113,6 +113,7 @@ export function handleConnection(
       }
       const msg = parsed as ClientMessage;
       if (security && grant && grant.expiresAt <= Date.now()) { ws.close(1008, 'Invitation expired'); return; }
+      if (security && grant && !security.sessions.has(ws)) { ws.close(4003, 'Voice access revoked'); return; }
 
       switch (msg.type) {
         case 'join': {
@@ -124,6 +125,7 @@ export function handleConnection(
             return;
           }
           const { room, name } = valid;
+          if (security?.events?.requestJoin(ws,{room,name,team:msg.team,invitation:msg.invitation,eventInviteProtocol:msg.eventInviteProtocol})) return;
 
           // v0.3: optional team field. v0.2.x clients omit it; we pass undefined
           // and computeTieredVolumes falls back to legacy team-blind behavior.
@@ -131,6 +133,7 @@ export function handleConnection(
           if (security && (!allowed || allowed.role !== 'player' || allowed.room !== room || allowed.name !== name)) {
             sendError(ws, 'Invitație de jucător invalidă sau expirată. Cere invitația organizatorului.'); return;
           }
+          if (security && allowed && security.events && !security.events.permitsGrant(room,allowed)) { sendError(ws,'Acest meci este administrat din Caster. Cere aprobarea administratorului.');return; }
           if (security && grant && (grant.room !== room || grant.name !== name)) { sendError(ws, 'Room switch denied'); return; }
           const team = allowed?.team ?? (msg.team === 'ORDER' || msg.team === 'CHAOS' ? msg.team : undefined);
 
@@ -194,6 +197,7 @@ export function handleConnection(
           for (const peer of others) {
             send(peer.ws, { type: 'peer_joined', name });
           }
+          security?.events?.playerChanged();
           break;
         }
 
@@ -359,6 +363,7 @@ export function handleConnection(
     // Undefined for a socket that was evicted by a later join — its name is
     // still live under a different socket, so nothing is broadcast.
     const gone = rooms.leave(ws);
+    security?.events?.playerChanged();
     if (!gone) return;
     for (const peer of gone.remaining) {
       send(peer.ws, { type: 'peer_left', name: gone.name });

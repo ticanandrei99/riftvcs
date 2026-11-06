@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Format adapted from [Ke
 
 ## [Unreleased] — RiftVoice
 
+## [v0.3.0] — 2026-11-06
+
+### Added
+- Password-protected administrator and named moderator accounts in Caster.
+- Shared 10-player event invitation, pregame Riot ID check-in and live admission list.
+- Pregame team moves/swaps, team locking when a match binds, and isolated staff voice credentials.
+- Moderation voice suspension, protected administrator identity and private named audit history.
+### Security
+- Pending check-ins cannot access player media or TURN sessions; approval reuses the authenticated voice handshake.
+- Moderation revokes the socket session and prevents automatic voice reconnection while access is suspended.
+
 ## [v0.2.0] — 2026-11-06
 
 ### Added
@@ -620,3 +631,5 @@ Initial public iteration: Overwolf → Tauri 2 migration, Supabase-stack → cus
 [v0.1.19]: https://github.com/danthi123/LoLProxChat/releases/tag/v0.1.19
 
 [v0.2.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.2.0
+
+[v0.3.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.3.0

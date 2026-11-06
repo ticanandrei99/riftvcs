@@ -11,6 +11,8 @@ Community test build. RiftVoice has not been reviewed or endorsed by Riot Games.
 ## Current features
 
 - Organizer-invited custom rooms with server-assigned identities and teams.
+- Password-protected organizer panel, named moderators, a shared 10-player voice invitation and pregame check-in with a claimed Riot ID.
+- Pregame team moves/swaps, live attendance, moderation voice suspension, protected administrator voice and a private named audit trail.
 - Team voice and ally proximity; optional nearby enemy voice when visibly identified inside your camera, delivered through a server media gateway.
 - Isolated Caster Mode with receive-only spectator role, OBS mix and individual mute controls.
 - Optional camera listening, team settings and position recalibration.
@@ -28,6 +30,8 @@ Proximity relies on minimap tracking and may be inaccurate. Champion/skin-based 
 Requires Windows x64, WebView2, a microphone and access to the shared voice server. Players need their own organizer invitation and must be in the same custom match; casters use a separate audio channel. Headphones are recommended for the local preview.
 
 Instalează setup-ul, deschide RiftVoice și verifică microfonul. Serverul implicit este `https://riftvoice-server.onrender.com`. Introdu invitația organizatorului în Setări. Serverul trebuie actualizat pentru autentificare și separarea echipelor. Modul implicit redă coechipierii din apropiere. Opțiunile de cameră sunt facultative. Testul local se oprește după 30 de secunde; apelul cu ceilalți jucători nu are această limită.
+
+Din 0.3.0, streamerul/organizatorul se autentifică în Caster, generează un cod `RV-` pentru cei 10 jucători și aprobă înscrierile trimise din aplicație înainte de meci. Conturile nominale ale moderatorilor permit identificarea autorului fiecărui mute. Repartizarea din RiftVoice nu modifică lobby-ul LoL; numele este declarat de participant și confirmat manual. Configurează `ORGANIZER_PASSWORD` și `MODERATOR_ACCOUNTS_JSON` numai pe server. Vezi [organizare și moderare](docs/organizer.ro.md).
 
 ## Source and build
 

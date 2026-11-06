@@ -1,6 +1,6 @@
 {
   "name": "riftvoice",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -20,6 +20,7 @@
     "test:server": "npm --prefix server test -- --run",
     "verify": "npm run typecheck && npm test -- --runInBand --silent && npm run test:server && npm run test:e2e",
     "test:voice-audio": "node scripts/test-voice-audio.cjs",
+    "test:organizer-ui": "node scripts/test-organizer-ui.cjs",
     "build:windows:caster": "tauri build --config src-tauri/tauri.caster.conf.json --bundles nsis"
   },
   "keywords": [],

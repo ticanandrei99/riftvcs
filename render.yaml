@@ -23,3 +23,7 @@ services:
         value: ""
       - key: ENEMY_CAMERA_VOICE
         value: "0"
+      - key: ORGANIZER_PASSWORD
+        sync: false
+      - key: MODERATOR_ACCOUNTS_JSON
+        value: "[]"
