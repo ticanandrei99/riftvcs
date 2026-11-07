@@ -1,4 +1,4 @@
-# LoLProxChat și Voxdria 0.4.1 — comparație sinceră
+# LoLProxChat și Voxdria 0.4.2 — comparație sinceră
 
 LoLProxChat, creat de danthi123 și contribuitori, este baza tehnică a proiectului nostru. Voxdria (numele nou al RiftVoice) este un fork AGPL, cu funcții suplimentare pentru customuri organizate și comentatori. Nu este o aplicație scrisă de la zero.
 
@@ -13,7 +13,7 @@ Comparația surselor folosește arhiva locală D:\Rift-voice\original\LoLProxCha
 | Intrare în custom | Cameră deterministă și date de identificare furnizate de client în handshake-ul arhivat | Cod vocal, cerere, aprobare organizator, rezervare privată, rol/echipă impuse de server |
 | Voce înainte de meci | Nu am identificat fluxul de eveniment echivalent în arhiva analizată | Lobby vocal pe echipe după aprobare; mutare/schimb și închidere la admiterea în meci |
 | Administrare | Nu am identificat panoul nominal echivalent în arhivă | Administrator și moderatori cu parole, zece locuri/cinci pe echipă, mute/revocare, admin protejat și istoric nominal privat |
-| Caster și spectator audio | Nu am identificat aplicația dedicată echivalentă în arhivă | Voxdria Caster separat, spectator fără microfon, audio izolat de jucători, PTT/mute/deafen și controale de mix OBS |
+| Caster și spectator audio | Nu am identificat aplicația dedicată echivalentă în arhivă | Voxdria Caster separat, link/cerere/aprobare dedicată, spectator fără microfon, audio izolat de jucători, PTT/mute/deafen și controale de mix OBS |
 | Mute individual | Exista deja | Păstrat în player/Caster, cu prioritate pentru deafen și oprirea vocilor din mix |
 | Procesare voce | Infrastructura audio și controalele de bază sunt upstream | Natural/Robotic opțional, procesare locală, preview; fără înregistrări oficiale de campioni sau voice cloning |
 | TURN și confidențialitate | README-ul oferă alegerea Force TURN; media obișnuită este P2P | TURN-only în producție; gateway-ul adversarilor termină criptarea și operatorul trebuie considerat de încredere |

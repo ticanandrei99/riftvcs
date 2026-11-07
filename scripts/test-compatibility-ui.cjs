@@ -44,14 +44,16 @@ async function main(){
     await bob.evaluate('document.getElementById("lobby-stream-mute").checked=true;document.getElementById("lobby-stream-mute").dispatchEvent(new Event("change"))');await bob.wait('window.fixture.state().muted.every(peer=>peer.muted)&&window.fixture.state().microphone===true','incoming gate');checks.push('Stream gate mutes incoming voices while the sender microphone track stays enabled');
     await bob.evaluate('document.getElementById("lobby-stream-mute").checked=false;document.getElementById("lobby-stream-mute").dispatchEvent(new Event("change"))');await bob.wait('window.fixture.state().muted.every(peer=>!peer.muted)','gate reopened');
     await admin.evaluate(row('Bob#EU')+'.querySelectorAll("button")[1].click()');await bob.wait('window.fixture.state().muted===undefined||window.fixture.state().media==="blocked"','moderation stop');
-    await bob.wait('window.fixture.state().media==="blocked"','moderated voice blocked');await admin.evaluate(row('Bob#EU')+'.querySelectorAll("button")[1].click()');await delay(500);
+    await bob.wait('window.fixture.state().media==="blocked"','moderated voice blocked');
+    await admin.wait(row('Bob#EU')+'.querySelectorAll("button")[1].textContent==="Reactivează accesul vocal"','organizer received muted state');
+    await admin.evaluate(row('Bob#EU')+'.querySelectorAll("button")[1].click()');await bob.wait('!document.getElementById("lobby-voice-connect").disabled','unmute reaches participant');
     if(await bob.evaluate('window.fixture.state().media==="ready"'))throw Error('Unmute bypassed manual reconnection');await bob.click('lobby-voice-connect');await bob.wait('window.fixture.state().quality?.connected===1','manual reconnection');checks.push('Moderation closes audio; reactivation requires the participant to reconnect');
     await admin.evaluate(row('Alice#EU')+'.querySelectorAll("button")[0].click()');await alice.wait('window.fixture.state().team==="CHAOS"&&window.fixture.state().media==="ready"&&window.fixture.state().peers.length===0','team move');await bob.wait('window.fixture.state().peers.length===0','old team peer removed');checks.push('Moving a player rebuilds the lobby audio on the new team and removes the old peer');
     await alice.evaluate('window.fixture.startGame()');await alice.wait('window.fixture.closedLobby()&&window.fixture.state().authorized&&window.fixture.state().started','authenticated game handoff');await bob.wait('window.fixture.state().started&&window.fixture.closedLobby()','all lobby channels closed');checks.push('Actual SignalingService joins the game through the private reservation and all pregame audio closes at first match admission');
     const health=await alice.evaluate('window.fixture.health()');if(health!=='unavailable')throw Error('Unexpected TURN readiness without configured relay: '+health);checks.push('The UI reports TURN as unavailable when no relay is configured, without claiming playable network audio');
     const audioTarget=await(await fetch('http://127.0.0.1:'+debugPort+'/json/new?'+encodeURIComponent(origin+'/caster-audio'),{method:'PUT'})).json(),audio=await cdp(audioTarget);tabs.push(audio);
     await audio.wait('!!window.casterAudioFixture&&!!document.getElementById("join").onclick','real Caster controls');
-    await audio.field('token','invalid');await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("Invalid")','bad Caster invitation');
+    await audio.field('token','invalid');await audio.click('join');await audio.wait('document.getElementById("status").textContent.toLowerCase().includes("invalid")','bad Caster invitation');
     if(await audio.evaluate('window.casterAudioFixture.state().microphoneRequests')!==0)throw Error('Caster requested microphone before admission');
     await audio.field('token',audioGrants[0].token);await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("AudioCaster")','Caster admitted');
     if(!await audio.evaluate('document.getElementById("mute").checked&&document.getElementById("ptt").checked&&window.casterAudioFixture.state().gains.every(value=>value===0)&&document.getElementById("token").value===""'))throw Error('Caster defaults did not fail closed');
@@ -73,8 +75,43 @@ async function main(){
     if(await alice.evaluate('!!document.getElementById("discord-streamer")'))throw Error('Player UI exposes the streamer shortcut');
     checks.push('Discord buttons request only native destination names; the private streamer shortcut is absent from the player UI (native calls mocked, no Discord login or channel changes)');
     checks.push('Actual Caster UI: no microphone before admission or for spectators; mute/deafen, TX and commentary sliders, PTT and blur/input safety, stream gate independence, leave cleanup and update display verified');
+    const casterLink=await admin.evaluate('document.getElementById("organizer-caster-link").value');
+    if(!casterLink.startsWith(api+'/caster-invite#VC-')||casterLink.includes(invitation))throw Error('Caster invitation not separated from player invite');
+    const choose=async(tab,scope,label)=>{if(!await tab.evaluate('(()=>{const scope='+scope+';const button=scope&&Array.from(scope.querySelectorAll("button")).find(b=>b.textContent==='+JSON.stringify(label)+');if(!button||button.disabled)return false;button.click();return true;})()'))throw Error('Missing usable control: '+label);};
+    const requestRow=name=>'Array.from(document.querySelectorAll('+JSON.stringify('[aria-label="Cereri comentatori"] .organizer-person')+')).find(e=>e.textContent.includes('+JSON.stringify(name)+'))';
+    await audio.field('token',casterLink);await audio.field('request-name','RequestedCaster');await audio.field('request-role','caster');await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("așteaptă aprobarea")','guest request waiting');
+    if(await audio.evaluate('window.casterAudioFixture.state().microphoneRequests')!==1)throw Error('Pending guest opened a microphone');
+    await admin.wait(requestRow('RequestedCaster')+'!==undefined','caster request visible');await choose(admin,requestRow('RequestedCaster'),'Aprobă comentator');
+    await audio.wait('document.getElementById("status").textContent.includes("Conectat: RequestedCaster · caster")','approved guest connected');
+    if(!await audio.evaluate('document.getElementById("mute").checked&&document.getElementById("token").value===""&&window.casterAudioFixture.state().gains.slice(-2).every(value=>value===0)'))throw Error('Approved guest did not start muted');
+    await audio.click('leave');await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("Conectat: RequestedCaster")','in-memory approved reconnection');
+    await audio.click('leave');await audio.evaluate('location.reload()');await audio.wait('!!window.casterAudioFixture&&!!document.getElementById("join").onclick','guest reload');await audio.click('join');
+    await audio.wait('document.getElementById("status").textContent.includes("Conectat: RequestedCaster")','session approval restored after reload');
+    await audio.click('leave');await audio.evaluate('window.casterAudioFixture.failNextMicrophone()');await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("Microfonul nu poate fi deschis")','explicit microphone failure');await delay(300);
+    if(!await audio.evaluate('document.getElementById("status").textContent.includes("Microfonul nu poate fi deschis")'))throw Error('Audio error was overwritten on socket close');
+    await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("Conectat: RequestedCaster")','retry after microphone failure');
+    await choose(admin,row('RequestedCaster'),'Elimină comentatorul');await audio.wait('document.getElementById("status").textContent.includes("Acces vocal oprit")','guest removal closes media');
+    checks.push('Separate VC link: real guest request opens no microphone while pending; authenticated approval auto-connects muted, private approval reconnects in memory and after reload, microphone failure stays visible and removal revokes audio');
+    const beforeListener=await audio.evaluate('window.casterAudioFixture.state().microphoneRequests');
+    await audio.field('token',casterLink);await audio.field('request-name','RequestedListener');await audio.field('request-role','spectator');await audio.click('join');
+    await admin.wait(requestRow('RequestedListener')+'!==undefined','listener request');
+    if(await admin.evaluate(requestRow('RequestedListener')+'.textContent.includes("Aprobă comentator")'))throw Error('Listener request exposes microphone approval');
+    await choose(admin,requestRow('RequestedListener'),'Aprobă doar ascultare');await audio.wait('document.getElementById("status").textContent.includes("Conectat: RequestedListener · spectator")','listener connected');
+    if(await audio.evaluate('window.casterAudioFixture.state().microphoneRequests')!==beforeListener)throw Error('Approved listener opened a microphone');await audio.click('leave');
+    await audio.field('token',casterLink);await audio.field('request-name','RejectedGuest');await audio.field('request-role','caster');await audio.click('join');await admin.wait(requestRow('RejectedGuest')+'!==undefined','rejected guest request');
+    await choose(admin,requestRow('RejectedGuest'),'Respinge cererea');await audio.wait('document.getElementById("status").textContent.includes("respinsă")','rejection shown');await delay(300);
+    if(!await audio.evaluate('document.getElementById("status").textContent.includes("respinsă")&&!document.getElementById("join").disabled'))throw Error('Rejection status or retry was lost');
+    await audio.field('token',invitation);await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("codul jucătorilor")','player code refused by Caster');
+    checks.push('Listener requests cannot expose microphone approval or capture audio; rejected requests preserve their reason and enable retry; the player RV code is explicitly refused in Caster');
+    await audio.field('token',casterLink);await audio.field('request-name','CancelledForOwnRole');await audio.click('join');await audio.wait('document.getElementById("status").textContent.includes("așteaptă aprobarea")','pending before own-role connection');
+    await audio.field('organizer-password',password);await audio.click('organizer-login');await audio.wait('!document.getElementById("organizer-controls").disabled','own organizer password accepted');
+    await choose(audio,'document.getElementById("organizer-event")','Conectează acest Caster cu rolul meu');await audio.wait('document.getElementById("status").textContent.includes("Conectat: Administrator")','own role replaces pending guest request');await audio.click('leave');
+    checks.push('An authenticated organizer can replace their pending guest request with the own-role audio connection; no administrator password is shared with guests');
     const receipt={version:require('../package.json').version,status:'passed',browser:'Microsoft Edge headless',scope:'Actual Caster organizer, actual player invitation panel, LobbyVoiceController, AudioService and SignalingService; synthetic audio over local WebRTC. Explicit test factory permits loopback ICE; production remains TURN only. No Riot client, real microphone, OBS or external TURN used.',syntheticReceivedRms:rms,checks};
     fs.writeFileSync(path.join(root,'verification/compatibility-ui-proof.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt,null,2));
+  }catch(error){
+    const diagnostic=[];for(const tab of tabs){try{diagnostic.push(await tab.evaluate('({player:window.fixture?.state(),audioStatus:document.getElementById("status")?.textContent,organizerStatus:document.getElementById("organizer-status")?.textContent})'));}catch{}}
+    fs.writeFileSync(path.join(root,'verification/compatibility-ui-failure.json'),JSON.stringify(diagnostic,null,2));throw error;
   }finally{
     // Close this test browser, including its renderer/audio children, before reusing the debug port.
     for(const tab of tabs){try{await tab.evaluate('window.fixture?.stop()');}catch{}}

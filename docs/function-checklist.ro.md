@@ -1,4 +1,4 @@
-# Inventar de verificare — Voxdria / Voxdria Caster 0.4.1
+# Inventar de verificare — Voxdria / Voxdria Caster 0.4.2
 
 Inventarul separă comportamentele verificate automat, probele audio locale și verificările care cer un custom, OBS sau alt calculator. Nu declară că fiecare funcție internă ori combinație de dispozitive este dovedită printr-un test. Rezultatele și numerele finale sunt în [raportul de verificare](verification-results.ro.md); constatările de securitate sunt în [audit](security-review.ro.md).
 
@@ -13,6 +13,8 @@ Inventarul separă comportamentele verificate automat, probele audio locale și 
 | Cod RV- brut și invitație completă | `invitation-input`, proba cu panoul real al jucătorului | Linkul Riot singur nu este cod vocal |
 | Mesaje pentru cod lipsă/expirat, refuz, server inaccesibil | `voice-invitation`, `lobby-registration`, teste server | Codul expirat trebuie reemis de organizator |
 | Cerere înainte de meci, aprobare, refuz | Server real + interfețe Caster/jucător | Riot ID este declarat, apoi confirmat manual |
+| Link separat pentru comentatori și aprobare caster/spectator | Parser, lifecycle, server real HTTP/WS și flux UI cu audio sintetic | Numele nu este autentificat Riot; nu lansează automat aplicația din browser |
+| Refuz/anulare/reconnect Caster, eroare microfon păstrată | Teste de înregistrare și proba UI | Dispozitivul real și ieșirea OBS trebuie confirmate pe PC-ul streamerului |
 | Rezervare privată și reluare înscriere | `lobby-registration`, `organizer-events` | Închiderea aplicației pierde rezervarea sesiunii |
 | Generator aleatoriu de invitații / maximum zece | Teste server și UI | Nu generează coduri oficiale Riot |
 | Link lobby LoL copiat manual | `lobby-link`, copiere invitație în UI | Aplicația nu intră și nu mută persoane în clientul Riot |
@@ -32,7 +34,7 @@ Inventarul separă comportamentele verificate automat, probele audio locale și 
 | Oprire voci în mixul streamerului | Proba UI/audio reală, teste pentru gate și mute-uri combinate | Oprește și căștile; nu există bus OBS independent |
 | Alegere input/output și revenire la dispozitiv implicit | `devices`, `audio-mic`, `peer-connection` | USB/Bluetooth, scoatere/reintroducere și mix Windows cer probe hardware |
 | Ieșire audio nativă a procesului | Proba hardware de 3 s și QA pornire/mute/stop, Realtek 48 kHz, 0 underruns/cadre eliminate; teste jitter buffer | Nu dovedește volumul auzit de utilizator |
-| Captură audio pe aplicație în OBS | OBS 33.0.1, probă din etapa RiftVoice 0.4.0 pe mixerul păstrat: 14,93 s, 440 Hz și liniște după stop, microfon/desktop excluse | Nu este o nouă probă hardware 0.4.1, mix real de comentatori, stream sau probă de delay |
+| Captură audio pe aplicație în OBS | OBS 33.0.1, probă din etapa RiftVoice 0.4.0 pe mixerul păstrat: 14,93 s, 440 Hz și liniște după stop, microfon/desktop excluse | Nu este o nouă probă hardware 0.4.2, mix real de comentatori, stream sau probă de delay |
 | Microfon Windows / ascultare procesată și oprire preview | Microfon Realtek deschis și semnal detectat local; `microphone-test`, teste engine/audio | Vârf 1 în proba locală: nivelul și calitatea trebuie reglate/ascultate cu căști; sunetul nu a fost stocat sau transmis |
 | Natural/Robotic, bypass, intensitate | OfflineAudioContext și WebRTC cu ton sintetic | Nu sunt voci oficiale de campioni și nu există voice cloning |
 | Caster / spectator audio distincte | Teste admitere, roluri și SDP; validare client înainte de microfon | Spectatorul LoL nu este detectat automat |

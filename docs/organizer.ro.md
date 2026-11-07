@@ -1,10 +1,10 @@
-# Organizare custom, administratori și moderatori — Voxdria 0.4.1
+# Organizare custom, administratori și moderatori — Voxdria 0.4.2
 
 Panoul de organizare se află în aplicația **Voxdria Caster**. Un administrator sau moderator autentificat poate genera o invitație vocală comună pentru maximum 10 jucători, aproba înscrieri, repartiza câte cinci locuri pe Albastru/Roșu, vedea conexiunile, schimba codul și închide camera. Caster audio rămâne separat de jucătorii activi.
 
 ## Configurare o singură dată pe server
 
-Actualizează sursele serverului și ambele aplicații la 0.4.1. Un installer nou nu actualizează serviciul Render. În mediul **serverului**, configurează:
+Actualizează sursele serverului și ambele aplicații la 0.4.2. Un installer nou nu actualizează serviciul Render. În mediul **serverului**, configurează:
 
 - `ORGANIZER_PASSWORD`: parola administratorului, minimum 12 caractere, maximum 512 octeți. Alege o parolă lungă și unică. Fără ea, administrarea și înscrierile sunt dezactivate.
 - `MODERATOR_ACCOUNTS_JSON`: implicit `[]`; pentru conturi nominale, o listă cu `name` și `password`. Fiecare moderator are propria parolă, diferită de cea a administratorului și de celelalte parole. Numele contului are 3–32 caractere: litere ASCII, cifre, punct, cratimă, underscore; maximum 20 de conturi. Parolele respectă aceeași limită de lungime.
@@ -29,10 +29,10 @@ După restart, `/health` trebuie să arate `organizerAvailable: true`. Nu return
 ## Invitarea și înscrierea celor 10 jucători
 
 1. În Caster, administratorul lasă **Cont moderator** gol și introduce parola sa. Moderatorul introduce numele contului și parola proprie. Rolul și numele sunt stabilite pe server din credențiale; clientul nu poate alege rolul Administrator.
-2. Completează camera, numele casterului invitat și durata (1–12 ore). Opțional, lipește linkul lobby-ului copiat din LoL. Apasă **Generează cod pentru 10 persoane**, apoi **Copiază invitația completă**: include linkul LoL, dacă a fost adăugat, și codul vocal separat `RV-`. Linkul poate fi adăugat sau schimbat și după creare, cu **Salvează linkul LoL**. Voxdria validează formatul, fără să deschidă linkul sau să afle dacă lobby-ul mai este disponibil.
+2. Completează camera și durata (1–12 ore). Opțional, lipește linkul lobby-ului copiat din LoL. Apasă **Generează cod pentru 10 persoane**, apoi **Copiază invitația completă**: include linkul LoL, dacă a fost adăugat, și codul vocal separat `RV-`. Linkul poate fi adăugat sau schimbat și după creare, cu **Salvează linkul LoL**. Voxdria validează formatul, fără să deschidă linkul sau să afle dacă lobby-ul mai este disponibil.
 3. Distribuie invitația vocală și, separat, linkul lobby-ului LoL. Un link `gg.riotgames.com/LOL?joinCode=...` nu este un cod Voxdria. Aplicația nu creează un lobby Riot și nu mută persoane în clientul LoL.
 
-Riot documentează generarea oficială a codurilor pentru turnee prin [Tournament API](https://developer.riotgames.com/docs/lol#tournament-api), cu cheie API și configurare de provider/turneu. Această integrare nu este implementată sau configurată în Voxdria 0.4.1. Codul vocal aleatoriu nu este un cod Riot și nu poate genera singur un link Riot valid. Linkul copiat de organizator este doar metadată a invitației; nu acordă roluri și nu validează automat un participant.
+Riot documentează generarea oficială a codurilor pentru turnee prin [Tournament API](https://developer.riotgames.com/docs/lol#tournament-api), cu cheie API și configurare de provider/turneu. Această integrare nu este implementată sau configurată în Voxdria 0.4.2. Codul vocal aleatoriu nu este un cod Riot și nu poate genera singur un link Riot valid. Linkul copiat de organizator este doar metadată a invitației; nu acordă roluri și nu validează automat un participant.
 4. În aplicația normală, jucătorul introduce codul și Riot ID-ul complet, apoi **Conectează cu invitația**. Numele este declarat de utilizator, nu este verificat prin autentificare Riot. Nu se cere parola LoL. Identificatorul intern este aleatoriu, însă numele afișat este cel introdus de jucător.
 5. Cererea apare imediat în Caster, fără să fie nevoie de un meci pornit. Organizatorul compară numele cu persoana din lobby și aprobă Albastru sau Roșu. Înscrierea primește un cod personal privat, valabil numai în sesiunea aplicației. Numărul de persoane înscrise și conexiunile vocale sunt afișate distinct.
 6. Înainte de start, **Mută în ...** schimbă repartizarea vocală dacă există loc. Pentru o listă completă 5+5, alege doi jucători și **Schimbă locurile între jucători**. Fă aceeași repartizare în lobby-ul LoL; Voxdria nu poate modifica lobby-ul jocului.
@@ -40,9 +40,9 @@ Riot documentează generarea oficială a codurilor pentru turnee prin [Tournamen
 
 Nu este nevoie de un cont global Voxdria sau de autentificare Riot pentru înscriere. Un participant care a închis aplicația pierde codul personal al sesiunii și trebuie reînscris de organizator. O simplă reconectare vocală în aceeași sesiune păstrează codul. Dacă nu s-a făcut înscriere înainte de start, codul comun poate trimite o cerere în timpul meciului; organizatorul aprobă numai echipa detectată. Numărul total rămâne 10, cu maximum 5 pe echipă.
 
-**Conectează acest Caster cu rolul meu** emite o invitație personală pentru canalul de comentatori. Administratorul are o identitate protejată stabilită pe server; moderatorii au identități nominale. Aceste invitații personale nu apar în lista celorlalți moderatori. Invitația generică de caster/spectator existentă continuă să fie acceptată în secțiunea audio. Pentru un spectator audio fără microfon se păstrează invitația statică cu rol `spectator`.
+**Conectează acest Caster cu rolul meu** conectează propria identitate de administrator sau moderator. Pentru invitați, folosește **Copiază linkul comentatorilor**, separat de codul `RV-`. Ei completează numele și rolul în Caster, trimit cererea și așteaptă aprobarea din **Cereri comentatori**. Rolurile sunt comentator cu microfon sau spectator doar cu ascultare; nu oferă administrare. Vezi [pașii de invitare, aprobare și revocare](caster-invites.ro.md). Invitațiile personale statice existente rămân acceptate direct.
 
-## Voce în lobby și trecerea în meci (0.4.1)
+## Voce în lobby și trecerea în meci (0.4.2)
 
 După aprobare, Voxdria se poate conecta la vocea echipei din lobby. Nu este nevoie să pornească meciul pentru a vedea cererea sau a auzi coechipierii aprobați. Caster afișează separat înscrierea, conexiunea vocală de lobby și conexiunea din meci. Maximum cinci persoane împart un canal de lobby; Albastru și Roșu sunt izolate. Casterii/spectatorii nu intră în niciunul dintre aceste canale.
 

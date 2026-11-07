@@ -1,17 +1,20 @@
-# Voxdria 0.4.1 — nume nou și proximity standard
+# Voxdria 0.4.2 — invitații și aprobare pentru comentatori
 
-RiftVoice devine **Voxdria**, iar aplicația comentatorilor se numește **Voxdria Caster**. Titlurile, interfața română/engleză, notificările, procesul Windows, sursele, pachetele și installerele folosesc numele nou. Păstrăm culorile negru/roșu, iconul de microfon și creditul/licența LoLProxChat.
+Organizatorul poate copia un link separat pentru comentatori și spectatori audio. Invitatul lipește linkul în Voxdria Caster, completează numele și rolul și trimite cererea. Administratorul sau moderatorul aprobă ori respinge din secțiunea Cereri comentatori. Parola de administrare nu se distribuie invitaților.
 
-**Proximity este modul standard implicit pentru jucători**, inclusiv pentru adversarii apropiați identificați vizibil în camera proprie. Serverul activează gateway-ul implicit, iar blueprint-ul folosește ENEMY_CAMERA_VOICE=1. O valoare 0 deja salvată în Render trebuie schimbată la 1. TURN rămâne necesar. Ascultarea se oprește la lipsa identității/camerei/poziției, raport expirat, distanță nepermisă sau moarte; mute/deafen și controalele personale sunt păstrate. Nu se obțin poziții ascunse sau date automate de spectator.
+- Microfonul nu se deschide înainte de aprobare. Comentatorul aprobat pornește cu microfonul oprit și PTT activ; spectatorul audio nu transmite. O cerere doar de ascultare nu poate fi promovată la microfon.
+- Reconectarea refolosește invitația personală aprobată pe durata sesiunii și până la expirare. Schimbarea linkului oprește cererile vechi; eliminarea persoanei revocă accesul ei.
+- Mesajele pentru cerere refuzată, microfon indisponibil și ieșire OBS nereușită rămân vizibile. Panoul autentificat și canalul audio au stări distincte.
+- Canalul comentatorilor este separat de vocea jucătorilor, inclusiv înainte de meci. Aprobarea nu acordă administrare, date de spectator sau acces la poziții ascunse. Numele este declarat, fără autentificare Riot; organizatorul verifică persoana.
+- Proximity rămâne modul standard al jucătorilor, inclusiv pentru adversari apropiați identificați vizibil în camera proprie. Team voice, mute individual, PTT/deafen, Champion Voice Changer opțional și mixul OBS sunt păstrate.
+- Arhiva pentru încărcarea surselor din browser împarte automat fiecare lot la maximum 99 de fișiere.
 
-Invitațiile RiftVoice deja emise rămân acceptate. Generatorul Voxdria folosește o etichetă citibilă și de clientul precedent. Identificatorii aplicațiilor și preferințele sunt păstrate; adresele reale GitHub/Render rămân cele existente. Ghidul MIGRARE-NUME.ro.md explică instalarea, limita migrării NSIS și aliasurile necesare pentru notificarea clienților vechi.
+Actualizează serverul Render și ambele aplicații la 0.4.2. Verifică /health: serverVersion=0.4.2, casterInviteProtocol=1, casterRequestsAvailable=true, lobbyVoiceProtocol=1 și enemyCameraVoice=true. O valoare veche ENEMY_CAMERA_VOICE=0 suspendă vocea adversarilor și trebuie schimbată la 1. Installerul nu actualizează serverul.
 
-Sunt păstrate: înscriere/aprobare în lobby, maximum zece jucători/cinci pe echipă, mutare/schimb, voce de lobby pe echipe, moderatori nominali, administrator protejat, istoric de moderare, mute individual, PTT/deafen, Natural/Robotic opțional și preview. Casterii/spectatorii audio rămân separați de jucători, cu mix OBS și controlul vocilor primite. Butoanele Discord sunt linkuri externe; rolurile și vocea Discord rămân gestionate separat.
+Pașii sunt în INVITATII-CASTER.ro.md și CASTER-OBS.ro.md. Rezultatele locale sunt în VERIFICARI.ro.md. Mai sunt necesare customul real cu zece PC-uri/rețele, capacitatea și consumul TURN pe durata evenimentului, reglarea microfoanelor, mixul OBS și delay-ul spectator/stream. Probele hardware/OBS din 0.4.0 sunt marcate drept anterioare. Două suite vizuale cer înregistrări reale încă indisponibile.
 
-COMPARATIE.ro.md prezintă ce am preluat din LoLProxChat, ce am adăugat și ce nu am demonstrat prin probe comparative. Nu atribuim Voxdria invenția camera mode, mute-ului individual sau infrastructurii originale de teste.
+Build-uri de comunitate nesemnate, fără aprobare Riot. Raportarea vizibilității poate fi falsificată de un client modificat; filtrarea media nu este atestare anti-cheat. Notificarea de update deschide pagina fixă de descărcare; instalarea automată semnată nu este configurată. Linkurile Discord nu conectează automat vocea sau rolurile Discord.
 
-Rezultatele exacte sunt în VERIFICARI.ro.md și FUNCTII-VERIFICATE.ro.md. Probele hardware/OBS 0.4.0 sunt marcate drept anterioare, pe componentele audio păstrate. Mai sunt necesare customul real cu zece PC-uri/rețele, înregistrările pentru două suite vizuale, TURN/capacitatea hostului în eveniment, reglarea microfoanelor și delay-ul spectator/stream, instalarea curată și migrarea între release-uri publicate.
+Pentru GitHub Release folosește tag-ul exact v0.4.2 și atașează individual Voxdria_0.4.2_x64-setup.exe și Voxdria Caster_0.4.2_x64-setup.exe, sursele, licența și ghidurile. Aliasurile identice pentru updaterul RiftVoice rămân în legacy-updater-assets. Pachetele locale nu sunt publicare sau deploy automat.
 
-Build-uri de comunitate nesemnate, fără aprobare Riot. Vizibilitatea raportată de client poate fi falsificată; filtrarea media nu este atestare anti-cheat. Notificarea de update deschide pagina fixă; instalarea automată semnată nu este configurată.
-
-Pentru release folosește tag-ul exact **v0.4.1** și atașează individual **Voxdria_0.4.1_x64-setup.exe** și **Voxdria Caster_0.4.1_x64-setup.exe**, sursele, licența și ghidurile. Pentru notificarea vechilor instalări, atașează și aliasurile identice din legacy-updater-assets. Installerele singure nu actualizează Render, iar pachetele locale nu sunt publicare sau deploy automat.
+Bazat pe LoLProxChat/danthi123, cu păstrarea creditului și licenței AGPL-3.0-or-later. Rebrandul și limitele migrării NSIS sunt descrise în MIGRARE-NUME.ro.md.

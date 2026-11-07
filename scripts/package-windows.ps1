@@ -26,7 +26,7 @@ function Get-SourceFiles([string]$folder) {
     foreach ($item in Get-ChildItem -LiteralPath $folder -Force) {
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Source links are not supported: $($item.FullName)" }
         if ($item.PSIsContainer) { if ($item.Name -notin $excludedDirs) { Get-SourceFiles $item.FullName }; continue }
-        if (($item.Name -like '.env*' -and $item.Name -ne '.env.example') -or $item.Name -like '*.private.json' -or $item.Name -like '*audit*.json' -or $item.Extension -in @('.pem','.key','.pfx','.p12','.pyc','.pt','.log')) { continue }
+        if (($item.Name -like '.env*' -and $item.Name -ne '.env.example') -or $item.Name -like '*.private.json' -or $item.Name -like '*audit*.json' -or $item.Name -like '*outdated*.json' -or $item.Extension -in @('.pem','.key','.pfx','.p12','.pyc','.pt','.log')) { continue }
         $item.FullName
     }
 }

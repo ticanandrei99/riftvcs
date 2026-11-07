@@ -1,5 +1,11 @@
 # Threat model — current Voxdria fork
 
+## Version 0.4.2 commentator approval
+
+A separate VC invitation allows a bounded five-minute request, not audio admission. Only an authenticated organizer/moderator can issue a private caster or receive-only spectator grant. The requester alone receives its token; guest grants have no staff authority and are absent from organizer snapshots. A spectator request cannot be upgraded to microphone access. Known normalized player names and approved guest names cannot overlap, including approval races, but aliases and self-claimed identities still require organizer verification.
+
+Guest credentials remain scoped to the event, role and expiry. Removing a guest or closing the event revokes signaling/sessions; rotating the request link rejects pending requests without revoking previously approved grants. Pending state is transient, with per-event and global caps. Persistent stores migrate to schema 3 and reject privileged/malformed guest grants. Invitation URLs use a fragment, excluded from the HTTP request, and the landing page is inert help with no script or credential reflection. This is not Riot/Discord authentication, spectator-data access or an audio route to players.
+
 ## Version 0.4 pregame boundary
 
 Approved lobby participants use private reservations on `/lobby-voice`, a separate team-isolated RoomManager and a server-assigned `lobby-player` role. Shared invitations and caster credentials do not authorize lobby audio. Lobby bearers can fetch TURN credentials, but cannot query game volume/position endpoints. Move/swap, moderation, removal, event expiry/close, session takeover and first match binding revoke the affected lobby sessions. Clients tear down their old media before activating in-game signaling; the event can no longer admit lobby audio once bound.

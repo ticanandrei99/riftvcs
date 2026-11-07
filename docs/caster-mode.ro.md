@@ -1,6 +1,6 @@
 # Caster Mode, invitații și OBS
 
-În 0.4.1, ambele aplicații și serverul folosesc același flux de invitație: panou de conectare vizibil în Voxdria, aprobare în Caster și voce de lobby separată pe echipe. Caster păstrează canalul izolat pentru comentatori și interfață negru/roșu, câmpuri închise la culoare, cereri distincte și cinci locuri vizibile pe fiecare echipă. Este o aplicație desktop Tauri pe Windows; fișierele interfeței sunt resurse interne ale aplicației.
+În 0.4.2, ambele aplicații și serverul folosesc același flux de invitație: panou de conectare vizibil în Voxdria, aprobare în Caster și voce de lobby separată pe echipe. Caster păstrează canalul izolat pentru comentatori și interfață negru/roșu, câmpuri închise la culoare, cereri distincte și cinci locuri vizibile pe fiecare echipă. Este o aplicație desktop Tauri pe Windows; fișierele interfeței sunt resurse interne ale aplicației.
 
 Din 0.3.0 există panou de administrator/moderator cu parolă, invitație comună pentru 10 jucători, înscriere înainte de start, repartizare pe echipe și moderare cu istoric nominal. Pentru utilizarea curentă urmează [ghidul de organizare](organizer.ro.md). Instrucțiunile de invitații statice de mai jos rămân disponibile pentru operatorii care folosesc configurarea manuală.
 
@@ -8,7 +8,7 @@ Din 0.3.0 există panou de administrator/moderator cu parolă, invitație comun�
 
 Producția folosește invitații și separă rutele directe pe echipe. Din 0.2.0, organizatorul poate activa vocea adversarilor apropiați în cameră, exclusiv prin filtrul media al serverului; vezi [configurarea și limitele](enemy-camera.ro.md). Caster Mode are propriul canal și build; nu transmite către jucători și nu primește vocea acestora. Rolul spectator este audio, fără detectarea automată a spectatorului LoL.
 
-În aplicația de jucător, lipește codul RV- sau invitația completă în panoul Conectare, completează Riot ID-ul și apasă Conectează cu invitația. După aprobare, vocea de lobby poate porni între coechipierii aprobați. Codul personal este păstrat numai în sesiunea aplicației. În Caster Mode, autentifică-te și folosește conectarea cu rolul propriu, ori introdu invitația separată de caster/spectator și apasă Conectează. Un server vechi fără sesiuni securizate este refuzat de clientul normal.
+În aplicația de jucător, lipește codul RV- sau invitația completă în panoul Conectare, completează Riot ID-ul și apasă Conectează cu invitația. După aprobare, vocea de lobby poate porni între coechipierii aprobați. Codul personal este păstrat numai în sesiunea aplicației. Organizatorul conectează Caster cu rolul propriu după autentificare. Invitații folosesc linkul separat `VC-`, numele și rolul, trimit cererea și așteaptă aprobarea; vezi [invitațiile comentatorilor](caster-invites.ro.md). Invitația personală deja aprobată se poate conecta direct. Un server vechi fără sesiuni securizate este refuzat de clientul normal.
 
 Mute individual oprește persoana doar pentru tine; unmute o reactivează. Mute All are prioritate. Mute-ul se păstrează la reconectarea persoanei în același meci; în canalul caster este păstrat în memoria aplicației până la închidere. Pentru streamer, mute-ul influențează și mixul local capturat din Voxdria, nu înregistrările făcute de alte persoane.
 
@@ -16,7 +16,7 @@ Casterul pornește cu microfonul oprit, PTT activ și monitorul comentariului lo
 
 ## Organizator / operator
 
-Instalează serverul actualizat pe propriul host HTTPS/WSS. Configurează TURN valid și verifică certificatul/reverse proxy. Nu pune invitații sau chei TURN în build-ul frontend, URL, capturi ori repo. Serverul public existent nu a fost actualizat automat.
+Instalează serverul actualizat pe propriul host HTTPS/WSS. Configurează TURN valid și verifică certificatul/reverse proxy. Nu pune invitații personale sau chei TURN în build-ul frontend, URL, capturi ori repo. Linkul de cerere `VC-` este distribuit separat, în fragmentul URL; nu este o invitație personală și nu acordă acces fără aprobare. Serverul public existent nu a fost actualizat automat.
 
 PLAYER_GRANTS_JSON și CASTER_GRANTS_JSON sunt liste JSON pe server. Fiecare obiect are token aleatoriu de minimum 32 caractere, room, name, role, expiresAt (Unix, milisecunde); player are și team ORDER/CHAOS. Numele și camera trebuie să corespundă sesiunii custom. Organizatorul verifică manual participanții; tokenul nu este autentificare Riot.
 
@@ -48,7 +48,7 @@ Pentru comunitate și canalul privat league-comentator există butoane Discord. 
 
 Adaugă o sursă Application Audio Capture pentru Voxdria Caster și dezactivează Desktop Audio pentru a evita dublarea. Verifică metrul sursei și o înregistrare locală. Ghid oficial: https://obsproject.com/kb/application-audio-capture-guide
 
-În etapa RiftVoice 0.4.0, ruta a fost probată local cu OBS 33.0.1 și AppAudioOutput într-o aplicație QA: înregistrarea de 14,93 s conține tonul sintetic de 440 Hz, apoi liniște după oprire. Microfonul/desktopul au fost excluse și nu s-a pornit stream. Codul mixerului este păstrat în Voxdria; această înregistrare nu este o nouă probă hardware 0.4.1 și nu echivalează cu un mix de comentatori, delay sincronizat sau custom real. Rezultatele curente și pașii rămași sunt în verification-results.ro.md.
+În etapa RiftVoice 0.4.0, ruta a fost probată local cu OBS 33.0.1 și AppAudioOutput într-o aplicație QA: înregistrarea de 14,93 s conține tonul sintetic de 440 Hz, apoi liniște după oprire. Microfonul/desktopul au fost excluse și nu s-a pornit stream. Codul mixerului este păstrat în Voxdria; această înregistrare nu este o nouă probă hardware 0.4.2 și nu echivalează cu un mix de comentatori, delay sincronizat sau custom real. Rezultatele curente și pașii rămași sunt în verification-results.ro.md.
 
 Varianta 1: monitorul local Voxdria rămâne oprit. OBS captează co-casterii din aplicație; microfonul local este o sursă separată în OBS. Mute/PTT din Voxdria NU controlează acea sursă OBS: configurează mute/hotkey și acolo.
 

@@ -1,4 +1,4 @@
-# Voxdria / Voxdria Caster 0.4.1 — verificare de securitate
+# Voxdria / Voxdria Caster 0.4.2 — verificare de securitate
 
 Revizie internă a surselor, configurației native/web, rutării și dependențelor, în 6–7 noiembrie 2026. Nu este certificare, audit Riot sau garanție de absență a vulnerabilităților. Copia de lucru este Voxdria-Caster, derivată din D:\Rift-voice\main-project. Rezultatele executate sunt în [raport](verification-results.ro.md), iar funcțiile și probele lor în [inventar](function-checklist.ro.md).
 
@@ -6,6 +6,11 @@ Revizie internă a surselor, configurației native/web, rutării și dependențe
 
 | Constatare / risc | Măsură aplicată |
 |---|---|
+| Raport automat npm-outdated cu căi locale în arhiva de surse | Exclus din pachete împreună cu rapoartele audit, logurile și configurația privată; nu este necesar pentru build |
+| Confuzie între codul jucătorilor, invitația de comentatori și parola de administrare | Link VC separat permite doar cerere; organizator autentificat aprobă rolul; invitația privată nu oferă administrare și nu apare în snapshot |
+| Spectator promovat la microfon / același nume pe canalul de jucători și Caster | Spectatorul poate fi aprobat doar pentru ascultare; verificare de nume normalizat și la aprobare; aliasurile cer verificare umană |
+| Cereri abandonate / granturi păstrate după eliminare | Anulare pe închiderea socketului, expirare la cinci minute, limite pe cameră/server, schimbare de link și revocare individuală; store v3 validat |
+| Mesaj audio ascuns de închiderea conexiunii | Mesaje persistente pentru refuz, microfon/OBS nereușit și timeout; callback-urile vechi nu redeschid media |
 | Cod RV- salvat fără cerere vizibilă înainte de meci | Panou de conectare vizibil, parsare invitație completă, Riot ID, cerere/aprobare explicită și stare precisă |
 | Lipsa vocii înainte de meci | Canal de lobby cu rezervare privată după aprobare, rol impus de server, echipe izolate și bearer separat |
 | Sesiune veche la reconnect / mutare echipă / meci | Revocare înainte de înlocuire, close terminal la takeover/moderare, cleanup și protecție împotriva callback-urilor async vechi |
