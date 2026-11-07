@@ -8,7 +8,20 @@ Original copyright, attribution and license notices are retained.
 Project license: GNU Affero General Public License, version 3 or later
 (SPDX: AGPL-3.0-or-later). See LICENSE for the complete terms.
 
-## Current Voxdria modifications
+## Player 0.4.3: original-engine test variant
+
+LoLProxChat 0.5.24 tracking, camera, audio, peer connection, volume calculation
+and capture sources are used verbatim. The complete original reference and
+per-file hashes are included under upstream/. Authentication, invitations,
+network configuration, logging and the Voxdria player UI are separate adapters.
+Only the maintained root/server lockfiles are used by the application build.
+Frozen upstream lockfiles are retained solely as original source provenance.
+Custom voice effects and lobby audio are inactive in this player variant.
+The existing Voxdria Caster 0.4.2 is not replaced by this release.
+Original player audio uses client-side filtering and TURN-relayed WebRTC;
+legacy media-gateway guarantees do not apply to that path. See README.md.
+
+## Historical Voxdria modifications through 0.4.2
 
 Modification notice updated: 2026-11-07.
 

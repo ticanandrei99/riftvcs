@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.3 — original-engine player test variant
+
+- Uses the supplied LoLProxChat 0.5.24 proximity/camera/audio/capture sources verbatim, with full original source hashes.
+- Keeps the Voxdria player interface and approved RV invitations through separate authentication/network adapters.
+- Removes player pregame voice; registration and team approval remain. Custom voice effects/preview are inactive in this original-audio variant.
+- Adds an authenticated original-player server endpoint while retaining existing Caster 0.4.2 behavior and isolation.
+- Adds opposing-team synthetic WebRTC, moderation, permission and adapter regression checks. Real custom/GPU tests remain required.
+- Documents client-side visibility filtering and the absence of legacy media-gateway guarantees on the original path.
+
 All notable changes to this project are documented here. Format adapted from [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [SemVer](https://semver.org/) loosely — `0.x.y` releases may break compatibility without warning.
 
 ## [Unreleased] — RiftVoice

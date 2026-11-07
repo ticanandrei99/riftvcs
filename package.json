@@ -1,6 +1,6 @@
 {
   "name": "voxdria",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -18,11 +18,13 @@
     "typecheck": "tsc --noEmit",
     "build:windows": "tauri build --bundles nsis",
     "test:server": "npm --prefix server test -- --run",
-    "verify": "npm run typecheck && npm test -- --runInBand --silent && npm run test:server && npm run test:e2e",
+    "verify": "npm run verify:source && npm run typecheck && npm test -- --runInBand --silent && npm run test:original -- --silent && npm run test:server && npm run test:e2e",
     "test:voice-audio": "node scripts/test-voice-audio.cjs",
     "test:organizer-ui": "node scripts/test-organizer-ui.cjs",
-    "test:compatibility-ui": "node scripts/test-compatibility-ui.cjs",
-    "build:windows:caster": "tauri build --config src-tauri/tauri.caster.conf.json --bundles nsis"
+    "test:compatibility-ui": "node scripts/test-original-player.cjs",
+    "test:original": "jest --config jest.original.config.js --runInBand",
+    "test:original-player": "npm --prefix server run build && node scripts/test-original-player.cjs",
+    "verify:source": "node scripts/verify-original-source.cjs"
   },
   "keywords": [],
   "author": "",

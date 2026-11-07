@@ -1,71 +1,50 @@
-# Voxdria
+# Voxdria — player 0.4.3, original engine
 
-Windows proximity voice for League of Legends, based on **LoLProxChat** by danthi123 and its contributors, with Voxdria modifications.
+Windows voice for League of Legends community custom games. This player uses the **unchanged LoLProxChat 0.5.24 engine** supplied locally by the owner, with the Voxdria interface and authenticated invitation adapters. Upstream: [danthi123/LoLProxChat](https://github.com/danthi123/LoLProxChat). AGPL-3.0-or-later; see LICENSE and NOTICE.md.
 
-## Download
+**Experimental custom-game test build.** This is not Riot-approved software. Reverting to upstream does not establish Riot compliance or prove that a GPU crash is fixed. Windows installers are unsigned.
 
-Download the Windows setup from [Releases](https://github.com/ticanandrei99/riftvcs/releases). Releases include the corresponding complete source, license, notices and SHA-256 checksums.
+## Current behavior
 
-Community test build. Voxdria has not been reviewed or endorsed by Riot Games. No guarantee of compatibility with Vanguard or protection from account penalties is made. The Windows binaries are currently unsigned.
+- Red Voxdria player interface, RV invitation parsing, pregame registration and organizer approval.
+- Game voice only during a detected game. No player lobby audio controller or lobby voice button.
+- Original tracking, camera recognition, volume calculation, microphone, playback and WebRTC source, without edits.
+- Upstream camera mode enabled by default. Original distance and camera options remain available.
+- Original microphone mute, receive mute, individual ally/enemy mute, volume sliders and push-to-talk.
+- Organizer-authorized sessions; separate player/Caster invitations and rooms; moderation revokes audio.
+- Authenticated TURN configuration in production. Loopback ICE and synthetic microphones are test fixtures only.
+- Player update notification and Discord community shortcut.
 
-## Current features
+**Voxdria Caster stays at 0.4.2.** Use its existing installer. This branch delivers no new Caster installer. All players in an original-engine room need player 0.4.3 and server 0.4.3. The server continues to support the existing Caster protocol. Player 0.4.2 audio is in a separate legacy room.
 
-- Organizer-invited custom rooms with server-assigned identities and teams.
-- Password-protected organizer panel, named moderators, a shared 10-player voice invitation and pregame check-in with a claimed Riot ID.
-- Pregame team moves/swaps, live attendance, moderation voice suspension, protected administrator voice and a private named audit trail.
-- Approved, team-isolated lobby voice before the match, with automatic teardown when the event binds to a game.
-- Proximity as the standard player mode: nearby allies and visibly identified nearby enemies inside your camera; enemy audio is enforced by a server media gateway.
-- Isolated Caster Mode with receive-only spectator role, OBS mix and individual mute controls.
-- Optional camera listening, team settings and position recalibration.
-- Manual Natural and Robotic voice effects; local processed-microphone preview.
-- Muting your microphone or all voices also stops the local preview. Unmuting does not restart it.
-- TURN-only WebRTC audio; connection status and quality information.
-- Diagnostic summary that excludes player names, IP addresses and credentials.
-- Incoming-voice mute for the local stream mix, independent of microphone transmission; it also mutes local playback.
-- Fixed Discord community shortcut and a private Streamer-channel shortcut in Caster; Discord controls access and audio separately.
-- English/Romanian interface, black-and-red theme, minimize and close controls.
-- Update checks at application startup, with a notice and link to the official installer. Installation is initiated by the player.
+Custom voice effects and the processed-microphone preview are hidden and inactive in this original-audio variant. Their historical code is not inserted into the active microphone path.
 
-Proximity relies on minimap tracking and may be inaccurate. Champion/skin-based voice selection is not part of the current interface. Effects use local signal processing, not official champion recordings or AI voice cloning.
+## Visibility and trust
 
-## Getting started / Pornire
+The original camera engine recognizes icons drawn on the player's own minimap. No hidden game positions or automatic spectator feed are acquired. There is no injection, game-memory reading or Vanguard bypass.
 
-Requires Windows x64, WebView2, a microphone and access to the shared voice server. Players need their own organizer invitation and must be in the same custom match; casters use a separate audio channel. Headphones are recommended for the local preview.
+Original audio is relayed through TURN between players, **not filtered by the legacy server media gateway**. A modified client can bypass its local receive filter. Camera recognition can fail or retain a recent observation; unavailable templates cause the original proximity fallback. Original server distance calculation is not an authoritative fog-of-war filter. This variant does not guarantee prevention of information leakage and is not an anti-cheat system.
 
-Instalează setup-ul, deschide Voxdria și verifică microfonul. Serverul implicit este `https://riftvoice-server.onrender.com`. În panoul Conectare, lipește codul RV- sau invitația completă din Caster, completează Riot ID-ul și apasă Conectează cu invitația. Pentru voce înainte de meci, ambele aplicații și serverul trebuie actualizate la 0.4.2; după aprobarea organizatorului, coechipierii pot vorbi în lobby. La identificarea meciului, această voce se închide și începe autentificarea de joc. Modul normal păstrează proximity/team voice și efectele opționale.
+Caster audio is isolated from active players. Caster permissions cannot query player volumes or enter player rooms. Spectator/stream delay remains the streamer's responsibility.
 
-Din 0.3.0, streamerul/organizatorul se autentifică în Caster, generează un cod `RV-` pentru cei 10 jucători și aprobă înscrierile trimise din aplicație înainte de meci. Conturile nominale ale moderatorilor permit identificarea autorului fiecărui mute. Repartizarea din Voxdria nu modifică lobby-ul LoL; numele este declarat de participant și confirmat manual. Configurează `ORGANIZER_PASSWORD` și `MODERATOR_ACCOUNTS_JSON` numai pe server. Vezi [organizare și moderare](docs/organizer.ro.md).
+## Setup and source
 
-## Source and build
+Read [setup and test instructions in Romanian](docs/player-original.ro.md) and [current verification results](docs/verification-0.4.3.ro.md). Older feature/security documents describe legacy 0.4.2; this guide takes precedence for player 0.4.3.
 
-Current verification and limits: [Romanian feature checklist](docs/function-checklist.ro.md), [security review](docs/security-review.ro.md), [test/build results](docs/verification-results.ro.md). Test tooling uses a checked-in, MIT-licensed local deepmerge patch; see [vendor/deepmerge](vendor/deepmerge/README.md). This is not an upstream patched release.
+The complete original reference is in `upstream/LoLProxChat/`. `upstream/SOURCE.json` records its 213 hashes. Runtime copies are in `src/upstream/`, `server/src/upstream/` and `src-tauri/src/player_original_capture.rs`. Adapters are in `src/player-original/` and `server/src/original-player.ts`. Webpack redirects only upstream network configuration and logging to authenticated Voxdria equivalents.
 
-Client: `src/` and `src-tauri/`. Server: `server/`. Deployment: `render.yaml`, with Render root directory `server`.
-
-Windows build requires Node 22.12+, the Rust MSVC toolchain specified in `rust-toolchain.toml`, Visual Studio C++ Build Tools, Windows SDK and WebView2.
+Frozen reference manifests are provenance material, not application dependencies. Install only at the repository root and in `server/`, using their maintained lockfiles; do not install the old reference lockfiles.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build-windows.ps1
+npm ci
+npm --prefix server ci
+npm run verify:source
+npm run typecheck
+npm test -- --runInBand
+npm run test:original -- --silent
+npm --prefix server test -- --run
+npm run test:original-player
+npm run build:windows
 ```
 
-The script installs locked dependencies, runs checks/tests and builds the Windows executable and NSIS installer. Outputs, corresponding source and checksums are in `artifacts/`.
-
-See [enemy camera voice and its limits](docs/enemy-camera.ro.md), [security review](docs/security-review.ro.md), [Caster Mode and OBS](docs/caster-mode.ro.md), [operation and validation](docs/VOXDRIA.md), [Render setup](docs/RENDER.ro.md) and [publishing updates](docs/UPDATES.ro.md).
-
-Use Voxdria 0.4.2 and the updated server with working TURN. Enemy proximity is enabled by default; ENEMY_CAMERA_VOICE=0 is an explicit operator suspension. An existing Render value of 0 must be changed to 1. The existing public service and GitHub addresses are retained for compatibility; see [name and update migration](docs/rebrand.ro.md). The public server was not deployed in this session. Visibility is client-reported, not Riot attestation; a modified client can fabricate reports. The trusted media server terminates enemy audio encryption.
-
-Caster guests use a separate VC invitation link, choose a name and caster/listener role, and wait for organizer approval before joining audio. They receive no administrator privileges. See the [Caster invitation guide](docs/caster-invites.ro.md). Opening the link in a browser shows instructions; paste the complete link into the native Caster application.
-
-## Privacy
-
-Audio connections require an authenticated TURN relay. Direct peer connections are disabled. This avoids exposing direct peer connection addresses through the normal client connection; server and TURN operators can still see connection metadata, including IP addresses. This is not an anonymity guarantee.
-
-Configure TURN credentials only in the server environment. Never commit `.env`, API tokens, passwords or signing keys.
-
-## Attribution and license
-
-Source base: [LoLProxChat](https://github.com/danthi123/LoLProxChat), modified by Voxdria. Original notices and license are retained. See [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE), **AGPL-3.0-or-later**. Third-party components retain their respective licenses.
-
-League of Legends names, artwork and related data belong to their respective owners. Voxdria is not endorsed by Riot Games. Approval claims in historical upstream documentation do not establish approval for Voxdria.
-
-Voxdria isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+Original CV tests: `npx jest --config jest.original.cv.config.js --runInBand`. Recording-dependent suites require real captures. Build only the Windows player from this branch; retain Caster 0.4.2.

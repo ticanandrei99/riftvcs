@@ -7,6 +7,7 @@ import type { CameraMedia } from './camera-media.js';
 import { enemyCameraVolume } from './enemy-camera.js';
 import { enemyProximityEnabled } from './media-policy.js';
 import { CASTER_INVITE_PAGE } from './caster-invite-page.js';
+import { OriginalPlayerVoice } from './original-player.js';
 import { handleCasterConnection, type CasterGrant } from './caster.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { WebSocketServer } from 'ws';
@@ -76,6 +77,7 @@ if(configuredModerators.length&&!process.env.ORGANIZER_PASSWORD)throw Error('Con
 const organizerController = organizerEvents
   ? new OrganizerController(new OrganizerPassword(process.env.ORGANIZER_PASSWORD!),organizerEvents,sessions,
     configuredModerators) : undefined;
+const originalPlayers=new OriginalPlayerVoice(playerGrants,sessions,rooms,organizerEvents);
 console.info('[startup] Authorization configured; organizer='+!!organizerController+'; enemy media='+cameraEnabled);
 const iceCredentials = () => TURN_KEY_ID && TURN_KEY_API_TOKEN
   ? generateCloudflareIceServers(TURN_KEY_ID, TURN_KEY_API_TOKEN)
@@ -159,11 +161,20 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', serverVersion:SERVER_VERSION, rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, casterRequestsAvailable:!!organizerController, casterInviteProtocol:1, lobbyVoiceAvailable:!!organizerController, lobbyVoiceProtocol:1, eventInviteProtocol:1, protocolVersion: 2 }));
+    res.end(JSON.stringify({ status: 'ok', serverVersion:SERVER_VERSION, rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, originalPlayerVoice:true, originalPlayerProtocol:1, originalPlayerFiltering: 'upstream-client-camera', organizerAvailable: !!organizerController, casterRequestsAvailable:!!organizerController, casterInviteProtocol:1, lobbyVoiceAvailable:!!organizerController, lobbyVoiceProtocol:1, eventInviteProtocol:1, protocolVersion: 2 }));
     return;
   }
 
   const session = sessions.get(req.headers.authorization);
+  if(req.method==='POST'&&req.url==='/player/compute-volumes'){
+    if(!session||session.role!=='player'||!originalPlayers.owns(session.ws)){sendError(res,403,'Approved original player session required');return;}
+    const ip=clientIp(req,PROXY_TRUST,onUntrustedForward);
+    if(!computeVolumesIpLimiter.tryConsume(ip)||!computeVolumesPlayerLimiter.tryConsume(playerKey(ip,session.name))){sendError(res,429,'rate limit exceeded');return;}
+    let body='',bytes=0,aborted=false;
+    req.on('data',(chunk:Buffer)=>{if(aborted)return;bytes+=chunk.length;if(bytes>LIMITS.BODY_BYTES){aborted=true;sendError(res,413,'request body too large');req.destroy();return;}body+=chunk.toString();});
+    req.on('end',()=>{if(aborted)return;try{const result=originalPlayers.compute(session.ws,JSON.parse(body));res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));}catch(error){sendError(res,400,error instanceof SyntaxError?'Invalid JSON':error instanceof Error?error.message:'Invalid original volume request');}});
+    return;
+  }
   if (!development && (req.url === '/compute-volumes' || req.url === '/turn-credentials') && !session) {
     sendError(res, 401, 'Voice session required'); return;
   }
@@ -284,7 +295,7 @@ wss.on('connection', (ws, req) => {
   // and every room in it.
   ws.on('error', (err) => console.warn('[ws] socket error:', (err as Error).message));
 
-  if (req.url !== '/ws' && req.url !== '/caster' && req.url !== '/organizer' && req.url !== '/registration' && req.url !== '/lobby-voice' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
+  if (req.url !== '/ws' && req.url !== '/player/ws' && req.url !== '/caster' && req.url !== '/organizer' && req.url !== '/registration' && req.url !== '/lobby-voice' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
   if (wss.clients.size > 500) { ws.close(1013, 'Server capacity reached'); return; }
   const origin = req.headers.origin;
   const allowedOrigins = ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost', ...(process.env.ALLOWED_WEB_ORIGINS || '').split(',')];
@@ -308,6 +319,7 @@ wss.on('connection', (ws, req) => {
     ws.on('close', () => clearTimeout(authDeadline));
   }
   ws.on('pong', () => heartbeat.markAlive(ws));
+  if(req.url==='/player/ws'){originalPlayers.handle(ws,heartbeat);return;}
   if(req.url==='/lobby-voice'){
     if(!organizerEvents){ws.close(1008,'Organizarea nu este activată pe server.');return;}
     handleCasterConnection(ws,[],sessions,()=>organizerEvents.playerChanged(),{rooms:lobbyRooms,authorize:token=>organizerEvents.authorizeLobbyVoice(token)});return;

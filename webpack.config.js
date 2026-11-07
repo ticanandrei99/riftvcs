@@ -36,6 +36,13 @@ module.exports = {
   // larger than a web download. Keep explicit budgets instead of disabling hints.
   performance: { maxAssetSize: 32 * 1024 * 1024, maxEntrypointSize: 768 * 1024 },
   plugins: [
+    // Only network configuration and shared logging cross the upstream boundary.
+    // Proximity, tracking, camera and WebRTC implementations remain byte-identical.
+    new webpack.NormalModuleReplacementPlugin(/core[\\/](config|logging)$/, resource => {
+      if (resource.context.startsWith(path.resolve(__dirname, 'src/upstream'))) {
+        resource.request = path.resolve(__dirname, 'src/core', resource.request.endsWith('logging') ? 'logging.ts' : 'config.ts');
+      }
+    }),
     new webpack.DefinePlugin({
       __VOXDRIA_VERSION__: JSON.stringify(require('./package.json').version),
       __PROXCHAT_SERVER__: JSON.stringify(process.env.PROXCHAT_SERVER || 'https://riftvoice-server.onrender.com'),

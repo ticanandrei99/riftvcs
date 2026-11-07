@@ -18,7 +18,7 @@ it('serves an inert invitation landing page without reflecting fragment credenti
   const response=await fetch(base+'/caster-invite#VC-'+'a'.repeat(43)),html=await response.text();
   expect(response.status).toBe(200);expect(html).toContain('Voxdria Caster 0.4.2');expect(html).not.toContain('VC-'+'a'.repeat(43));
   expect(html).not.toContain('<script');expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");expect(response.headers.get('x-frame-options')).toBe('DENY');
-  const health=await (await fetch(base+'/health')).json() as any;expect(health).toMatchObject({serverVersion:'0.4.2',casterInviteProtocol:1,casterRequestsAvailable:true});
+  const health=await (await fetch(base+'/health')).json() as any;expect(health).toMatchObject({serverVersion:'0.4.3',casterInviteProtocol:1,casterRequestsAvailable:true});
   expect((await fetch(base+'/caster-invite',{method:'HEAD'})).status).toBe(200);
 });
 
