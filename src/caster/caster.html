@@ -19,8 +19,10 @@
     <section id="organizer-panel" aria-label="Administrare custom"></section>
     <section class="panel audio-panel" aria-labelledby="audio-heading">
       <div class="section-heading"><div><span class="eyebrow">AUDIO &amp; OBS</span><h2 id="audio-heading">Canal comentatori</h2></div><p id="status" class="status-pill" role="status">Deconectat</p></div>
-      <p class="muted">Conectează-te din camera organizată mai sus sau folosește invitația personală de caster / spectator.</p>
-      <div class="connection-row"><label>Invitație personală <input id="token" type="password" autocomplete="off" placeholder="Cod de caster / spectator"></label><div class="actions"><button id="join">Conectează</button><button id="leave" class="quiet">Deconectează</button></div></div>
+      <p class="muted">Administratorul/moderatorul folosește „Conectează acest Caster cu rolul meu”. Invitații trimit o cerere prin linkul separat. Autentificarea de administrare și conectarea audio au stări distincte.</p>
+      <div class="connection-row"><label>Invitație comentatori <input id="token" type="password" autocomplete="off" maxlength="4096" placeholder="Link de comentatori sau cod personal aprobat"></label><div class="actions"><button id="join">Conectează / trimite cererea</button><button id="leave" class="quiet">Deconectează / anulează</button></div></div>
+      <div class="form-grid"><label>Numele tău pentru cerere <input id="request-name" maxlength="64" autocomplete="off" placeholder="Nume comentator"></label><label>Rol cerut prin link <select id="request-role"><option value="caster">Comentator · cu microfon după aprobare</option><option value="spectator">Spectator audio · fără microfon</option></select></label></div>
+      <p class="muted small">Linkul permite doar o cerere. După aprobare conectarea audio pornește automat, cu microfonul oprit. Aprobarea personală este păstrată în sesiunea aplicației pentru reconectare.</p>
       <div class="audio-controls">
         <div class="control-card"><h3>Microfon și ascultare</h3>
           <label class="check"><input id="mute" type="checkbox" checked> Microfon oprit</label>

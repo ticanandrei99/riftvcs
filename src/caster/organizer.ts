@@ -4,9 +4,10 @@ declare const __VOXDRIA_VERSION__:string;
 
 interface Pending {id:string;name:string;requestedTeam:'ORDER'|'CHAOS';mode?:'game'|'lobby'}
 interface Member {name:string;team:'ORDER'|'CHAOS';connected:boolean;lobby?:boolean;lobbyVoice?:boolean;muted?:boolean}
-interface Staff {id:string;kind:'staff'|'caster';name:string;role:'organizer'|'moderator'|'caster';connected:boolean;muted:boolean}
+interface Staff {id:string;kind:'staff'|'caster'|'guest';name:string;role:'organizer'|'moderator'|'caster'|'spectator';connected:boolean;muted:boolean}
+interface CasterPending {id:string;name:string;requestedRole:'caster'|'spectator'}
 interface Audit {id:string;at:number;actorName:string;actorRole:'organizer'|'moderator';action:'mute'|'unmute'|'mute_denied';eventTitle:string;targetName:string}
-interface EventView {id:string;title:string;invite:string;expiresAt:number;bound:boolean;capacity:number;casterInvitation:string;casterName:string;players:Member[];pending:Pending[];staff?:Staff[];lobbyLink?:string}
+interface EventView {id:string;title:string;invite:string;expiresAt:number;bound:boolean;capacity:number;casterInvitation:string;casterName:string;players:Member[];pending:Pending[];staff?:Staff[];lobbyLink?:string;casterInvite?:string;casterPending?:CasterPending[]}
 interface State {type:'organizer_state';persistent:boolean;events:EventView[];audit?:Audit[]}
 const short=(x:unknown):x is string=>typeof x==='string'&&x.length>0&&x.length<=64;
 export function parseOrganizerState(value:any):State|null{
@@ -19,10 +20,12 @@ export function parseOrganizerState(value:any):State|null{
       !Array.isArray(e.players)||e.players.length>10||!Array.isArray(e.pending)||e.pending.length>20)return null;
     ids.add(e.id);
     if(e.lobbyLink!==undefined&&(typeof e.lobbyLink!=='string'||(e.lobbyLink!==''&&!/^https:\/\/gg\.riotgames\.com\/LOL\?joinCode=[A-Za-z0-9_-]{3,128}$/.test(e.lobbyLink))))return null;
+    if(e.casterInvite!==undefined&&!/^VC-[A-Za-z0-9_-]{43}$/.test(e.casterInvite))return null;
+    if(e.casterPending!==undefined&&(!Array.isArray(e.casterPending)||e.casterPending.length>20||e.casterPending.some((p:any)=>!p||!short(p.id)||!short(p.name)||!['caster','spectator'].includes(p.requestedRole))))return null;
     if(e.players.some((p:any)=>!p||!short(p.name)||!['ORDER','CHAOS'].includes(p.team)||typeof p.connected!=='boolean')||
       e.pending.some((p:any)=>!p||!short(p.id)||!short(p.name)||!['ORDER','CHAOS'].includes(p.requestedTeam)))return null;
     if(e.players.some((p:any)=>(p.lobby!==undefined&&typeof p.lobby!=='boolean')||(p.lobbyVoice!==undefined&&typeof p.lobbyVoice!=='boolean')||(p.muted!==undefined&&typeof p.muted!=='boolean'))||
-      (e.staff!==undefined&&(!Array.isArray(e.staff)||e.staff.length>25||e.staff.some((p:any)=>!p||!short(p.id)||!short(p.name)||!['staff','caster'].includes(p.kind)||!['organizer','moderator','caster'].includes(p.role)||typeof p.connected!=='boolean'||typeof p.muted!=='boolean'))))return null;
+      (e.staff!==undefined&&(!Array.isArray(e.staff)||e.staff.length>25||e.staff.some((p:any)=>!p||!short(p.id)||!short(p.name)||!['staff','caster','guest'].includes(p.kind)||!['organizer','moderator','caster','spectator'].includes(p.role)||typeof p.connected!=='boolean'||typeof p.muted!=='boolean'))))return null;
   }
   return value;
 }
@@ -42,7 +45,7 @@ export function mountOrganizer(connectCaster:(invitation:string)=>void):()=>void
     <p id="organizer-status" role="status">Neautentificat. Generarea codurilor necesită parola configurată pe server.</p>
     <fieldset id="organizer-controls" disabled hidden><legend>Panou de organizare</legend>
       <details id="organizer-new-room" open><summary>Creează o cameră nouă</summary><div class="form-grid"><label>Numele camerei <input id="organizer-title" maxlength="64" value="Custom comunitate"></label>
-      <label>Nume comentator <input id="organizer-caster-name" maxlength="64" value="Comentator"></label>
+      <input id="organizer-caster-name" type="hidden" value="Invitație directă (compatibilitate)">
       <label>Link lobby LoL (opțional, copiat din joc) <input id="organizer-lobby-link" type="url" autocomplete="off" maxlength="300" placeholder="https://gg.riotgames.com/LOL?joinCode=..."></label>
       <label>Valabilitate (ore) <input id="organizer-hours" type="number" min="1" max="12" value="8"></label>
       </div><button id="organizer-create">Generează cod pentru 10 persoane</button></details>
@@ -59,7 +62,7 @@ export function mountOrganizer(connectCaster:(invitation:string)=>void):()=>void
   const audit=element<HTMLElement>('organizer-audit');
   const clear=()=>{authenticated=false;role='';state=null;selected='';controls.disabled=true;controls.hidden=true;picker.replaceChildren();detail.replaceChildren();audit.replaceChildren();audit.hidden=true;login.disabled=false;logout.disabled=true;password.value='';};
   const send=(value:unknown)=>{if(authenticated&&ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(value));else message('Autentifică-te mai întâi.');};
-  const copy=async(text:string)=>{try{await navigator.clipboard.writeText(text);message('Copiat. Distribuie codul vocal participanților.');}catch{message('Copierea automată nu este disponibilă. Selectează codul și copiază-l manual.');}};
+  const copy=async(text:string)=>{try{await navigator.clipboard.writeText(text);message('Copiat. Distribuie invitația doar persoanelor vizate.');}catch{message('Copierea automată nu este disponibilă. Selectează invitația și copiază manual.');}};
   const render=()=>{
     audit.replaceChildren();audit.hidden=role!=='organizer';
     if(role==='organizer'){
@@ -82,6 +85,20 @@ export function mountOrganizer(connectCaster:(invitation:string)=>void):()=>void
       button('Schimbă codul',()=>send({type:'event_rotate',eventId:event.id})),button('Conectează acest Caster cu rolul meu',()=>send({type:'event_caster',eventId:event.id})),
       button('Închide camera',()=>send({type:'event_close',eventId:event.id})));
     detail.append(inviteCard);
+    const casterCard=document.createElement('section');casterCard.className='invite-card';casterCard.setAttribute('aria-label','Invitația comentatorilor');
+    casterCard.append(paragraph('Comentatori și spectatori · link separat, cu aprobare'));
+    if(event.casterInvite){
+      const url=SERVER_URL+'/caster-invite#'+event.casterInvite;
+      const link=document.createElement('input');link.readOnly=true;link.id='organizer-caster-link';link.value=url;link.setAttribute('aria-label','Link invitație comentatori');
+      casterCard.append(link,button('Copiază linkul comentatorilor',()=>{void copy(url);}),button('Schimbă linkul comentatorilor',()=>send({type:'caster_rotate',eventId:event.id})),paragraph('Invitatul lipește linkul în Voxdria Caster, își trece numele și trimite cererea. Aprobarea nu oferă administrare.'));
+    }else casterCard.append(paragraph('Actualizează serverul pentru cererile separate de comentatori.'));
+    detail.append(casterCard);
+    const casterRequests=document.createElement('section');casterRequests.className='pending-card';casterRequests.setAttribute('aria-label','Cereri comentatori');casterRequests.append(paragraph('Cereri comentatori: '+(event.casterPending?.length||0)));
+    if(!event.casterPending?.length)casterRequests.append(paragraph('Cererile comentatorilor și spectatorilor apar aici, separat de jucători.'));
+    for(const p of event.casterPending||[]){const row=document.createElement('div');row.className='organizer-person';row.append(paragraph(p.name+' · cere '+(p.requestedRole==='caster'?'comentator cu microfon':'spectator audio, fără microfon')));
+      if(p.requestedRole==='caster')row.append(button('Aprobă comentator',()=>send({type:'caster_approve',requestId:p.id,role:'caster'})));
+      row.append(button('Aprobă doar ascultare',()=>send({type:'caster_approve',requestId:p.id,role:'spectator'})),button('Respinge cererea',()=>send({type:'caster_reject',requestId:p.id})));casterRequests.append(row);}
+    detail.append(casterRequests);
     const lobbyLink=document.createElement('input');lobbyLink.type='url';lobbyLink.maxLength=300;lobbyLink.value=event.lobbyLink||'';lobbyLink.id='organizer-current-lobby-link';lobbyLink.setAttribute('aria-label','Link lobby LoL copiat din joc');
     detail.append(paragraph('Linkul Riot se copiază din clientul LoL. Invitația completă include acest link și codul vocal separat.'),lobbyLink,button('Salvează linkul LoL',()=>send({type:'event_lobby_link',eventId:event.id,lobbyLink:lobbyLink.value.trim()})));
     const connected=event.players.filter(p=>p.connected||p.lobbyVoice).length,blue=event.players.filter(p=>p.team==='ORDER').length,red=event.players.filter(p=>p.team==='CHAOS').length;
@@ -111,8 +128,10 @@ export function mountOrganizer(connectCaster:(invitation:string)=>void):()=>void
       second.selectedIndex=1;detail.append(first,second,button('Schimbă locurile între jucători',()=>send({type:'event_swap',eventId:event.id,first:first.value,second:second.value})));
     }
     const staff=document.createElement('section');staff.className='staff-card';staff.setAttribute('aria-label','Comentatori și moderare');staff.append(paragraph('Canal izolat · comentatori'));
-    for(const p of event.staff||[]){const row=document.createElement('div');row.className='organizer-person';row.append(paragraph(`${p.name} · ${p.role==='organizer'?'Administrator':p.role==='moderator'?'Moderator':'Caster invitat'} · ${p.muted?'Mute de moderare':p.connected?'Conectat':'Neconectat'}`),
-      button(p.role==='organizer'&&role==='moderator'?'Administrator protejat':p.muted?'Reactivează accesul vocal':'Mute de moderare',()=>send({type:'event_moderate',eventId:event.id,kind:p.kind,targetId:p.id,muted:!p.muted}),p.role==='organizer'&&role==='moderator'));staff.append(row);}
+    for(const p of event.staff||[]){if(p.kind==='caster'&&p.name==='Invitație directă (compatibilitate)'&&!p.connected)continue;const row=document.createElement('div');row.className='organizer-person';row.append(paragraph(`${p.name} · ${p.role==='organizer'?'Administrator':p.role==='moderator'?'Moderator':p.role==='spectator'?'Spectator audio':'Caster invitat'} · ${p.muted?'Mute de moderare':p.connected?'Autorizat pe canal (server)':'Neconectat'}`),
+      button(p.role==='organizer'&&role==='moderator'?'Administrator protejat':p.muted?'Reactivează accesul vocal':'Mute de moderare',()=>send({type:'event_moderate',eventId:event.id,kind:p.kind,targetId:p.id,muted:!p.muted}),p.role==='organizer'&&role==='moderator'));
+      if(p.kind==='guest')row.append(button('Elimină comentatorul',()=>send({type:'caster_remove',eventId:event.id,guestId:p.id})));
+      staff.append(row);}
     detail.append(staff,paragraph('Mute de moderare suspendă conexiunea vocală (transmisie și ascultare) până la reactivare și reconectare manuală. Mute pentru mine rămâne personal.'),
       paragraph(state?.persistent?'Camerele și istoricul sunt păstrate în stocarea privată a operatorului.':'Camerele și istoricul sunt temporare: se pierd la repornirea serverului.'));
   };
