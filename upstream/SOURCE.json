@@ -1,0 +1,862 @@
+{
+  "project": "LoLProxChat",
+  "author": "danthi123",
+  "version": "0.5.24",
+  "sourceDirectory": "D:\\old-project\\Voxdria\\LoLProxChat-main\\LoLProxChat-main",
+  "archiveSha256": "f3ac5184644b5540905adc2db241e3af35c0a740b48738a7117a202cdf8d9ab3",
+  "license": "AGPL-3.0-or-later",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "3a2223fb09e55c7428e5a843d6d777839181d83ab05d88fa2117a76626442c1d"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "518de17350c28596d2aa9bcfc7a054c33a33c2bd6a0b559ca92b68e9c8e57024"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug.md",
+      "sha256": "e8fb7b04ed2142b270e267d9edcb0050b5a2c2063266fae7c2260ba1f126cfae"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature.md",
+      "sha256": "fccec1948b9b2b5124c26bc78be8b5406ee5cf5557f9c108858ee7b47bd40df2"
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "sha256": "7ff3e7d052bfdbae620c34fa495398f27467b09c5ede8db9a2d53f9f7855811d"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "5ad948b787c875560902d03a19bfc7f1d0d90047718d0bfb83e0b2337aedc112"
+    },
+    {
+      "path": ".github/workflows/icon-watch.yml",
+      "sha256": "fb2219394b5d6d451d45d313def462c2452ca403a5688ea352875676c0b88667"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "e3e882ba59ce6ed862ca212fbf585d462874793aa66d899b714809e999e95351"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "d13ccca79bfe8becf57de467820e5b4c18882db08f6f28d2d5198b15c68dca23"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "a6e1dccf59778c6e0a3ce6edd59f78cccbddbbda07f32b1220261150e85fa6ed"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "fb227f0017544cd6fa85ed013e133c4c037afcf406ad3cd3fd67d4f9ad6de895"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+    },
+    {
+      "path": "README.md",
+      "sha256": "120579b2d35d9501f36424f0cfcbddcd6feb394a79defc1589d4b584b49b3751"
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "cc548e4b2f793d7e751dd4b27e2db76b8d693edc9b6f09772da8f71ba4e97a2f"
+    },
+    {
+      "path": "assets/minimap-blank-ha.png",
+      "sha256": "117e94c419b5348e85046c5e6adde2f7717857c7d7d9be29ad92ace5bea37c33"
+    },
+    {
+      "path": "assets/minimap-blank-sr.png",
+      "sha256": "67581df7df9e206629f505a9ff1ccde15e38ae112c03276c9500057121dcfd84"
+    },
+    {
+      "path": "docker-compose.proxchat.yml",
+      "sha256": "b8a59571a27339eb43c70bbc7c88b7ab5e2f22f088cf3577477ab46ec711b434"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "3c650a8924004f2de5b7c207ca25644dd12dd2ee2165d63be06f21816748afe3"
+    },
+    {
+      "path": "docs/compliance.md",
+      "sha256": "23b4702c42edb6765986d3f918eec6374a2b54b719d4b0d559f879a8c6dc7cc4"
+    },
+    {
+      "path": "docs/manual-test-checklist.md",
+      "sha256": "6463d8305c0032069080e2b4b571730dad883a2b299e8e888a3500aa916b1fb8"
+    },
+    {
+      "path": "docs/plans/2026-03-06-lolproxchat-design.md",
+      "sha256": "19cc45169ff098a378572ad15ec0c6789e6e44a1e5539c89c03e5690284010cb"
+    },
+    {
+      "path": "docs/plans/2026-03-06-lolproxchat-implementation.md",
+      "sha256": "ef3eedeafcca43b5b5d8e4a16095b8a3ab1a0fa3a43d60a6d78bb83c6aa00301"
+    },
+    {
+      "path": "docs/plans/2026-03-06-proxchat-v2-design.md",
+      "sha256": "16367019534e276a6ee47a717313d22f3534f88ae77ecaeeeee8127f02268b59"
+    },
+    {
+      "path": "docs/plans/2026-03-06-proxchat-v2-implementation.md",
+      "sha256": "c248d01017cd33e187b18c42bb28cf139b731f961a75aa2a9f8793e09898a2ba"
+    },
+    {
+      "path": "docs/plans/2026-03-07-self-icon-identification-research.md",
+      "sha256": "f171788d16dc13629002b97d0fad8f38af86860052ca919dd9b48efa86ec7bdd"
+    },
+    {
+      "path": "docs/plans/2026-03-09-rnnoise-integration.md",
+      "sha256": "94a58aeb8d648f1a65100e8b6f100cbba8b932e9718c40866fc9925b07f80668"
+    },
+    {
+      "path": "docs/plans/2026-04-11-tauri-standalone-implementation.md",
+      "sha256": "10189649011dde8a94a8e3b322ba9ea378a321a1f2e253e987605d4b14a2b6a1"
+    },
+    {
+      "path": "docs/plans/2026-04-11-tauri-standalone-migration.md",
+      "sha256": "e7c2dfa14ac6956e2ea060d5b7abf7e9a3da6e6e3fef6c1f81f48b21fe662f08"
+    },
+    {
+      "path": "docs/plans/2026-06-02-server-side-positions.md",
+      "sha256": "bb49f882136834a2918987be0eeba8a0b7a14e6d6d13a421a593e9918f118efc"
+    },
+    {
+      "path": "docs/plans/2026-06-02-v0.3.0-design.md",
+      "sha256": "8fe514b7a0c3b48d1181b33270473225adc4f2a0a70eae19881e02dca2f9e990"
+    },
+    {
+      "path": "docs/plans/2026-06-02-v0.3.0-implementation-plan.md",
+      "sha256": "5ce0087543a24f523ba0e194b1d782ba1a3ec05ab08e2b7820315d9aac3b3f0f"
+    },
+    {
+      "path": "docs/plans/2026-06-03-cv-ring-annulus-detection.md",
+      "sha256": "117cb1fe377eb06889e8e12a524093671d46216f2dc174157f5db7827a67ee8e"
+    },
+    {
+      "path": "docs/plans/2026-06-03-cv-ssim-primary-detection.md",
+      "sha256": "f1ec7fafae3b06e793486b7a7563b3c5caaff944a5c81fd7685323606924f6a9"
+    },
+    {
+      "path": "docs/plans/2026-06-03-cv-tracking-research.md",
+      "sha256": "256e1cfb15d20d02dd59dce17c28c52d2a319909e79033cc02dca14939002d36"
+    },
+    {
+      "path": "docs/self-hosting.md",
+      "sha256": "c1a6b176631ede0441cf1137eac644ec6d55b6899e90e1744315770d5c8c4f06"
+    },
+    {
+      "path": "docs/threat-model.md",
+      "sha256": "4d8a000c89584a12619ee3f539e05f1dc27ad0b1dd9372dc141a1f6dfcc0c5e1"
+    },
+    {
+      "path": "docs/user-guide.md",
+      "sha256": "65f87f2a019c1209633d68e20c47124da1593de93c6537989176a2c93c5fb623"
+    },
+    {
+      "path": "icons/IconMouseNormal.png",
+      "sha256": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0"
+    },
+    {
+      "path": "icons/IconMouseOver.png",
+      "sha256": "cdb30873bdf16770bfea1fe86e44db7476e504c2dca1542b0660b20f47f523a7"
+    },
+    {
+      "path": "jest.config.js",
+      "sha256": "5420c6958589aeb97d08b0ddbce01963fdbe5b617820bd964e76b9e7dd347ff9"
+    },
+    {
+      "path": "jest.e2e.config.js",
+      "sha256": "f05c63f106738b0b5149d21a14195e8a611199f8868cd486303be48bb0261501"
+    },
+    {
+      "path": "models/champion-classifier-metrics.json",
+      "sha256": "f6781a759a36013eba356fd204a63e5c5483f48d67e1fbe3f26ff19fc0013ff8"
+    },
+    {
+      "path": "models/champion-icons-manifest.json",
+      "sha256": "42e64439a5c4a7eabea8e6cc243a43cf7e297296b54dac921ef5d4eb7a13e2d7"
+    },
+    {
+      "path": "models/champion_classifier.onnx",
+      "sha256": "84a4ceaaa9befb98516990d056667865555f7b51c8eb78f38c876a97a219da3f"
+    },
+    {
+      "path": "models/champion_labels.json",
+      "sha256": "7108dd06849b5121d7c295ec9c430c026464d0f753b062337b5472ab43e93643"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "651c6138d814b9dd391fc761741eda0aee4f426aa6426302450898b53026410e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "7b087fd12c71dd8d0dfc87bc3574c651ab97a8b39bc1a6753311c4f2d7925ae0"
+    },
+    {
+      "path": "scripts/bump-version.mjs",
+      "sha256": "91420a174a2b49e36d2181891e744cd424a2cf5ed9bcb7f2a37f4e6e67111482"
+    },
+    {
+      "path": "scripts/deploy-server.sh",
+      "sha256": "59aefcec3a1ffcbe64dba7c0c8413383037a558dfb431d55ae134a8afc84f2dc"
+    },
+    {
+      "path": "scripts/fetch-minimap-icons.mjs",
+      "sha256": "a8e054834b54de0856638e7355fda9ad635802694a26d1a0ca4378f001cd53f3"
+    },
+    {
+      "path": "scripts/icon-diff-summary.mjs",
+      "sha256": "325471f276aba378049a29cc47a50c4bd4ca77ce5aac0b2c7e88bfe6741cecb2"
+    },
+    {
+      "path": "scripts/icon-set-changed.mjs",
+      "sha256": "58d92d6bb7bd4817fd12b2beb74bb509da490414322040c607dd0f9f7c55daf0"
+    },
+    {
+      "path": "scripts/make-cv-fixtures.py",
+      "sha256": "b6ab6661af48ad85efddb6d4763b05afe5aa9c9907f80c211c14a7c5c5294ea7"
+    },
+    {
+      "path": "scripts/make-game-fixtures.py",
+      "sha256": "c94f794d49b8b647ae1dc5cb7a07bfa5c8dc092d8839021e485bcf485bf31f2b"
+    },
+    {
+      "path": "scripts/refresh-model.mjs",
+      "sha256": "4dee8869d00edbb523bf13bfd4de014c85c5711b729c6fbe1d20af34d6817254"
+    },
+    {
+      "path": "scripts/requirements.txt",
+      "sha256": "a965159b764739fa00b6d719c1c07784e7d26ba521d07d7e08bc5c1f8f9e4311"
+    },
+    {
+      "path": "scripts/train_champion_classifier.py",
+      "sha256": "045c131b8789a3aaaecc656d9459f7fbc9e9f005e42e5fe75febe6f331b8d67d"
+    },
+    {
+      "path": "scripts/update-champion-icons.js",
+      "sha256": "fde975fdbf74ee2b43b7463264d442209371c6051ec90a95f2e7ab5270ad5912"
+    },
+    {
+      "path": "server/.dockerignore",
+      "sha256": "9f353fa27b462d4ad05cb9b08836570fa2be6f53c42caefffa9aa372f30e3612"
+    },
+    {
+      "path": "server/Dockerfile",
+      "sha256": "4a2ef2d96960b93bf5676090b8ea625a1326a0e65159a82a5721fa4e62af4b0b"
+    },
+    {
+      "path": "server/package-lock.json",
+      "sha256": "de3e0f5c296f1febff108884de48726e0960a05afc3247522ec28ca32024f7ef"
+    },
+    {
+      "path": "server/package.json",
+      "sha256": "b99a7adc8779658aa98f9fe64fc0373e974bf7d101e2c02195569560fc152cf5"
+    },
+    {
+      "path": "server/src/heartbeat.ts",
+      "sha256": "52dba3a40360496fbe6f7f9469188ec1a2c788175bc13503f4c26f091faf958b"
+    },
+    {
+      "path": "server/src/index.ts",
+      "sha256": "66cce197caee2289b48cf0f90c71224a16e56b51a05577ad8944596d7bd66def"
+    },
+    {
+      "path": "server/src/rate-limit.ts",
+      "sha256": "13a2661b6d25e4ef84a7b020de3ed0f7f1b86a84b92c3bd9dae40a491691c0a5"
+    },
+    {
+      "path": "server/src/rooms.ts",
+      "sha256": "a67ad64e1f057810cfa4d929f3edf72183908ef78364ef3d8b2d058f9e834957"
+    },
+    {
+      "path": "server/src/turn.ts",
+      "sha256": "77db9bb396cacc6e2459ae26a8813385b0820b8932f9bf448bf3e7800f7c828b"
+    },
+    {
+      "path": "server/src/types.ts",
+      "sha256": "e9b559fe4c5476c068542cdd7a7ee50427f12e2cd299f1b39d475a555ad7c48a"
+    },
+    {
+      "path": "server/src/validate.ts",
+      "sha256": "49136194b88f5c64588491906fb75b91949db2177ce3128003e86a7673864028"
+    },
+    {
+      "path": "server/src/volumes.ts",
+      "sha256": "9047ff9dedc7bd23cbcdab7dee894bd965bf6a3b6ced160ec9a97288873166f7"
+    },
+    {
+      "path": "server/src/ws-handler.ts",
+      "sha256": "3aaea96ff07194a5acdccd03c49f9843518fdb7c8f0c2a38ee6e78dd46ecc725"
+    },
+    {
+      "path": "server/tests/heartbeat.test.ts",
+      "sha256": "23fbcc89561128e23d5768f5e00b324758da0bd38ae6da05879a8b821fb00931"
+    },
+    {
+      "path": "server/tests/integration.test.ts",
+      "sha256": "7436273c686e09e565d9179b4356e0ef67328d438d7e680f7f12e26d309597ec"
+    },
+    {
+      "path": "server/tests/rate-limit.test.ts",
+      "sha256": "3ca1d1ae738ccbadedc0a4c4ee51b19a8a4ded26f4c54022e0525b4de900e66e"
+    },
+    {
+      "path": "server/tests/rooms.test.ts",
+      "sha256": "1ff16a2652eceb35d35e19753a659f494c0c18fdb82085cc20196aef4d3ce393"
+    },
+    {
+      "path": "server/tests/turn.test.ts",
+      "sha256": "32b1b8fb69dc3c4f38a9b766289a1a936b3e55d64f18e54cf19141af70d12d70"
+    },
+    {
+      "path": "server/tests/validate.test.ts",
+      "sha256": "ed6e59616b22b1d4d1cde8ef943975a266d530ac66fa83e0a68e3148086d7386"
+    },
+    {
+      "path": "server/tests/volumes.test.ts",
+      "sha256": "68156799dfc6ec2364166ecd516f2deede4e0db8e767accffad195fbec87e23d"
+    },
+    {
+      "path": "server/tests/ws-handler.test.ts",
+      "sha256": "bb876e0a3d50427ea9fb6ea7d8514265bcbefff5e69f4edee99497a992ed7c7b"
+    },
+    {
+      "path": "server/tsconfig.json",
+      "sha256": "bfefe365d7c43bd80d33f130b8053be166f6f4cadb23d13709ed94288f868e51"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "sha256": "07d2a7c53a6c320541afe4e32cbe8a7d891dd1a7725a9b6e56f3bcc544507f59"
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "cecb9f1c0190946bcf347ed4f9e369332a42bf29106013af745039aac55c582d"
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "6aeeab41bc35efde4e3c2b644a6248f7fc06d24ae30b75c0d33491cbb0c1fa31"
+    },
+    {
+      "path": "src-tauri/capabilities/default.json",
+      "sha256": "9f8209318838624b6defa1c37eec061a80b11bfee7ffa7c5d295d90c7af9725d"
+    },
+    {
+      "path": "src-tauri/gen/schemas/acl-manifests.json",
+      "sha256": "070abaa7b138a953dfddebfa086b9d2ebee285ed60ca86d71fad425519eae958"
+    },
+    {
+      "path": "src-tauri/gen/schemas/capabilities.json",
+      "sha256": "981d80757d235ea58f7bc88ea0708bf148d424eb4378ce00a0ba0b9f67ae1282"
+    },
+    {
+      "path": "src-tauri/gen/schemas/desktop-schema.json",
+      "sha256": "88cf23980f1479b57ee8dfd2206216770e0b943b50466b745f0e458c41946e60"
+    },
+    {
+      "path": "src-tauri/gen/schemas/windows-schema.json",
+      "sha256": "88cf23980f1479b57ee8dfd2206216770e0b943b50466b745f0e458c41946e60"
+    },
+    {
+      "path": "src-tauri/icons/128x128.png",
+      "sha256": "84ad9f494d122f716cfdb900dff5df6016510f1c89fe4721cc3986892631cb1d"
+    },
+    {
+      "path": "src-tauri/icons/32x32.png",
+      "sha256": "9d6d060dfcff7708131a5a0ed78e37856e79903653ef41181708b1aaa1cc5474"
+    },
+    {
+      "path": "src-tauri/icons/icon.ico",
+      "sha256": "cf10095dca3298903dbfadcc403a64822b7b914127c03738f7138ff1094f8458"
+    },
+    {
+      "path": "src-tauri/src/audio_out.rs",
+      "sha256": "2412e72137666d5102732db1006b0f7fadc1a3bf7724bf50fb555bc71eda2dc6"
+    },
+    {
+      "path": "src-tauri/src/capture.rs",
+      "sha256": "af4470b7e0599c13093ed967649e2e0270b796a53945a604b5828af327dca1cf"
+    },
+    {
+      "path": "src-tauri/src/game_bundle.rs",
+      "sha256": "e2d5c9f55790ee8b987971ded601b46c7f159f1095eb91109b04938ac8abee10"
+    },
+    {
+      "path": "src-tauri/src/game_window.rs",
+      "sha256": "fd4681c9dce49ec1f1140fdcad38ae4df498c5f0f04baef09a9d260d3a7b18a2"
+    },
+    {
+      "path": "src-tauri/src/global_keys.rs",
+      "sha256": "fe8fa936f1266c3054c9c670c993d44de295a562965b26411da3391e1cb42054"
+    },
+    {
+      "path": "src-tauri/src/key_decision.rs",
+      "sha256": "b6e2859c764aa4effd55d9d5420b415926c4500cf4212c86038095d37f999859"
+    },
+    {
+      "path": "src-tauri/src/lcu.rs",
+      "sha256": "39361926a26c5a47b3466e9a3a33e7cb8320b0451c27dabda67dd3cb368dc587"
+    },
+    {
+      "path": "src-tauri/src/main.rs",
+      "sha256": "4fe87b051fa996abddc0f93283d5c287aea1de7c834859e6c0709edd3ec02450"
+    },
+    {
+      "path": "src-tauri/src/mic_permission.rs",
+      "sha256": "93bd6ca9ecb65b1e6a48b0b1909550bede370229a7a307b4d77efc123c9008b3"
+    },
+    {
+      "path": "src-tauri/src/updater.rs",
+      "sha256": "76a050e10766064dd3bc55b499750ce3a5631612796b477b60ef12053c5c69d8"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "sha256": "72a6b405b4fca6230c0ba9ec7217302c93501c90bc89f801fd0d7dfc33079d8a"
+    },
+    {
+      "path": "src/background/background.html",
+      "sha256": "5621dad20a1b5d14955dfb8a91f5530a66875b83518731e32d9590f52d2064f2"
+    },
+    {
+      "path": "src/background/background.ts",
+      "sha256": "dd57cdc57eda99321965d6c15ebe23f38b8fc849573ecb562d26a002437fecea"
+    },
+    {
+      "path": "src/core/capture-frame.ts",
+      "sha256": "7d76fb404d674c4bf49e6787ae53ed96d748d1a78431ce90ea8e797431786cac"
+    },
+    {
+      "path": "src/core/config.ts",
+      "sha256": "c324dbf33739149fdf89c69023484e06b5127979f85c5f168aa8c3e456e7dedf"
+    },
+    {
+      "path": "src/core/game-window.ts",
+      "sha256": "5b2d3f2f0b651d37b84c3a7f87823279a7d99669a1c4123cdc8427b91ecce2a6"
+    },
+    {
+      "path": "src/core/identity.ts",
+      "sha256": "96eb979669897981e678e86b87ff37258252adbd751699d3b8b184e1ec8f6d7b"
+    },
+    {
+      "path": "src/core/keymap.ts",
+      "sha256": "80b9978d2888a5b7cc16d53d356b94eea435f0e191c292eb211c83d3018aa279"
+    },
+    {
+      "path": "src/core/logging.ts",
+      "sha256": "dcf3db5332e4e7a0e209ad24eb0ff560e6477100f35ef423f35acb93d8bb0c13"
+    },
+    {
+      "path": "src/core/map-calibration.ts",
+      "sha256": "ce283f63ec12834b8a387e6987d0b272ea353f9f77953792a1da0b0de1a5b817"
+    },
+    {
+      "path": "src/core/map-detect.ts",
+      "sha256": "c078ff4de750b0c54300c4c403884fbad79e9d34f95bfbc0b132b1ba03881a75"
+    },
+    {
+      "path": "src/core/room.ts",
+      "sha256": "da09cde4387e49bb760298e9d939dcbe7fdf952c3f6c6fff566e0c7781f037f8"
+    },
+    {
+      "path": "src/core/streamer-detect.ts",
+      "sha256": "441cea8d22cd188ff166cfaa85f89ec38fa4421cb1600cbd6d35057a0639acf3"
+    },
+    {
+      "path": "src/core/types.ts",
+      "sha256": "ab5061b5b5a60513e6e4214209da66058c867279981ed5528f95b7f1cb312337"
+    },
+    {
+      "path": "src/core/window-globals.ts",
+      "sha256": "ac16b9066b736b346fb3c10db198359a0111e9e5a1324e24cf44a6ea75a7e681"
+    },
+    {
+      "path": "src/overlay/i18n.ts",
+      "sha256": "bc78b3bb33dd71cd68bfb437f0ceffd5ba44ac635514a157ae34efb90a74aaa4"
+    },
+    {
+      "path": "src/overlay/overlay.css",
+      "sha256": "4a2b66f921d16fa1b925b2a6ad2a1b593489350bc9cfff8ee2d1989cac6dc18e"
+    },
+    {
+      "path": "src/overlay/overlay.html",
+      "sha256": "031fb2e51707d1156be3fe55ad189f484d9195191d3a6a3ec155fa71dfef84fd"
+    },
+    {
+      "path": "src/overlay/overlay.ts",
+      "sha256": "34508581fa2b82b97a6066ef4131071b3ac35fb982e3023e9a02f0bb86890bd8"
+    },
+    {
+      "path": "src/overlay/resize-helpers.ts",
+      "sha256": "a0da15c1e568dfae431d52740c448f8028b34c0cc7e7cd85bdc6d30580f836ec"
+    },
+    {
+      "path": "src/scanner/scanner.css",
+      "sha256": "c0902e69024e394ef48215d4fbbc9d94a0e4cbede8fc57f66e36ceb07952c8de"
+    },
+    {
+      "path": "src/scanner/scanner.html",
+      "sha256": "35c7fcb16273f020100acf5791565d35eba468a66f41da323eeb1de57c2b518d"
+    },
+    {
+      "path": "src/scanner/scanner.ts",
+      "sha256": "e911604e7e078cf77323a314dfe956a00edf7e350199217fe6b1a9650cdaa883"
+    },
+    {
+      "path": "src/services/app-audio-output.ts",
+      "sha256": "5814fe8b693540ba13a25d9e7f9080172d3945d6fa6f42802606650ca3338973"
+    },
+    {
+      "path": "src/services/audio-prefs.ts",
+      "sha256": "665e68d80bda732d16557b7328281bdd52a6c8070e506365a3d635d88a357cdb"
+    },
+    {
+      "path": "src/services/audio.ts",
+      "sha256": "40692334e59a6abf425674a366afac87b729476071b45d0c1ac16a476733e142"
+    },
+    {
+      "path": "src/services/blob-types.ts",
+      "sha256": "e6e2bfcef789f32c0d3b3e3bd756ba6c24817ef06f6320b55b3a082bb9f88b16"
+    },
+    {
+      "path": "src/services/camera-box.ts",
+      "sha256": "1a16b409d9e5e3be9dd5eed734fc4aeec070e01a6a56ce79b89548bbae5a0a5b"
+    },
+    {
+      "path": "src/services/camera-hearing.ts",
+      "sha256": "bf6f112684830640474b17c6ac1364aa522d8a0eac9f562453aececada8746fc"
+    },
+    {
+      "path": "src/services/champion-classifier.ts",
+      "sha256": "4c6ca8a4e292776fb53e03f9a568a7b05abffe16c949aca3198eebab326c51c2"
+    },
+    {
+      "path": "src/services/debug-bundle.ts",
+      "sha256": "d22ead31443e0b9f14d28af67ec59b1402d31b5aeaf9eca5f1429180cdf5bfb8"
+    },
+    {
+      "path": "src/services/devices.ts",
+      "sha256": "14519a719af17729d2cdac77c6cdfcc16428cc12b5de1acc1880e38cafcdcee0"
+    },
+    {
+      "path": "src/services/frame-source.ts",
+      "sha256": "23777dcc4fdb4a40d7fb66ab61109daf309bb1fa434db828fdc623db07797ca1"
+    },
+    {
+      "path": "src/services/game-state.ts",
+      "sha256": "50cb3913dff557ecaa4e81778fcbaa94d90e5cd970cf27c2728c01b8c82206fb"
+    },
+    {
+      "path": "src/services/icon-identity.ts",
+      "sha256": "28a496e436e24764ef1d05e0208ea1ec7adfa04896950c72f9a541ab0daeb912"
+    },
+    {
+      "path": "src/services/orchestrator.ts",
+      "sha256": "698d2545ec1611493024ad2101fdc2efe3b364516fb596a8f9f4a3313cf21171"
+    },
+    {
+      "path": "src/services/peer-connection.ts",
+      "sha256": "5bcdc2b38bef96667129de6fdf6f1025180dc7ba735099489cf5c7626ef46c3e"
+    },
+    {
+      "path": "src/services/privacy.ts",
+      "sha256": "65453a84366ef31440b3d8d35e15b5cfcc19d1ad5b4569dc9861487179c9b95e"
+    },
+    {
+      "path": "src/services/signaling.ts",
+      "sha256": "9593baab05213de89b1800a680d305332db7ae165da4d9b34e708a5c22986540"
+    },
+    {
+      "path": "src/services/skin-matcher.ts",
+      "sha256": "1a55a8b1fe449befab9a4dfd575ba0773182ae6034ffc18e56bc7ac13662ae70"
+    },
+    {
+      "path": "src/services/speakers.ts",
+      "sha256": "0eadef29c83d897a8d703b3028e82c28faf4e839a944e2a3452c437feeca6fdb"
+    },
+    {
+      "path": "src/services/tracking-helpers.ts",
+      "sha256": "d4f18b599fdc368baca9dafc89ff60eb982ca5855739aa725587cfc42240e434"
+    },
+    {
+      "path": "src/services/tracking.ts",
+      "sha256": "0e454da3171a082cd780c664a79edfe888464de0ce14e12c4effa256a61c3545"
+    },
+    {
+      "path": "src/services/updater.ts",
+      "sha256": "801cfc4975f4bd62090945af1a3a6918113b162c23a760b432de8e82a251da89"
+    },
+    {
+      "path": "src/services/volume-client.ts",
+      "sha256": "b52efdb31026c1a3e9aec39cc9adfbcf76cf4ccc9c459f250cb495e5b256cc32"
+    },
+    {
+      "path": "src/speakers/speakers.css",
+      "sha256": "99777fb32f08d229aaf138ee507bf6796a11d376760663cb4a28072ace504f4f"
+    },
+    {
+      "path": "src/speakers/speakers.html",
+      "sha256": "214a3db21b646c0ea3a7d1e4126bb1de41d3aec3b4dbc5a4d776e8d1e828ac33"
+    },
+    {
+      "path": "src/speakers/speakers.ts",
+      "sha256": "8378f369e6418d532daeabe138aa7c6b2b7534d2229fc54e56a2727e4f1ba971"
+    },
+    {
+      "path": "tests/core/capture-frame.test.ts",
+      "sha256": "8c452bc73be22d47b73d7e5bb404bb5c32585b8e42f3888312980c914c0ce015"
+    },
+    {
+      "path": "tests/core/config.test.ts",
+      "sha256": "70ae9d9d6a25af6426bd6a3f6ad2daf5a61ac370ca9524bb10184daebd22893c"
+    },
+    {
+      "path": "tests/core/game-window.test.ts",
+      "sha256": "bba74e8cf73b55c36efc4f6043ede640a839c6d67d608bdc2dd44880496418ca"
+    },
+    {
+      "path": "tests/core/identity.test.ts",
+      "sha256": "e840fd3791537c829160b369b46fbdad55abc760fa2726ead50684aa3d5f3988"
+    },
+    {
+      "path": "tests/core/keymap.test.ts",
+      "sha256": "76820d94db0d9d5ca9c6e35bb3f46cefa0fd7892e313e7fe6722f74a31ec8d72"
+    },
+    {
+      "path": "tests/core/logging.test.ts",
+      "sha256": "7b0c614f9352fa03eac108bc2a739b89f824f383e2572e0fba6cc23ea024dee8"
+    },
+    {
+      "path": "tests/core/map-calibration.test.ts",
+      "sha256": "cb2d78de62aa5df017a59d9e043c113d1cb1e730b98a7c65b7b8d139ad80b78c"
+    },
+    {
+      "path": "tests/core/map-detect.test.ts",
+      "sha256": "9435318da469bb79c4bc03bb342b330ac04d48063806a48123a56645d84723e6"
+    },
+    {
+      "path": "tests/core/room.test.ts",
+      "sha256": "f7aa517ed5fd78e2ff08ad98321b868c2614e935e368186c80d78576f2d7e85b"
+    },
+    {
+      "path": "tests/core/streamer-detect.test.ts",
+      "sha256": "99c5711928d11fbf54abc4d61e95937ce2a57e17c214b1014dc8981b6d071c28"
+    },
+    {
+      "path": "tests/cv/camera-eval.test.ts",
+      "sha256": "5bb430059788d779678bc18dc25243b6317aa35ecc40938ae34ea6420e0301a3"
+    },
+    {
+      "path": "tests/cv/camera-sim.test.ts",
+      "sha256": "6240d97bf1325ce47d4dd27f5a30c4de5468f41701058bacaccfca0bf9152f4b"
+    },
+    {
+      "path": "tests/cv/harness-selfcheck.test.ts",
+      "sha256": "6490602569372fffefeca20813cd75877bd58bbf2622e07e5d99718ef80aa7fd"
+    },
+    {
+      "path": "tests/cv/harness/camera-scenes.ts",
+      "sha256": "e1d1f691a9cd4ad7405fc74933f4dbcdabe57a2c1e2c1b502157f5e2fe3c43c7"
+    },
+    {
+      "path": "tests/cv/harness/drive.ts",
+      "sha256": "d98604341fc791ca425231738e897596f14ac5251fc1d9f70585a9d985222a7a"
+    },
+    {
+      "path": "tests/cv/harness/frames.ts",
+      "sha256": "d306f9ce223d2682f2e855adbba1d8c0ca758062f03c7d8d6ad4efa2aeb2cf20"
+    },
+    {
+      "path": "tests/cv/harness/png.ts",
+      "sha256": "a1291c3e526a9131c3dd636d166450d35b544ffe838ea6cbb1dbba660d6ec083"
+    },
+    {
+      "path": "tests/cv/harness/real.ts",
+      "sha256": "df6d2983567d44498442ba5f9a938d862f3eacc8fff25503a49e97964630184c"
+    },
+    {
+      "path": "tests/cv/harness/scenes.ts",
+      "sha256": "fb43606dd107dc777fa74bc35f30e2b33d111f792319bf31fd9bae0838b3f577"
+    },
+    {
+      "path": "tests/cv/harness/scorers.ts",
+      "sha256": "5f5e579407f3873cfbc04cd2bb3cb38d2365bfa8d9d02bea1a3594f6300ad896"
+    },
+    {
+      "path": "tests/cv/near-field-gate.test.ts",
+      "sha256": "e8d90ce3593c591f1024cfab916c549637fc493d872ad0d3e00d342d6aedf75a"
+    },
+    {
+      "path": "tests/cv/real-art.test.ts",
+      "sha256": "58f94faf6fab61cbe4f1d4ecee79274b544442a7c936477fb81130fbbcc962b4"
+    },
+    {
+      "path": "tests/cv/real-games.test.ts",
+      "sha256": "9fc973e8747788ee1b2332282f0be00124c73e87c405da340165968ce1f7bb4e"
+    },
+    {
+      "path": "tests/cv/tracking-simulation.test.ts",
+      "sha256": "db82ea400db4bf4f0004c51c5e25cc7cbff0a304b66df18742cfb5105ee06043"
+    },
+    {
+      "path": "tests/e2e/compliance.e2e.test.ts",
+      "sha256": "5cf335a905fe80ed52fc6f244b29550d607bf440fc98ab30fd595839546078a6"
+    },
+    {
+      "path": "tests/e2e/fakes/game-state.ts",
+      "sha256": "25776f73652d4520cb7c53c7df64dfc0688a67cfbbc4b937d9faccb31dbb9bf8"
+    },
+    {
+      "path": "tests/e2e/fakes/peer.ts",
+      "sha256": "ee805296fb70ba3e3829fa2d9e3fb570a20f8a9dde33965489279f11526d7301"
+    },
+    {
+      "path": "tests/e2e/fakes/tauri-core.ts",
+      "sha256": "0044a680b75c4aebca011ea23811cf5b18263d2d321e4e14a98511c533985a22"
+    },
+    {
+      "path": "tests/e2e/fakes/tauri-event.ts",
+      "sha256": "1bce379fe680ad9e122f3451e8f0b9fd5690c477606bf085a2d9f7891bd6f61f"
+    },
+    {
+      "path": "tests/e2e/fakes/tracker.ts",
+      "sha256": "2a19a12f15dedf377d274a3e0b21c406a3b079e3f2b4cbd76bbcfd4774bdd1ed"
+    },
+    {
+      "path": "tests/e2e/fakes/webaudio.ts",
+      "sha256": "f7d2109da16e715682b023f063c309e646247c635b9f1024e920fcd9e0c3de31"
+    },
+    {
+      "path": "tests/e2e/harness/client.ts",
+      "sha256": "cc3e9f3dbf7d052281a7be1c1b3d68458b3054260d3d488d40202b2175860f3a"
+    },
+    {
+      "path": "tests/e2e/harness/tap.ts",
+      "sha256": "0e30092b049519f7469dea0079e07e7b0effb97e646dadad9868d8352595aa49"
+    },
+    {
+      "path": "tests/e2e/session.e2e.test.ts",
+      "sha256": "0e363c4f1617b2856bc1ee6d7c80a416a4b3fb187d6a745e2132c23f35299b72"
+    },
+    {
+      "path": "tests/e2e/setup/dom.ts",
+      "sha256": "04012a08f79ad5803d1809a62071a45479e62ee7e4a5f0206d3222679771ee25"
+    },
+    {
+      "path": "tests/e2e/setup/env.ts",
+      "sha256": "76daf59421756e9eb66765f3ad82366463dfea6bf6571d80b6699c62cebff1b9"
+    },
+    {
+      "path": "tests/e2e/setup/global-setup.ts",
+      "sha256": "17272e8ee5980ba6e75417e81fb69e0a208f5cdb1f0529360d06e16015d8425c"
+    },
+    {
+      "path": "tests/e2e/setup/global-teardown.ts",
+      "sha256": "943a9df1fea14b301bc98958463e2fa00695bf4e11ff8599438fcfe73d496ac1"
+    },
+    {
+      "path": "tests/integration/session-flow.test.ts",
+      "sha256": "6dcba1522d879177c3e5ad3d406579b82197b6edb3756f7a51d78fbf6c292a40"
+    },
+    {
+      "path": "tests/overlay/i18n.test.ts",
+      "sha256": "bdbd1c240b696df0028d1ef337e597cb1283a9760ebda536c318aa9436b26e59"
+    },
+    {
+      "path": "tests/overlay/resize-helpers.test.ts",
+      "sha256": "bca645cc9251f0fbf0cf01ca78f812414e90b16e7c44a80fa3cf3b24b01ee5f5"
+    },
+    {
+      "path": "tests/services/audio-mic.test.ts",
+      "sha256": "78d777f5e418d951747d703f2a242b38e98ec5d651354001e3f8d2019c79fcf4"
+    },
+    {
+      "path": "tests/services/audio-peer-lifecycle.test.ts",
+      "sha256": "9d84da24a1d4e65d06ebcffdfee302de47e29474929d028876eaa9e889895fd0"
+    },
+    {
+      "path": "tests/services/audio-prefs.test.ts",
+      "sha256": "e8626d25ff7813ec5203aeb0dc22674b8546e3aa62893e8be9eef4469f7e0a1d"
+    },
+    {
+      "path": "tests/services/audio.test.ts",
+      "sha256": "bfe9ccf2e25e9bb4fd0b18300822e30512b3015db5a99695ab55982000aed50b"
+    },
+    {
+      "path": "tests/services/camera-box.test.ts",
+      "sha256": "b6931fc3fb78bf831ca1564f871967298ac76695805973d2eedc0d237f1a13f7"
+    },
+    {
+      "path": "tests/services/camera-hearing.test.ts",
+      "sha256": "741da0cc0277afc18b1ffb2058ed9605419cadc9f59378252e0268bbd4f2030e"
+    },
+    {
+      "path": "tests/services/champion-classifier.test.ts",
+      "sha256": "61074e50d1070f09fc6fc56c7215b9f77670a60c18c4a2611839d95345061d50"
+    },
+    {
+      "path": "tests/services/debug-bundle.test.ts",
+      "sha256": "26a3ff4ea557e929fc2cd2c3516e96cacfc889b105545e40a752fadd0fb7e3d1"
+    },
+    {
+      "path": "tests/services/devices.test.ts",
+      "sha256": "4dc0c7eccbdbcf3ae8efc6557b16d93e17f92537946d40a97467460b7f73ce6a"
+    },
+    {
+      "path": "tests/services/game-state.test.ts",
+      "sha256": "13a5749974d7df90240ec4df45f7ff6d581f3aae1de8aea25679aa52f4f7b1bf"
+    },
+    {
+      "path": "tests/services/orchestrator-lifecycle.test.ts",
+      "sha256": "0305bfaa19e6c052f2bba302ddbbdd6842cd26300a02dad192484fae4305263d"
+    },
+    {
+      "path": "tests/services/peer-app-audio.test.ts",
+      "sha256": "81cc66a04dffa53e5f6b58b1cdf8334256c556594b3f1266484839b3bb5cef8b"
+    },
+    {
+      "path": "tests/services/peer-connection.test.ts",
+      "sha256": "5d7e7c6203c39fa6783dbf6001d6a214c8e35ded44e1907a0ba0865314696850"
+    },
+    {
+      "path": "tests/services/signaling.test.ts",
+      "sha256": "78ce843afcfd2384aaeed307114960484f348bca16744fb9ed4e417d525ba108"
+    },
+    {
+      "path": "tests/services/skin-matcher.test.ts",
+      "sha256": "183b28e49966ef70a5a54ca4d116d2936d98376a66488cedcaf012c739a1be9c"
+    },
+    {
+      "path": "tests/services/speakers.test.ts",
+      "sha256": "5504e781ac1cdb83cefdc71a5124f8c1c3b7ec4510fb3a04e00a6b3fc9fdb779"
+    },
+    {
+      "path": "tests/services/tracking-helpers.test.ts",
+      "sha256": "5ddf64470deee292a76cb061fdf0be906d4966d4edc34cc4a2d5f3d3b85fb5c4"
+    },
+    {
+      "path": "tests/services/tracking.test.ts",
+      "sha256": "015419d2af0574ad7c78110df67393afed63c0bc844bed6d3734d94bf369e99d"
+    },
+    {
+      "path": "tests/services/volume-client.test.ts",
+      "sha256": "14d822630f58d998fa4b5cba2da4a2883a403f846a72d77a97d516c77358e481"
+    },
+    {
+      "path": "tests/setup/browser-globals.ts",
+      "sha256": "b9c3966a3442f691751118c8fe7b93dffaa8d7af96890d55456f949d6931952f"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "d7d6fade62ab94a8aa87fc17d189a59aa0383fd4a13f2a666c1f6e47f7dd4c3d"
+    },
+    {
+      "path": "tsconfig.test.json",
+      "sha256": "988dadaefc46b194bf3fb62b1422e1a7b79ce16dbfa9d775107f85d0f440861e"
+    },
+    {
+      "path": "webpack.config.js",
+      "sha256": "188eb3422fb02c4e1e50987415ae719235c8acc0956789f79f0d6c27d263911a"
+    }
+  ]
+}
