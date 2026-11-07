@@ -11,7 +11,7 @@ const {voiceAuthorization}=require('../../src/services/voice-access');
 const {checkVoiceConnection}=require('../../src/services/connection-status');
 const {SERVER_URL}=require('../../src/core/config');
 if(location.pathname==='/caster-audio'){
-  const NativeContext=window.AudioContext,gains=[],tracks=[],discordRequests=[];let microphoneRequests=0,releasePageRequests=0;
+  const NativeContext=window.AudioContext,gains=[],tracks=[],discordRequests=[];let microphoneRequests=0,releasePageRequests=0,failMicrophone=false;
   window.__TAURI_INTERNALS__={invoke:async (command,args)=>{
     if(command==='check_for_update')return {current_version:__VOXDRIA_VERSION__,latest_version:__VOXDRIA_VERSION__,update_available:false,channel_ready:true,download_url:null,notes:null};
     if(command==='open_release_page'){releasePageRequests++;return;}
@@ -20,11 +20,12 @@ if(location.pathname==='/caster-audio'){
   }};
   window.AudioContext=class extends NativeContext{createGain(){const gain=super.createGain();gains.push(gain);return gain;}};
   navigator.mediaDevices.getUserMedia=async()=>{
-    microphoneRequests++;const ctx=new NativeContext();await ctx.resume();const oscillator=ctx.createOscillator(),gain=ctx.createGain(),destination=ctx.createMediaStreamDestination();
+    microphoneRequests++;if(failMicrophone){failMicrophone=false;throw new DOMException('Synthetic denied microphone','NotAllowedError');}
+    const ctx=new NativeContext();await ctx.resume();const oscillator=ctx.createOscillator(),gain=ctx.createGain(),destination=ctx.createMediaStreamDestination();
     gain.gain.value=.01;oscillator.connect(gain).connect(destination);oscillator.start();const track=destination.stream.getAudioTracks()[0],stop=track.stop.bind(track);tracks.push(track);
     track.stop=()=>{stop();oscillator.stop();void ctx.close();};return destination.stream;
   };
-  window.casterAudioFixture={state:()=>({gains:gains.map(gain=>gain.gain.value),microphoneRequests,releasePageRequests,discordRequests,tracks:tracks.map(track=>track.readyState)})};
+  window.casterAudioFixture={failNextMicrophone:()=>{failMicrophone=true;},state:()=>({gains:gains.map(gain=>gain.gain.value),microphoneRequests,releasePageRequests,discordRequests,tracks:tracks.map(track=>track.readyState)})};
   require('../../src/caster/caster');
 }else if(document.getElementById('organizer-panel')){
   mountOrganizer(()=>{});
