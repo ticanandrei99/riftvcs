@@ -49,6 +49,12 @@ afterEach(() => {
 });
 
 describe('log buffering', () => {
+  test('credentials are removed before reaching either the native debug log or the console',async()=>{
+    const {logging,invoke}=await loadLogging();logging.setLoggingEnabled(true);const token='x'.repeat(43);
+    console.error('Bearer '+token,{password:'test-only-secret'});await logging.flushLogBuffer();
+    expect(JSON.stringify(allLines(invoke))).not.toContain(token);expect(JSON.stringify(stubs.error!.mock.calls)).not.toContain('test-only-secret');
+    logging.setLoggingEnabled(false);console.error('Bearer '+token);expect(JSON.stringify(stubs.error!.mock.calls)).not.toContain(token);
+  });
   test('coalesces several lines into one batched IPC call, in order', async () => {
     const { logging, invoke } = await loadLogging();
     logging.setLoggingEnabled(true);

@@ -31,3 +31,12 @@ test('unmuting one person cannot override mute-all, and mute-all preserves indiv
   expect(one.unmute).toHaveBeenCalledTimes(1);
   expect(two.unmute).not.toHaveBeenCalled(); expect(audio.isPlayerMuted('two')).toBe(true);
 });
+
+test('the incoming stream gate cannot be bypassed by individual unmute, deafen, volume refresh or reconnect',async()=>{
+  const peers=[makePeer(),makePeer()];let index=0;
+  const audio=new AudioService({sendSignal:jest.fn()},'local',async()=>peers[index++] as unknown as PeerConnection);
+  await audio.connectToPeer('ally',false);audio.setIncomingMuted(true);audio.toggleMutePlayer('ally');audio.toggleMutePlayer('ally');audio.setMuteAll(true);audio.setMuteAll(false);
+  audio.applyPeerVolumes({ally:1});audio.setPlayerVolume('ally',1);expect(peers[0].unmute).not.toHaveBeenCalled();
+  audio.disconnectPeer('ally');await audio.connectToPeer('ally',false);expect(peers[1].mute).toHaveBeenCalled();expect(peers[1].unmute).not.toHaveBeenCalled();
+  audio.setIncomingMuted(false);expect(peers[1].unmute).toHaveBeenCalled();
+});

@@ -16,8 +16,8 @@ const store = new Map<string, string>();
 describe('audio prefs', () => {
   beforeEach(() => store.clear());
 
-  test('fresh installs use Hybrid without camera hearing', () => {
-    expect(getAllyProximity()).toBe(false);
+  test('fresh installs use proximity without extending listening through the camera', () => {
+    expect(getAllyProximity()).toBe(true);
     expect(getCameraListen()).toBe(false);
     expect(getCameraOnly()).toBe(false);
     expect(getSharedReset()).toBe(true);
@@ -38,7 +38,7 @@ describe('audio prefs', () => {
     expect(getAllyProximity()).toBe(false);
   });
 
-  test('first RiftVoice launch applies Hybrid defaults once', () => {
+  test('first Voxdria launch applies proximity defaults once', () => {
     setAllyProximity(false);
     setCameraListen(false);
     setCameraOnly(false);
@@ -46,7 +46,7 @@ describe('audio prefs', () => {
     setAppAudio(false);
     setForceTurnRelay(false);
     expect(applyAudioDefaultsOnce()).toBe(true);
-    expect(getAllyProximity()).toBe(false);
+    expect(getAllyProximity()).toBe(true);
     expect(getCameraListen()).toBe(false);
     expect(getCameraOnly()).toBe(false);
     expect(getSharedReset()).toBe(true);
@@ -96,6 +96,9 @@ describe('audio prefs', () => {
       expect(getSharedReset()).toBe(true);
       expect(getAppAudio()).toBe(true);
       expect(getForceTurnRelay()).toBe(true);
+      expect(getAllyProximity()).toBe(true);
+      expect(getCameraOnly()).toBe(false);
+      expect(getCameraListen()).toBe(false);
     } finally {
       (globalThis as any).localStorage = real;
     }

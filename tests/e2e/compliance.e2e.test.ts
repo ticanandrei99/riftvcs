@@ -103,7 +103,9 @@ describe('E9 nothing a client receives carries another player\'s coordinates', (
     // them from.
     expect(volumeExchanges.length).toBeGreaterThan(0);
     for (const exchange of volumeExchanges) {
-      expect(Object.keys(exchange.response).sort()).toEqual(['myBlob', 'peerVolumes']);
+      expect(Object.keys(exchange.response).sort()).toEqual(['myBlob', 'peerVolumes', 'strictProximity']);
+      expect(exchange.request.strictProximity).toBe(true);
+      expect(exchange.response.strictProximity).toBe(true);
       // myBlob is a legacy empty string, not a number — the numeric bound is
       // the peer gains only.
       expect(typeof exchange.response.myBlob).toBe('string');

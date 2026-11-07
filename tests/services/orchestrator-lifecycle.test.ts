@@ -248,7 +248,7 @@ describe('panel settings across sessions', () => {
       setAllyProximity(false);
       await jest.advanceTimersByTimeAsync(500);
       expect(changed()).toEqual([
-        '[LoLProxChat] Settings changed: cameraMode=false allyProximity=false voiceOnCamera=false sharedReset=true' +
+        '[Voxdria] Settings changed: cameraMode=false allyProximity=false voiceOnCamera=false sharedReset=true' +
           ' (was cameraMode=false allyProximity=true voiceOnCamera=false sharedReset=true)',
       ]);
     } finally {
@@ -802,12 +802,17 @@ describe('the volume tick', () => {
     });
   });
 
-  it('keeps applying volumes while holding, so peers do not stay frozen', async () => {
+  it.each([
+    {mode:'team',allyProximity:false,allyVolume:1.0},
+    {mode:'proximity',allyProximity:true,allyVolume:undefined},
+  ])('keeps applying safe $mode volumes while holding, so peers do not stay frozen', async ({allyProximity,allyVolume}) => {
     // Not reporting our position is right; not touching the volume pipeline at
     // all is not. This path used to return before applyPeerVolumes, which left
     // every peer at the gain they happened to have when the tracker lost us —
     // so after a recall a player went on hearing everyone audible from the lane
     // they had just left, for as long as the tracker stayed lost.
+    const {setAllyProximity}=await import('../../src/services/audio-prefs');
+    setAllyProximity(allyProximity);
     const h = await startInGame();
     (h.orchestrator as any).peerStates = new Map([
       ['Ally',  { summonerName: 'Ally',  championName: 'Lux',  team: 'ORDER', isMuted: false, isDead: false }],
@@ -825,8 +830,8 @@ describe('the volume tick', () => {
     expect(h.audio.applyPeerVolumes).toHaveBeenCalled();
     const calls = h.audio.applyPeerVolumes.mock.calls;
     const applied = calls[calls.length - 1][0];
-    // Teammates need no coordinates to be scored, so they stay audible.
-    expect(applied.Ally).toBe(1.0);
+    // Explicit team voice stays audible; proximity must silence an unplaced peer.
+    expect(applied.Ally).toBe(allyVolume);
     // The enemy is scored by distance, and we have no position to measure from,
     // so they are omitted — which fades them rather than holding them.
     expect(applied.Enemy).toBeUndefined();

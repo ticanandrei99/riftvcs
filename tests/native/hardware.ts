@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { AppAudioOutput, listAppOutputDevices } from '../../src/services/app-audio-output';
+declare const __VOXDRIA_QA_RESULT_URL__:string;
 const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 const status = (s: string) => { document.getElementById('status')!.textContent = s; };
 const run = document.getElementById('run') as HTMLButtonElement;
@@ -60,7 +61,7 @@ async function runHardwareTest(): Promise<void> {
     result.passed = !result.fatalError && Object.values(result.tests).every((t: any) => t.passed === true);
     document.getElementById('result')!.textContent = JSON.stringify(result, null, 2);
     status(result.passed ? 'Proba locală a trecut.' : 'Proba a identificat o problemă; vezi rezultatul.');
-    try { await fetch('http://127.0.0.1:9415/result', { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result) }); }
+    try { await fetch(typeof __VOXDRIA_QA_RESULT_URL__==='undefined'?'http://127.0.0.1:9415/result':__VOXDRIA_QA_RESULT_URL__, { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result) }); }
     catch { status('Proba s-a terminat; rezultatul local nu poate fi salvat automat.'); }
     run.disabled = false;
   }

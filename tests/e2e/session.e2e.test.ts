@@ -100,8 +100,8 @@ describe('E1 join, presence and peer connection', () => {
   });
 });
 
-describe('E2 allies are audible at any distance with ally proximity off', () => {
-  it('uses Hybrid on a fresh RiftVoice install', async () => {
+describe('E2 proximity defaults and explicit team-wide listening', () => {
+  it('uses proximity on a fresh Voxdria install', async () => {
     clearStoredPrefs();
     const { players, a, b } = roster('ORDER');
     const [one, two] = track(makeClient(a, players), makeClient(b, players));
@@ -111,7 +111,8 @@ describe('E2 allies are audible at any distance with ally proximity off', () => 
     await waitForMesh(one, two);
 
     const exchange = await waitFor(() => volumesFor(a)[0], 'a volume exchange');
-    expect(exchange.request.allyProximity).toBe(false);
+    expect(exchange.request.allyProximity).toBe(true);
+    expect(exchange.request.strictProximity).toBe(true);
     expect(one.tracker.cameraTrackingEnabled).toBe(false);
   });
 
@@ -596,7 +597,7 @@ describe('E9 shared RESET reaches only the players who opted in', () => {
   });
 });
 
-describe('RiftVoice ten-player room', () => {
+describe('Voxdria ten-player room', () => {
   it('forms all 45 peer pairs for two teams of five through the real server', async () => {
     const tag = 'TEN' + (++tagSeq);
     const players = Array.from({ length: 10 }, (_, i) => player('Player' + i, tag, i % 2 ? 'Ahri' : 'Zed', i < 5 ? 'ORDER' : 'CHAOS'));
@@ -611,7 +612,7 @@ describe('RiftVoice ten-player room', () => {
   });
 });
 
-describe('RiftVoice visible enemy gate', () => {
+describe('Voxdria visible enemy gate', () => {
   it('silences a close enemy hidden by fog, then hears them only after an icon is visible', async () => {
     const { players, a, b } = roster();
     const [one, two] = track(makeClient(a, players), makeClient(b, players));

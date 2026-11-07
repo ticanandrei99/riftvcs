@@ -1,4 +1,5 @@
 import { getIceServers, ICE_SERVERS, _resetIceServerCacheForTests } from '../../src/core/config';
+import {setVoiceSessionToken} from '../../src/services/voice-access';
 
 // getIceServers is on the peer-creation path: every PeerConnection.create awaits
 // it, so a full lobby fired ~9 requests per client at game start against a 60-token
@@ -33,6 +34,7 @@ describe('getIceServers', () => {
 
   beforeEach(() => {
     _resetIceServerCacheForTests();
+    setVoiceSessionToken(null);
     fetchMock.mockReset();
     nowMs = 1_000_000;
     jest.spyOn(Date, 'now').mockImplementation(() => nowMs);
@@ -40,6 +42,7 @@ describe('getIceServers', () => {
   });
 
   afterEach(() => {
+    setVoiceSessionToken(null);
     jest.restoreAllMocks();
   });
 
@@ -122,5 +125,15 @@ describe('getIceServers', () => {
 
     await getIceServers();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+  test('does not reuse credentials from the lobby or a revoked session in another session',async()=>{
+    fetchMock.mockResolvedValue(okWith(TURN_SERVERS));setVoiceSessionToken('a'.repeat(43));await getIceServers();
+    setVoiceSessionToken('b'.repeat(43));await getIceServers();expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenLastCalledWith(expect.any(String),expect.objectContaining({headers:{Authorization:'Bearer '+'b'.repeat(43)},cache:'no-store',signal:expect.any(AbortSignal)}));
+  });
+  test('discards a late response from the previous authenticated session',async()=>{
+    const stale=deferred<any>();setVoiceSessionToken('a'.repeat(43));fetchMock.mockReturnValueOnce(stale.promise);const old=getIceServers();
+    setVoiceSessionToken('b'.repeat(43));fetchMock.mockResolvedValue(okWith(TURN_SERVERS));expect(await getIceServers()).toEqual(TURN_SERVERS);
+    stale.resolve(okWith([{urls:'turn:old.example',username:'old',credential:'old'}]));expect(await old).toEqual([]);expect(await getIceServers()).toEqual(TURN_SERVERS);
   });
 });
