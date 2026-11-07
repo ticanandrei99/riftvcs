@@ -17,7 +17,7 @@ try {
     $category = if ($name -match '^server/' -or $name -notmatch '/') { 0 }
       elseif ($name -match '^(src|src-tauri)/') { 1 }
       elseif ($name -match '^(tests|assets|models|icons)/') { 2 }
-      elseif ($name -match '^(docs|scripts|vendor|\.github)/') { 3 }
+      elseif ($name -match '^(docs|scripts|vendor|upstream|\.github)/') { 3 }
       else { throw "Unexpected source root: $name" }
     $part = [int][Math]::Floor($categoryCounts[$category] / 99) + 1
     $group = '{0:D2}-{1}-{2:D2}' -f ($category + 1),$categories[$category],$part

@@ -1,5 +1,6 @@
 param([string]$OutputDirectory, [ValidateSet('player','caster')][string]$Variant = 'player')
 $ErrorActionPreference = 'Stop'
+if ($Variant -ne 'player') { throw 'This is the player-only original-engine branch. Keep the existing Caster 0.4.2 installer.' }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $projectRoot = Split-Path $PSScriptRoot -Parent
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $projectRoot 'artifacts' }
@@ -19,8 +20,8 @@ foreach ($file in @($installers[0].FullName, (Join-Path $projectRoot 'LICENSE'),
     $outputs += $destination
 }
 # Explicit source roots; do not package local credentials, dependencies or captures.
-$sourceRoots = @('.github','assets','docs','icons','models','scripts','server','src','src-tauri','tests','vendor')
-$rootFiles = @('.env.example','.gitattributes','.gitignore','CHANGELOG.md','CONTRIBUTING.md','docker-compose.proxchat.yml','jest.config.js','jest.e2e.config.js','LICENSE','NOTICE.md','package.json','package-lock.json','README.md','render.yaml','rust-toolchain.toml','SECURITY.md','tsconfig.json','tsconfig.test.json','webpack.config.js')
+$sourceRoots = @('.github','assets','docs','icons','models','scripts','server','src','src-tauri','tests','vendor','upstream')
+$rootFiles = @('.env.example','.gitattributes','.gitignore','CHANGELOG.md','CONTRIBUTING.md','docker-compose.proxchat.yml','jest.config.js','jest.e2e.config.js','jest.original.config.js','jest.original.cv.config.js','LICENSE','NOTICE.md','package.json','package-lock.json','README.md','render.yaml','rust-toolchain.toml','SECURITY.md','tsconfig.json','tsconfig.test.json','webpack.config.js')
 $excludedDirs = @('node_modules','target','dist','.git','__pycache__','synthetic-data','champion-circles','fixtures-real','fixtures-icons','fixtures-games','artifacts','verification')
 function Get-SourceFiles([string]$folder) {
     foreach ($item in Get-ChildItem -LiteralPath $folder -Force) {

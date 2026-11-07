@@ -1,20 +1,14 @@
-# Voxdria 0.4.2 — invitații și aprobare pentru comentatori
+# Voxdria Player 0.4.3 — variantă original-engine pentru test
 
-Organizatorul poate copia un link separat pentru comentatori și spectatori audio. Invitatul lipește linkul în Voxdria Caster, completează numele și rolul și trimite cererea. Administratorul sau moderatorul aprobă ori respinge din secțiunea Cereri comentatori. Parola de administrare nu se distribuie invitaților.
+Motorul jucătorului revine la sursa originală LoLProxChat 0.5.24, fără editarea codului de proximity, cameră, audio sau captură. Interfața Voxdria și invitațiile aprobate rămân, prin adaptoare separate.
 
-- Microfonul nu se deschide înainte de aprobare. Comentatorul aprobat pornește cu microfonul oprit și PTT activ; spectatorul audio nu transmite. O cerere doar de ascultare nu poate fi promovată la microfon.
-- Reconectarea refolosește invitația personală aprobată pe durata sesiunii și până la expirare. Schimbarea linkului oprește cererile vechi; eliminarea persoanei revocă accesul ei.
-- Mesajele pentru cerere refuzată, microfon indisponibil și ieșire OBS nereușită rămân vizibile. Panoul autentificat și canalul audio au stări distincte.
-- Canalul comentatorilor este separat de vocea jucătorilor, inclusiv înainte de meci. Aprobarea nu acordă administrare, date de spectator sau acces la poziții ascunse. Numele este declarat, fără autentificare Riot; organizatorul verifică persoana.
-- Proximity rămâne modul standard al jucătorilor, inclusiv pentru adversari apropiați identificați vizibil în camera proprie. Team voice, mute individual, PTT/deafen, Champion Voice Changer opțional și mixul OBS sunt păstrate.
-- Arhiva pentru încărcarea surselor din browser împarte automat fiecare lot la maximum 99 de fișiere.
+- Voce în joc; pregame există numai înscrierea și aprobarea.
+- Mute individual pentru coechipieri/adversari, mute microfon/ascultare și push-to-talk din motorul original.
+- Cameră originală activă implicit. Efectele vocale Voxdria și previzualizarea procesată sunt inactive în această variantă.
+- Casterul existent rămâne la 0.4.2; nu există un nou instalator Caster în acest pachet.
+- Toți jucătorii au nevoie de 0.4.3, iar serverul trebuie actualizat la 0.4.3 înainte de test.
+- Verificate local: sursă originală identică, audio sintetic între două echipe în ambele sensuri, permisiuni, moderare și închiderea sesiunii. Rezultatele complete și limitele sunt în VERIFICARI.ro.md / docs/verification-0.4.3.ro.md.
 
-Actualizează serverul Render și ambele aplicații la 0.4.2. Verifică /health: serverVersion=0.4.2, casterInviteProtocol=1, casterRequestsAvailable=true, lobbyVoiceProtocol=1 și enemyCameraVoice=true. O valoare veche ENEMY_CAMERA_VOICE=0 suspendă vocea adversarilor și trebuie schimbată la 1. Installerul nu actualizează serverul.
+Versiune experimentală pentru custom, fără aprobare Riot. Filtrarea originală a camerei este locală și poate fi ignorată de un client modificat; pe acest traseu nu se aplică filtrul media strict al vechii versiuni. Lagul și resetarea driverului GPU nu sunt confirmate rezolvate. Rămân necesare testele cu microfoane reale, TURN extern, OBS și un custom real.
 
-Pașii sunt în INVITATII-CASTER.ro.md și CASTER-OBS.ro.md. Rezultatele locale sunt în VERIFICARI.ro.md. Mai sunt necesare customul real cu zece PC-uri/rețele, capacitatea și consumul TURN pe durata evenimentului, reglarea microfoanelor, mixul OBS și delay-ul spectator/stream. Probele hardware/OBS din 0.4.0 sunt marcate drept anterioare. Două suite vizuale cer înregistrări reale încă indisponibile.
-
-Build-uri de comunitate nesemnate, fără aprobare Riot. Raportarea vizibilității poate fi falsificată de un client modificat; filtrarea media nu este atestare anti-cheat. Notificarea de update deschide pagina fixă de descărcare; instalarea automată semnată nu este configurată. Linkurile Discord nu conectează automat vocea sau rolurile Discord.
-
-Pentru GitHub Release folosește tag-ul exact v0.4.2 și atașează individual Voxdria_0.4.2_x64-setup.exe și Voxdria Caster_0.4.2_x64-setup.exe, sursele, licența și ghidurile. Aliasurile identice pentru updaterul RiftVoice rămân în legacy-updater-assets. Pachetele locale nu sunt publicare sau deploy automat.
-
-Bazat pe LoLProxChat/danthi123, cu păstrarea creditului și licenței AGPL-3.0-or-later. Rebrandul și limitele migrării NSIS sunt descrise în MIGRARE-NUME.ro.md.
+Bazat pe LoLProxChat de danthi123 și contributori, AGPL-3.0-or-later. Sursele complete, licența și notificările sunt incluse. Instalatorul Windows este nesemnat.

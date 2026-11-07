@@ -1,3 +1,7 @@
+# Verificări curente: Player 0.4.3
+
+Pentru varianta cu motor original, vezi [rezultatele 0.4.3](verification-0.4.3.ro.md) și [configurarea](player-original.ro.md). Materialul de mai jos descrie implementarea precedentă 0.4.2; afirmațiile despre gateway și voce în lobby nu se aplică noului jucător.
+
 # Verificări Voxdria / Voxdria Caster 0.4.2 — 7 noiembrie 2026
 
 Copia de lucru este Voxdria-Caster. Aceasta este o versiune locală pregătită pentru test în comunitate, cu installere Windows distincte pentru jucători și comentatori. Pachetele nu publică GitHub și nu actualizează Render. Nu reprezintă o certificare Riot, un test de instalare pe Windows curat sau o validare într-un custom real.
