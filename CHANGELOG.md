@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format adapted from [Ke
 
 ## [Unreleased] — RiftVoice
 
+## [v0.4.2] — 2026-11-07
+
+### Added
+- Separate commentator invitation links, requests and organizer-approved caster/spectator roles.
+### Fixed
+- Clear independent administration/audio states and persistent connection failure messages.
+
 ## [v0.4.1] — 2026-11-07
 
 ### Changed
@@ -655,3 +662,5 @@ Initial public iteration: Overwolf → Tauri 2 migration, Supabase-stack → cus
 [v0.4.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.4.0
 
 [v0.4.1]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.4.1
+
+[v0.4.2]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.4.2

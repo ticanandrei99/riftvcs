@@ -6,6 +6,7 @@ import { OrganizerController, OrganizerPassword, moderatorAccounts } from './org
 import type { CameraMedia } from './camera-media.js';
 import { enemyCameraVolume } from './enemy-camera.js';
 import { enemyProximityEnabled } from './media-policy.js';
+import { CASTER_INVITE_PAGE } from './caster-invite-page.js';
 import { handleCasterConnection, type CasterGrant } from './caster.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { WebSocketServer } from 'ws';
@@ -151,9 +152,14 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     return;
   }
 
+  if(req.url==='/caster-invite'&&(req.method==='GET'||req.method==='HEAD')){
+    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",'X-Frame-Options':'DENY','X-Robots-Tag':'noindex, nofollow'});
+    res.end(req.method==='HEAD'?'':CASTER_INVITE_PAGE);return;
+  }
+
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', serverVersion:SERVER_VERSION, rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, lobbyVoiceAvailable:!!organizerController, lobbyVoiceProtocol:1, eventInviteProtocol:1, protocolVersion: 2 }));
+    res.end(JSON.stringify({ status: 'ok', serverVersion:SERVER_VERSION, rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, casterRequestsAvailable:!!organizerController, casterInviteProtocol:1, lobbyVoiceAvailable:!!organizerController, lobbyVoiceProtocol:1, eventInviteProtocol:1, protocolVersion: 2 }));
     return;
   }
 
@@ -313,8 +319,8 @@ wss.on('connection', (ws, req) => {
         if (!limiter.tryConsume('registration')) { ws.close(1008,'Registration rate limit');return; }
         if (!organizerEvents) throw Error('Înscrierile nu sunt activate pe server.');
         const msg = JSON.parse(raw.toString());
-        if (!msg || msg.type !== 'lobby_register') throw Error('Comandă de înscriere invalidă.');
-        organizerEvents.registerLobby(ws,msg);
+        if (!msg || !['lobby_register','caster_register'].includes(msg.type)) throw Error('Comandă de înscriere invalidă.');
+        if(msg.type==='caster_register')organizerEvents.registerCaster(ws,msg);else organizerEvents.registerLobby(ws,msg);
       } catch (err) { sendJson(ws,{type:'error',message:err instanceof SyntaxError?'Mesaj JSON invalid.':err instanceof Error?err.message:'Înscriere indisponibilă.'}); }
     });
     ws.once('close',()=>sessions.revoke(ws));return;

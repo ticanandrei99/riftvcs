@@ -83,6 +83,10 @@ export class OrganizerController {
           case 'event_swap':this.events.swap(msg.eventId,msg.first,msg.second);break;
           case 'event_moderate':this.events.moderate(actor!,msg.eventId,msg.kind,msg.targetId,msg.muted);break;
           case 'event_caster':send({type:'organizer_caster_invitation',invitation:this.events.casterInvitation(msg.eventId,actor!)});break;
+          case 'caster_approve':this.events.approveCaster(msg.requestId,msg.role);break;
+          case 'caster_reject':this.events.rejectCaster(msg.requestId);break;
+          case 'caster_rotate':this.events.rotateCaster(msg.eventId);break;
+          case 'caster_remove':this.events.removeCaster(msg.eventId,msg.guestId);break;
           case 'event_refresh':send(this.events.snapshot(actor));break;
           default:throw Error('Comandă de organizator nepermisă.');
         }

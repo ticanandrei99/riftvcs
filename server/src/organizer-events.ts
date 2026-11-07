@@ -13,9 +13,15 @@ const key = (name: string) => name.trim().normalize('NFKC').toLowerCase();
 type Team = 'ORDER' | 'CHAOS';
 export interface StaffIdentity { id: string; name: string; role: 'organizer' | 'moderator' }
 interface LobbySlot { id: string; token: string; name: string; team: Team; voiceMuted: boolean }
+interface GuestGrant extends VoiceGrant { guestId: string; role: 'caster' | 'spectator' }
+interface CasterPending {
+  id:string;eventId:string;ws:WebSocket;name:string;requestedRole:'caster'|'spectator';
+  expiresAt:number;timer:ReturnType<typeof setTimeout>;
+}
 interface VoiceEvent {
   id: string; title: string; invite: string; expiresAt: number; gameRoom: string | null; lobbyLink: string;
   players: VoiceGrant[]; caster: VoiceGrant; staff: VoiceGrant[]; roster: LobbySlot[];
+  casterInvite: string; guests: GuestGrant[];
 }
 interface Pending {
   id: string; eventId: string; ws: WebSocket; name: string; room: string; mode: 'game' | 'lobby';
@@ -29,6 +35,7 @@ interface AuditEntry {
 export class OrganizerEvents implements PlayerEventAccess {
   private events = new Map<string, VoiceEvent>();
   private pending = new Map<string, Pending>();
+  private casterPending = new Map<string, CasterPending>();
   private observers = new Map<WebSocket, StaffIdentity | undefined>();
   private registrations = new Map<WebSocket, { eventId: string; slotId: string }>();
   private audit: AuditEntry[] = [];
@@ -45,13 +52,20 @@ export class OrganizerEvents implements PlayerEventAccess {
         const raw = readFileSync(this.storePath, 'utf8');
         if (Buffer.byteLength(raw) > 2 * 1024 * 1024) throw Error('Organizer store too large');
         let parsed: any; try { parsed = JSON.parse(raw); } catch { throw Error('Invalid organizer store'); }
-        if (![1, 2].includes(parsed?.version) || !Array.isArray(parsed.events) || parsed.events.length > 12) throw Error('Invalid organizer store');
+        if (![1, 2, 3].includes(parsed?.version) || !Array.isArray(parsed.events) || parsed.events.length > 12) throw Error('Invalid organizer store');
         const usedRooms = new Set<string>(), usedTokens = new Set<string>();
         for (const stored of parsed.events) {
-          const event: VoiceEvent = { ...stored, staff: stored.staff ?? [], roster: stored.roster ?? [], lobbyLink: normalizeLobbyLink(stored.lobbyLink) };
+          const event: VoiceEvent = { ...stored, staff: stored.staff ?? [], roster: stored.roster ?? [], lobbyLink: normalizeLobbyLink(stored.lobbyLink),
+            casterInvite: parsed.version===3?stored.casterInvite:'VC-'+token(), guests:parsed.version===3?stored.guests:[] };
           if (!event || typeof event.id !== 'string' || !/^event-[A-Za-z0-9_-]{16}$/.test(event.id) || typeof event.title !== 'string' || !event.title.trim() || event.title.length > 64 || /[\x00-\x1f\x7f]/.test(event.title) ||
               !/^RV-[A-Za-z0-9_-]{43}$/.test(event.invite) || !Number.isSafeInteger(event.expiresAt) || !Array.isArray(event.players) || event.players.length > 10 ||
               !Array.isArray(event.staff) || event.staff.length > 24 || !Array.isArray(event.roster) || event.roster.length > 10 || (event.gameRoom !== null && !validateJoin(event.gameRoom, 'test').ok)) throw Error('Invalid organizer event');
+          if(typeof event.casterInvite!=='string'||!/^VC-[A-Za-z0-9_-]{43}$/.test(event.casterInvite)||!Array.isArray(event.guests)||event.guests.length+event.staff.length>24)throw Error('Invalid organizer caster assignments');
+          loadGrants(JSON.stringify(event.guests),['caster','spectator']);
+          if(
+            event.guests.some(g=>!g||typeof g.guestId!=='string'||!/^[A-Za-z0-9_-]{22}$/.test(g.guestId)||g.room!==event.id||g.expiresAt!==event.expiresAt||g.authority!==undefined||g.subjectId!==undefined||
+              key(g.name)==='administrator'||key(g.name).startsWith('moderator · ')||(g.voiceMuted!==undefined&&typeof g.voiceMuted!=='boolean'))||
+            new Set(event.guests.map(g=>g.guestId)).size!==event.guests.length)throw Error('Invalid organizer caster assignments');
           loadGrants(JSON.stringify(event.players), ['player']); loadGrants(JSON.stringify([event.caster, ...event.staff]), ['caster']);
           if (event.caster.room !== event.id || event.caster.expiresAt !== event.expiresAt || event.players.some(g => g.room !== event.gameRoom || g.expiresAt !== event.expiresAt) ||
               event.staff.some(g => g.room !== event.id || g.expiresAt !== event.expiresAt || !['organizer', 'moderator'].includes(g.authority!) || typeof g.subjectId !== 'string' || g.subjectId.length > 64) ||
@@ -61,7 +75,8 @@ export class OrganizerEvents implements PlayerEventAccess {
           if (event.expiresAt <= Date.now()) continue;
           if (event.gameRoom && usedRooms.has(event.gameRoom)) throw Error('Duplicate organizer match');
           if (event.gameRoom) usedRooms.add(event.gameRoom);
-          for (const value of [event.invite, event.caster.token, ...event.staff.map(g => g.token), ...event.players.map(g => g.token), ...event.roster.map(g => g.token)]) {
+          if(new Set([event.caster,...event.staff,...event.guests].map(g=>key(g.name))).size!==1+event.staff.length+event.guests.length)throw Error('Duplicate organizer caster name');
+          for (const value of [event.invite,event.casterInvite,event.caster.token, ...event.staff.map(g => g.token),...event.guests.map(g=>g.token), ...event.players.map(g => g.token), ...event.roster.map(g => g.token)]) {
             if (usedTokens.has(value)) throw Error('Duplicate organizer credential'); usedTokens.add(value);
           }
           this.events.set(event.id, event);
@@ -71,6 +86,7 @@ export class OrganizerEvents implements PlayerEventAccess {
             ['id', 'actorId', 'actorName', 'eventId', 'eventTitle', 'targetId', 'targetName', 'targetRole'].some(k => typeof a[k] !== 'string' || a[k].length > 128))) throw Error('Invalid organizer audit');
           this.audit = parsed.audit;
         }
+        if(parsed.version<3)this.persist([...this.events.values()]);
       }
     }
     this.syncGrants(); for (const event of this.events.values()) this.armExpiry(event);
@@ -85,12 +101,12 @@ export class OrganizerEvents implements PlayerEventAccess {
     if (!this.storePath) return;
     mkdirSync(dirname(this.storePath), { recursive: true });
     const temporary = this.storePath + '.' + randomBytes(6).toString('hex') + '.pending.private.json';
-    try { writeFileSync(temporary, JSON.stringify({ version: 2, events: next, audit }) + '\n', { flag: 'wx', mode: 0o600 }); renameSync(temporary, this.storePath); }
+    try { writeFileSync(temporary, JSON.stringify({ version: 3, events: next, audit }) + '\n', { flag: 'wx', mode: 0o600 }); renameSync(temporary, this.storePath); }
     catch { try { unlinkSync(temporary); } catch {} throw Error('Organizer state could not be saved'); }
   }
   private syncGrants(): void {
     const staticPlayers = this.players.filter(g => !this.ownedPlayerTokens.has(g.token)), staticCasters = this.casters.filter(g => !this.ownedCasterTokens.has(g.token));
-    const dynamicPlayers = [...this.events.values()].flatMap(e => e.players), dynamicCasters = [...this.events.values()].flatMap(e => [e.caster, ...e.staff]);
+    const dynamicPlayers = [...this.events.values()].flatMap(e => e.players), dynamicCasters = [...this.events.values()].flatMap(e => [e.caster, ...e.staff,...e.guests]);
     if (staticPlayers.length + dynamicPlayers.length > 500 || staticCasters.length + dynamicCasters.length > 500) throw Error('Voice grant capacity reached');
     this.players.splice(0, this.players.length, ...staticPlayers, ...dynamicPlayers); this.casters.splice(0, this.casters.length, ...staticCasters, ...dynamicCasters);
     this.ownedPlayerTokens = new Set(dynamicPlayers.map(g => g.token)); this.ownedCasterTokens = new Set(dynamicCasters.map(g => g.token));
@@ -110,7 +126,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     if (typeof title !== 'string' || !title.trim() || title.length > 64 || /[\x00-\x1f\x7f]/.test(title) || typeof casterName !== 'string' || !validateJoin('event', casterName).ok || key(casterName)==='administrator' || key(casterName).startsWith('moderator · ') ||
         typeof hours !== 'number' || !Number.isFinite(hours) || hours < 1 || hours > 12) throw Error('Completează numele camerei, comentatorul și durata de 1–12 ore.');
     const id = 'event-' + randomBytes(12).toString('base64url'), expiresAt = Date.now() + Math.round(hours * 3600000);
-    this.commit({ id, title: title.trim(), invite: 'RV-' + token(), expiresAt, gameRoom: null, lobbyLink:normalizeLobbyLink(lobbyLink), players: [], roster: [], staff: [], caster: { token: token(), room: id, name: casterName, role: 'caster', expiresAt } });
+    this.commit({ id, title: title.trim(), invite: 'RV-' + token(), casterInvite:'VC-'+token(),guests:[],expiresAt, gameRoom: null, lobbyLink:normalizeLobbyLink(lobbyLink), players: [], roster: [], staff: [], caster: { token: token(), room: id, name: casterName, role: 'caster', expiresAt } });
   }
   setLobbyLink(eventId:unknown,link:unknown):void {
     const event=this.event(eventId);this.commit({...event,lobbyLink:normalizeLobbyLink(link)});
@@ -123,12 +139,13 @@ export class OrganizerEvents implements PlayerEventAccess {
     return typeof invitation === 'string' ? [...this.events.values()].find(e => e.invite === invitation && e.expiresAt > Date.now()) : undefined;
   }
   registerLobby(ws: WebSocket, input: { invitation?: unknown; name?: unknown }): void {
-    if (this.registrations.has(ws) || [...this.pending.values()].some(p => p.ws === ws)) throw Error('Există deja o înscriere pe această conexiune.');
+    if (this.registrations.has(ws) || [...this.pending.values()].some(p => p.ws === ws)||[...this.casterPending.values()].some(p=>p.ws===ws)) throw Error('Există deja o înscriere pe această conexiune.');
     if (typeof input.name !== 'string' || !validateJoin('lobby', input.name.trim()).ok) throw Error('Introdu Riot ID-ul complet, de exemplu Nume#EUNE.');
     const name = input.name.trim();
     const reservedEvent = [...this.events.values()].find(e => e.expiresAt > Date.now() && e.roster.some(p => p.token === input.invitation));
     const event = reservedEvent || this.sharedEvent(input.invitation);
     if (!event) throw Error('Cod vocal invalid sau expirat.');
+    if(event.guests.some(g=>key(g.name)===key(name)))throw Error('Acest nume este aprobat pe canalul comentatorilor. Organizatorul trebuie să elimine acel acces înainte de înscrierea ca jucător.');
     const reserved = event.roster.find(p => p.token === input.invitation);
     if (reserved) {
       if (key(reserved.name) !== key(name)) throw Error('Înscrierea aparține altui Riot ID.');
@@ -138,6 +155,53 @@ export class OrganizerEvents implements PlayerEventAccess {
     if (this.allSlots(event).some(p => key(p.name) === key(name))) throw Error('Acest nume este deja înscris. Folosește sesiunea aprobată sau cere organizatorului să elimine înscrierea veche.');
     if (this.slotCount(event) >= 10) throw Error('Camera are deja 10 jucători aprobați.');
     this.addPending(ws, event, name, event.id, 'ORDER', 'lobby');
+  }
+  registerCaster(ws:WebSocket,input:{invitation?:unknown;name?:unknown;requestedRole?:unknown}):void{
+    if(this.sessions.has(ws)||this.registrations.has(ws)||[...this.pending.values(),...this.casterPending.values()].some(p=>p.ws===ws))throw Error('Există deja o înscriere pe această conexiune.');
+    if(typeof input.name!=='string'||!validateJoin('caster',input.name.trim()).ok||key(input.name)==='administrator'||key(input.name).startsWith('moderator · '))throw Error('Introdu un nume de comentator valid, fără roluri de administrator/moderator.');
+    if(input.requestedRole!=='caster'&&input.requestedRole!=='spectator')throw Error('Alege comentator sau spectator audio.');
+    const event=typeof input.invitation==='string'&&/^VC-[A-Za-z0-9_-]{43}$/.test(input.invitation)?[...this.events.values()].find(e=>e.casterInvite===input.invitation&&e.expiresAt>Date.now()):undefined;
+    if(!event)throw Error('Invitație de comentator invalidă sau expirată. Cere linkul separat organizatorului.');
+    const name=input.name.trim();
+    if(this.allSlots(event).some(p=>key(p.name)===key(name)))throw Error('Acest nume este înscris ca jucător. Comentatorii trebuie să fie separați de jucătorii activi.');
+    if([event.caster,...event.staff,...event.guests].some(g=>key(g.name)===key(name)))throw Error('Acest nume este deja rezervat pe canal. Reconectează sesiunea aprobată sau cere organizatorului eliminarea invitației.');
+    if([...this.casterPending.values()].some(p=>p.eventId===event.id&&key(p.name)===key(name)))throw Error('Există deja o cerere pentru acest nume de comentator.');
+    if(event.guests.length+event.staff.length>=24||this.casters.length>=500)throw Error('Canalul de comentatori este complet.');
+    if(this.pending.size+this.casterPending.size>=100||[...this.pending.values(),...this.casterPending.values()].filter(p=>p.eventId===event.id).length>=20)throw Error('Prea multe cereri în așteptare. Încearcă mai târziu.');
+    const id=randomBytes(16).toString('base64url'),expiresAt=Math.min(event.expiresAt,Date.now()+5*60000);
+    this.sessions.create({token:'',room:event.id,name,role:'pending',expiresAt},ws);
+    const timer=setTimeout(()=>this.rejectCaster(id,'Cererea de comentator a expirat. Trimite o cerere nouă.'),expiresAt-Date.now());timer.unref();
+    this.casterPending.set(id,{id,eventId:event.id,ws,name,requestedRole:input.requestedRole,expiresAt,timer});
+    ws.once('close',()=>{this.forgetCasterPending(id);this.sessions.revoke(ws);this.playerChanged();});
+    send(ws,{type:'caster_pending',name,requestedRole:input.requestedRole,message:'Cerere trimisă. Așteaptă aprobarea organizatorului.'});this.playerChanged();
+  }
+  private forgetCasterPending(id:string):CasterPending|undefined{
+    const pending=this.casterPending.get(id);if(pending){clearTimeout(pending.timer);this.casterPending.delete(id);}return pending;
+  }
+  approveCaster(id:unknown,role:unknown):void{
+    const pending=typeof id==='string'?this.casterPending.get(id):undefined;
+    if(!pending||pending.ws.readyState!==pending.ws.OPEN||pending.expiresAt<=Date.now())throw Error('Cererea de comentator nu mai este activă.');
+    if(role!=='caster'&&role!=='spectator')throw Error('Poți aproba numai comentator sau spectator audio.');
+    if(pending.requestedRole==='spectator'&&role!=='spectator')throw Error('Persoana a cerut doar ascultare. Este necesară o cerere nouă pentru microfon.');
+    const event=this.event(pending.eventId);
+    if(this.allSlots(event).some(p=>key(p.name)===key(pending.name)))throw Error('Persoana este înscrisă ca jucător și nu poate fi aprobată și pe canalul comentatorilor.');
+    if(event.guests.length+event.staff.length>=24||this.casters.length>=500)throw Error('Canalul de comentatori este complet.');
+    if([event.caster,...event.staff,...event.guests].some(g=>key(g.name)===key(pending.name)))throw Error('Numele comentatorului este deja folosit.');
+    const grant:GuestGrant={guestId:randomBytes(16).toString('base64url'),token:token(),room:event.id,name:pending.name,role,expiresAt:event.expiresAt};
+    this.commit({...event,guests:[...event.guests,grant]});this.forgetCasterPending(pending.id);this.sessions.revoke(pending.ws);
+    send(pending.ws,{type:'caster_approved',invitation:grant.token,name:grant.name,role:grant.role,expiresAt:grant.expiresAt});pending.ws.close(1000,'Caster request approved');this.playerChanged();
+  }
+  rejectCaster(id:unknown,message='Cerere de comentator respinsă de organizator.'):void{
+    const pending=typeof id==='string'?this.forgetCasterPending(id):undefined;if(!pending)return;
+    this.sessions.revoke(pending.ws);send(pending.ws,{type:'error',message});pending.ws.close(4003,'Caster request denied');this.playerChanged();
+  }
+  rotateCaster(eventId:unknown):void{
+    const event=this.event(eventId);this.commit({...event,casterInvite:'VC-'+token()});
+    for(const pending of [...this.casterPending.values()])if(pending.eventId===event.id)this.rejectCaster(pending.id,'Linkul comentatorilor a fost schimbat. Cere linkul nou.');
+  }
+  removeCaster(eventId:unknown,guestId:unknown):void{
+    const event=this.event(eventId),guest=event.guests.find(g=>g.guestId===guestId);if(!guest)throw Error('Comentatorul invitat nu există.');
+    this.commit({...event,guests:event.guests.filter(g=>g!==guest)});this.sessions.closeIdentity(guest.room,guest.name,guest.role);this.playerChanged();
   }
   private attachRegistration(ws: WebSocket, event: VoiceEvent, slot: LobbySlot): void {
     this.registrations.set(ws, { eventId: event.id, slotId: slot.id });
@@ -166,6 +230,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     const event = reservedEvent || this.sharedEvent(input.invitation);
     const error = (message: string) => send(ws, { type: 'error', message });
     if (!event) { error('Cod vocal Voxdria expirat sau invalid. Cere codul nou administratorului.'); return true; }
+    if(event.guests.some(g=>key(g.name)===key(input.name))){error('Acest nume are acces de comentator. Cere organizatorului eliminarea lui înainte de intrarea ca jucător.');return true;}
     if (this.rooms.getClientInfo(ws)) { error('Această conexiune este deja într-o cameră vocală.'); return true; }
     if (input.eventInviteProtocol !== 1) { error('Actualizează Voxdria la 0.3.0 pentru invitația comună.'); return true; }
     if (input.team !== 'ORDER' && input.team !== 'CHAOS') { error('Echipa jucătorului nu poate fi identificată.'); return true; }
@@ -190,7 +255,7 @@ export class OrganizerEvents implements PlayerEventAccess {
       throw Error('Există deja o cerere pe această conexiune.');
     }
     if ([...this.pending.values()].some(p => p.eventId === event.id && key(p.name) === key(name))) throw Error('Există deja o cerere pentru acest nume.');
-    if (this.pending.size >= 100 || [...this.pending.values()].filter(p => p.eventId === event.id).length >= 20) throw Error('Prea multe cereri în așteptare. Încearcă din nou mai târziu.');
+    if (this.pending.size+this.casterPending.size >= 100 || [...this.pending.values(),...this.casterPending.values()].filter(p => p.eventId === event.id).length >= 20) throw Error('Prea multe cereri în așteptare. Încearcă din nou mai târziu.');
     const id = randomBytes(16).toString('base64url'), expiresAt = Math.min(event.expiresAt, Date.now() + 5 * 60000);
     this.sessions.create({ token: '', room, name, role: 'pending', expiresAt }, ws);
     const timer = setTimeout(() => this.reject(id, 'Cererea a expirat. Introdu din nou codul vocal.'), expiresAt - Date.now()); timer.unref();
@@ -210,6 +275,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     const event = this.event(pending.eventId);
     if (team !== 'ORDER' && team !== 'CHAOS') throw Error('Alege echipa albastră sau roșie.');
     const existingSlot = this.allSlots(event).find(p => key(p.name) === key(pending.name));
+    if(event.guests.some(g=>key(g.name)===key(pending.name)))throw Error('Numele are acces pe canalul comentatorilor. Elimină acel acces înainte de aprobarea ca jucător.');
     if (event.roster.some(p => key(p.name) === key(pending.name) && p.voiceMuted) || event.players.some(p => key(p.name) === key(pending.name) && p.voiceMuted)) throw Error('Accesul vocal este oprit de moderare.');
     if ((!existingSlot && this.slotCount(event) >= 10) || this.teamCount(event, team) - (existingSlot?.team === team ? 1 : 0) >= 5) throw Error('Sunt permise 10 persoane, câte 5 în fiecare echipă.');
     if (pending.mode === 'lobby') {
@@ -264,27 +330,27 @@ export class OrganizerEvents implements PlayerEventAccess {
   casterInvitation(eventId: unknown, actor: StaffIdentity): string {
     const event = this.event(eventId), existing = event.staff.find(p => p.subjectId === actor.id);
     if (existing) { if (existing.voiceMuted) throw Error('Accesul tău vocal este oprit de moderare.'); return existing.token; }
-    if (event.staff.length >= 24 || this.casters.length >= 500) throw Error('Limita de comentatori a fost atinsă.');
+    if (event.staff.length+event.guests.length >= 24 || this.casters.length >= 500) throw Error('Limita de comentatori a fost atinsă.');
     const name = actor.role === 'organizer' ? 'Administrator' : 'Moderator · ' + actor.name;
-    if ([event.caster, ...event.staff].some(g => g.name === name)) throw Error('Numele comentatorului este deja folosit.');
+    if ([event.caster, ...event.staff,...event.guests].some(g => key(g.name) === key(name))) throw Error('Numele comentatorului este deja folosit.');
     const grant: VoiceGrant = { token: token(), room: event.id, name, role: 'caster', expiresAt: event.expiresAt, subjectId: actor.id, authority: actor.role };
     this.commit({ ...event, staff: [...event.staff, grant] }); return grant.token;
   }
   moderate(actor: StaffIdentity, eventId: unknown, kind: unknown, targetId: unknown, muted: unknown): void {
     const event = this.event(eventId);
-    if (typeof muted !== 'boolean' || typeof targetId !== 'string' || !['player', 'staff', 'caster'].includes(kind as string)) throw Error('Comandă de moderare invalidă.');
+    if (typeof muted !== 'boolean' || typeof targetId !== 'string' || !['player', 'staff', 'caster','guest'].includes(kind as string)) throw Error('Comandă de moderare invalidă.');
     const player = kind === 'player' ? event.players.find(p => key(p.name) === key(targetId)) : undefined;
     const slot = kind === 'player' ? event.roster.find(p => p.name === targetId) : undefined;
-    const grant = kind === 'staff' ? event.staff.find(g => g.subjectId === targetId) : kind === 'caster' && targetId === event.caster.name ? event.caster : player;
+    const grant = kind === 'staff' ? event.staff.find(g => g.subjectId === targetId) : kind==='guest'?event.guests.find(g=>g.guestId===targetId):kind === 'caster' && targetId === event.caster.name ? event.caster : player;
     if (!grant && !slot) throw Error('Participantul nu există.');
     const denied = grant?.authority === 'organizer' && actor.role !== 'organizer';
     const entry: AuditEntry = { id: randomBytes(16).toString('base64url'), at: Date.now(), actorId: actor.id, actorName: actor.name, actorRole: actor.role,
-      action: denied ? 'mute_denied' : muted ? 'mute' : 'unmute', eventId: event.id, eventTitle: event.title, targetId, targetName: grant?.name || slot!.name, targetRole: grant?.authority || (kind === 'player' ? 'player' : 'caster') };
+      action: denied ? 'mute_denied' : muted ? 'mute' : 'unmute', eventId: event.id, eventTitle: event.title, targetId, targetName: grant?.name || slot!.name, targetRole: grant?.authority || grant?.role || (kind === 'player' ? 'player' : 'caster') };
     const audit = [...this.audit, entry].slice(-1000);
     if (denied) { this.persist([...this.events.values()], audit); this.audit = audit; this.playerChanged(); throw Error('Moderatorii nu pot modifica vocea administratorului.'); }
     if ((grant?.voiceMuted === true || slot?.voiceMuted === true) === muted) return;
     this.commit({ ...event, players: event.players.map(p => p === player ? { ...p, voiceMuted: muted } : p), roster: event.roster.map(p => p === slot ? { ...p, voiceMuted: muted } : p),
-      staff: event.staff.map(p => p === grant ? { ...p, voiceMuted: muted } : p), caster: event.caster === grant ? { ...event.caster, voiceMuted: muted } : event.caster }, audit);
+      staff: event.staff.map(p => p === grant ? { ...p, voiceMuted: muted } : p), guests:event.guests.map(g=>g===grant?{...g,voiceMuted:muted}:g),caster: event.caster === grant ? { ...event.caster, voiceMuted: muted } : event.caster }, audit);
     if (muted && grant) this.sessions.closeIdentity(grant.room, grant.name, grant.role);
     if(muted&&kind==='player')this.closeLobbyVoice(event,targetId);
     this.playerChanged();
@@ -296,7 +362,8 @@ export class OrganizerEvents implements PlayerEventAccess {
   private revokeEvent(event: VoiceEvent): void {
     this.closeLobbyVoice(event);
     for (const p of [...this.pending.values()]) if (p.eventId === event.id) this.reject(p.id, 'Camera a fost închisă.');
-    for (const p of [...event.players, event.caster, ...event.staff]) this.sessions.closeIdentity(p.room, p.name, p.role);
+    for(const pending of [...this.casterPending.values()])if(pending.eventId===event.id)this.rejectCaster(pending.id,'Camera a fost închisă.');
+    for (const p of [...event.players, event.caster, ...event.staff,...event.guests]) this.sessions.closeIdentity(p.room, p.name, p.role);
     for (const [ws, info] of this.registrations) if (info.eventId === event.id) { this.sessions.revoke(ws); ws.close(4003, 'Event closed'); }
   }
   closeEvent(eventId: unknown): void {
@@ -307,12 +374,13 @@ export class OrganizerEvents implements PlayerEventAccess {
   snapshot(actor?: StaffIdentity): unknown {
     const now = Date.now();
     return { type: 'organizer_state', persistent: this.persistent, ...(actor?.role === 'organizer' ? { audit: this.audit.slice(-200).reverse() } : {}), events: [...this.events.values()].filter(e => e.expiresAt > now).map(e => ({
-      id: e.id, title: e.title, invite: e.invite, expiresAt: e.expiresAt, bound: !!e.gameRoom, capacity: 10, lobbyLink:e.lobbyLink, casterInvitation: e.caster.token, casterName: e.caster.name,
+      id: e.id, title: e.title, invite: e.invite, expiresAt: e.expiresAt, bound: !!e.gameRoom, capacity: 10, lobbyLink:e.lobbyLink, casterInvitation: e.caster.token, casterName: e.caster.name,casterInvite:e.casterInvite,
+      casterPending:[...this.casterPending.values()].filter(p=>p.eventId===e.id&&p.expiresAt>now).map(p=>({id:p.id,name:p.name,requestedRole:p.requestedRole})),
       players: this.allSlots(e).map(p => ({ name: p.name, team: p.team, connected: this.sessions.connected(e.gameRoom || '', e.players.find(g=>key(g.name)===key(p.name))?.name||p.name, 'player'),
         lobbyVoice:this.sessions.connected(e.id+'-lobby',p.name,'lobby-player'),
         lobby: e.roster.some(s => key(s.name) === key(p.name) && [...this.registrations.values()].some(r => r.eventId === e.id && r.slotId === s.id)),
         muted: e.roster.some(s => key(s.name) === key(p.name) && s.voiceMuted) || e.players.some(g => key(g.name) === key(p.name) && g.voiceMuted) })),
-      staff: [e.caster, ...e.staff].map(g => ({ id: g.subjectId || g.name, kind: g.subjectId ? 'staff' : 'caster', name: g.name, role: g.authority || 'caster', muted: g.voiceMuted === true, connected: this.sessions.connected(g.room, g.name, 'caster') })),
+      staff: [e.caster, ...e.staff,...e.guests].map(g => ({ id: 'guestId' in g?g.guestId:g.subjectId || g.name, kind:'guestId' in g?'guest':g.subjectId ? 'staff' : 'caster', name: g.name, role: g.authority || g.role, muted: g.voiceMuted === true, connected: this.sessions.connected(g.room, g.name, g.role) })),
       pending: [...this.pending.values()].filter(p => p.eventId === e.id && p.expiresAt > now).map(p => ({ id: p.id, name: p.name, requestedTeam: p.requestedTeam, mode: p.mode }))
     })) };
   }
@@ -320,5 +388,5 @@ export class OrganizerEvents implements PlayerEventAccess {
   playerChanged(): void {
     if (this.notifying) return; this.notifying = true; queueMicrotask(() => { this.notifying = false; for (const [ws, actor] of this.observers) if (this.sessions.has(ws)) send(ws, this.snapshot(actor)); });
   }
-  stop(): void { for (const timer of this.timers.values()) clearTimeout(timer); for (const p of this.pending.values()) clearTimeout(p.timer); this.timers.clear(); this.pending.clear(); this.observers.clear(); this.registrations.clear(); }
+  stop(): void { for (const timer of this.timers.values()) clearTimeout(timer); for (const p of [...this.pending.values(),...this.casterPending.values()]) clearTimeout(p.timer); this.timers.clear(); this.pending.clear();this.casterPending.clear(); this.observers.clear(); this.registrations.clear(); }
 }

@@ -32,7 +32,7 @@ Proximity relies on minimap tracking and may be inaccurate. Champion/skin-based 
 
 Requires Windows x64, WebView2, a microphone and access to the shared voice server. Players need their own organizer invitation and must be in the same custom match; casters use a separate audio channel. Headphones are recommended for the local preview.
 
-Instalează setup-ul, deschide Voxdria și verifică microfonul. Serverul implicit este `https://riftvoice-server.onrender.com`. În panoul Conectare, lipește codul RV- sau invitația completă din Caster, completează Riot ID-ul și apasă Conectează cu invitația. Pentru voce înainte de meci, ambele aplicații și serverul trebuie actualizate la 0.4.1; după aprobarea organizatorului, coechipierii pot vorbi în lobby. La identificarea meciului, această voce se închide și începe autentificarea de joc. Modul normal păstrează proximity/team voice și efectele opționale.
+Instalează setup-ul, deschide Voxdria și verifică microfonul. Serverul implicit este `https://riftvoice-server.onrender.com`. În panoul Conectare, lipește codul RV- sau invitația completă din Caster, completează Riot ID-ul și apasă Conectează cu invitația. Pentru voce înainte de meci, ambele aplicații și serverul trebuie actualizate la 0.4.2; după aprobarea organizatorului, coechipierii pot vorbi în lobby. La identificarea meciului, această voce se închide și începe autentificarea de joc. Modul normal păstrează proximity/team voice și efectele opționale.
 
 Din 0.3.0, streamerul/organizatorul se autentifică în Caster, generează un cod `RV-` pentru cei 10 jucători și aprobă înscrierile trimise din aplicație înainte de meci. Conturile nominale ale moderatorilor permit identificarea autorului fiecărui mute. Repartizarea din Voxdria nu modifică lobby-ul LoL; numele este declarat de participant și confirmat manual. Configurează `ORGANIZER_PASSWORD` și `MODERATOR_ACCOUNTS_JSON` numai pe server. Vezi [organizare și moderare](docs/organizer.ro.md).
 
@@ -52,7 +52,9 @@ The script installs locked dependencies, runs checks/tests and builds the Window
 
 See [enemy camera voice and its limits](docs/enemy-camera.ro.md), [security review](docs/security-review.ro.md), [Caster Mode and OBS](docs/caster-mode.ro.md), [operation and validation](docs/VOXDRIA.md), [Render setup](docs/RENDER.ro.md) and [publishing updates](docs/UPDATES.ro.md).
 
-Use Voxdria 0.4.1 and the updated server with working TURN. Enemy proximity is enabled by default; ENEMY_CAMERA_VOICE=0 is an explicit operator suspension. An existing Render value of 0 must be changed to 1. The existing public service and GitHub addresses are retained for compatibility; see [name and update migration](docs/rebrand.ro.md). The public server was not deployed in this session. Visibility is client-reported, not Riot attestation; a modified client can fabricate reports. The trusted media server terminates enemy audio encryption.
+Use Voxdria 0.4.2 and the updated server with working TURN. Enemy proximity is enabled by default; ENEMY_CAMERA_VOICE=0 is an explicit operator suspension. An existing Render value of 0 must be changed to 1. The existing public service and GitHub addresses are retained for compatibility; see [name and update migration](docs/rebrand.ro.md). The public server was not deployed in this session. Visibility is client-reported, not Riot attestation; a modified client can fabricate reports. The trusted media server terminates enemy audio encryption.
+
+Caster guests use a separate VC invitation link, choose a name and caster/listener role, and wait for organizer approval before joining audio. They receive no administrator privileges. See the [Caster invitation guide](docs/caster-invites.ro.md). Opening the link in a browser shows instructions; paste the complete link into the native Caster application.
 
 ## Privacy
 

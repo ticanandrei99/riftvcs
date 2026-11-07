@@ -17,5 +17,5 @@ describe('safe startup diagnostics',()=>{
   });
   it('refuses partially numeric or out-of-range deployment ports',async()=>{
     for(const port of ['32010suffix','65536'])expect((await boot({PORT:port})).code).toBe(1);
-  });
+  },15000); // Two processes, each with its own five-second startup deadline.
 });
