@@ -1,10 +1,12 @@
 # Manual test checklist
 
-Everything on this page is a thing no runner in this repo can check. CI has no
-Windows host, no GPU, no League client and no second machine, and `src-tauri`
-does not build on Linux at all, so the GDI capture, the low-level keyboard hook,
-click-through hit-testing, multi-monitor geometry, the updater's exe swap and
-real voice are verified here or not at all.
+The current Windows CI checks compiled logic, synthetic audio, routing and UI.
+It does not provide a real League match, multiple physical computers, a tested
+GPU/display setup or a human listening to the result. GDI capture, global PTT,
+click-through hit testing, display geometry and actual event audio still need
+the manual checks below. Local hardware and OBS QA results are documented in
+[the current verification report](verification-results.ro.md); do not infer
+that every manual row passed from a successful CI build.
 
 Run this before publishing a release. Copy the table into the release PR, fill
 in the build and date, and say which rows you actually ran — a blank row is more
@@ -59,9 +61,9 @@ rather than one you ran from `npm run dev`.
 
 | # | Steps | Expected | Automated cover |
 |---|---|---|---|
-| 4.1 | Publish a draft release, then publish it for real, with Auto-update on | The update is detected, downloaded, the exe swapped and the app relaunched on the new version | None — `updater.ts` has no test host |
+| 4.1 | On a staging release workflow, check a draft, then a stable release with the exact own-variant installer | Draft is ignored; a newer stable version with the correct asset produces a notification. Actualizează opens the fixed release page; installation is manual | Native updater metadata tests and client notification tests; public upgrade flow remains manual |
 | 4.2 | Decline the update when prompted | The app keeps running the old version and does not re-prompt in a loop | None |
-| 4.3 | Check the version shown in the panel after the swap | Matches the published tag, which is `src-tauri/Cargo.toml`'s version | None |
+| 4.3 | Install the verified newer installer manually, reopen and check the version | Matches the published tag and `src-tauri/Cargo.toml`; the player and Caster installers remain distinct | Build version checks; clean installation and upgrade remain manual |
 
 ## 5. Audio hardware
 

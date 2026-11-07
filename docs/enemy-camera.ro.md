@@ -1,6 +1,6 @@
-# Adversari apropiați în cameră — RiftVoice 0.2.0
+# Proximity standard — Voxdria 0.4.1
 
-Pentru customuri organizate, serverul actualizat poate permite vocea adversarilor. Fiecare jucător are opțiunea separată „Inamici apropiați în cameră”. Ambele persoane trebuie să accepte funcția. Caster Mode rămâne într-un canal separat de jucători.
+Proximity este modul standard implicit pentru jucători: coechipieri din apropiere și adversari apropiați identificați vizibil în camera proprie. Nu este necesară activarea unei funcții experimentale. Ascultarea adversarilor pornește implicit; fiecare persoană o poate opri sau folosi mute/deafen, iar ambele persoane trebuie să o păstreze activă. Caster Mode rămâne într-un canal separat de jucători.
 
 ## Regula de ascultare
 
@@ -13,7 +13,7 @@ Camera mutată departe nu permite ascultarea întregii hărți. Ascultarea este 
 1. Din server/: npm ci --include=dev, npm run build, npm start.
 2. Configurează PLAYER_GRANTS_JSON și CASTER_GRANTS_JSON conform caster-mode.ro.md.
 3. Configurează TURN valid: TURN_KEY_ID + TURN_KEY_API_TOKEN, TURN_URLS + TURN_USERNAME + TURN_PASSWORD sau TURN_SERVER + TURN_SECRET. Secretele rămân pe server.
-4. Setează ENEMY_CAMERA_VOICE=1 și repornește serverul. Valoarea implicită și render.yaml sunt 0; operatorul activează explicit funcția după configurare.
+4. Serverul 0.4.1 activează gateway-ul implicit când ENEMY_CAMERA_VOICE lipsește; render.yaml folosește 1. Dacă Render păstrează valoarea veche 0, schimb-o la 1 și repornește serviciul. Valoarea 0 rămâne o suspendare explicită pentru operator; alte valori nevalide sunt refuzate.
 5. /health trebuie să indice authenticationRequired=true, teamIsolation=true, enemyCameraVoice=true. teamIsolation desemnează separarea rutelor directe; adversarii comunică exclusiv prin filtrul media.
 6. În ambele aplicații configurează adresa HTTPS a serverului, introdu invitațiile și păstrează activă opțiunea pentru adversari. Controalele vechi de cameră/echipă se aplică aliaților și nu pot lărgi regula adversarilor.
 
@@ -37,7 +37,7 @@ Folosim captura locală deja disponibilă jucătorului. Nu citim memoria jocului
 
 **Un client modificat poate fabrica raportul de vizibilitate.** Provocările și filtrul media nu dovedesc că pixelii raportați sunt sinceri. Funcția nu este anti-cheat sau atestare Riot și nu garantează absența scurgerilor într-un eveniment cu participanți adversariali. O garanție mai puternică necesită o sursă de vizibilitate autorizată și verificabilă; proiectul nu presupune că aceasta există.
 
-RiftVoice nu are aprobare Riot pentru această modificare. Pachetul este destinat mai întâi testării în custom, cu arhitectura și limitele declarate exact.
+Voxdria nu are aprobare Riot pentru această modificare. Pachetul este destinat mai întâi testării în custom, cu arhitectura și limitele declarate exact.
 
 ## Verificare
 

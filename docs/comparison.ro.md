@@ -1,59 +1,36 @@
-# Comparație: LoLProxChat și RiftVoice 0.3.0
+# LoLProxChat și Voxdria 0.4.1 — comparație sinceră
 
-În 0.3.0, diferența principală este administrarea evenimentelor din aplicație: parolă de administrator, conturi nominale pentru moderatori, cod comun pentru 10 persoane, înscriere înainte de meci, repartizare/schimb de locuri și blocarea echipelor după start. Mute-ul de moderare revocă accesul vocal, administratorul autentificat este protejat de comenzile moderatorilor, iar istoricul arată cine a acționat și asupra cui. Acestea se adaugă izolării casterilor și filtrului adversarilor din 0.2.0.
+LoLProxChat, creat de danthi123 și contribuitori, este baza tehnică a proiectului nostru. Voxdria (numele nou al RiftVoice) este un fork AGPL, cu funcții suplimentare pentru customuri organizate și comentatori. Nu este o aplicație scrisă de la zero.
 
-RiftVoice refolosește în continuare infrastructura LoLProxChat și păstrează creditul/licența. Nu este demonstrată o îmbunătățire a latenței sau recunoașterii în meciuri reale. Identitățile și echipele depind de confirmarea organizatorului și de raportările clientului; nu există autentificare Riot sau aprobare nouă. Vezi [fluxul actual](organizer.ro.md) și [rezultatele 0.3.0](verification-results.ro.md). Comparația cu proiectul original rămâne limitată la arhiva locală descrisă mai jos.
+Comparația surselor folosește arhiva locală D:\Rift-voice\original\LoLProxChat-main.zip, cu versiune nativă 0.5.24. Am consultat și [README-ul public LoLProxChat](https://github.com/danthi123/LoLProxChat) la 7 noiembrie 2026. Acesta descrie deja camera mode, mute individual, updater și infrastructură CV/WebRTC. Nu prezentăm aceste funcții drept invenții Voxdria. Consultarea README-ului nu este o revizie a fiecărui commit upstream nou.
 
-## Etapa anterioară RiftVoice 0.2.0
-
-În 0.2.0, vocea adversarilor apropiați în cameră a fost reintrodusă ca funcție opțională de eveniment: invitații, acordul ambelor persoane, icon vizibil identificat, cameră lizibilă și distanță sub 1.350 unități. Un filtru media pe server elimină pachetele nepermise; nu există legătură directă între adversari. Casterii rămân izolați. Installerele acelei etape au versiunea 0.2.0.
-
-Această rută este mai restrictivă decât simpla proximitate după distanță din arhiva originală. Introduce însă un operator media de încredere și păstrează o limită importantă: un client modificat poate falsifica raportul vizual. Nu există atestare Riot sau dovadă de superioritate în tracking/latență. [Configurare și limite](enemy-camera.ro.md), [verificări curente](verification-results.ro.md).
-
-## Comparația anterioară pentru RiftVoice 0.1.0
-
-Textul de mai jos consemnează etapa anterioară, când vocea adversarilor era complet dezactivată pe serverul securizat. Pentru comportamentul 0.2.0 folosește explicația de mai sus și documentația legată.
-
-Comparație la 6 noiembrie 2026, bazată pe arhiva locală D:\Rift-voice\original\LoLProxChat-main.zip (pachetul nativ indică 0.5.24) și pe copia RiftVoice-Caster dezvoltată în acest chat. Nu este un benchmark în meciuri reale și nu presupune că arhiva locală este cea mai recentă versiune publică a autorului.
-
-## Verdict sincer
-
-LoLProxChat este baza tehnică substanțială: tracking pe minimapă, audio WebRTC, overlay, moduri de ascultare, controale de microfon și o infrastructură de teste. RiftVCS nu a fost construit de la zero; creditul autorului danthi123 și al contribuitorilor trebuie păstrat.
-
-RiftVCS are acum o direcție distinctă pentru comunitate și custom games: organizatori, invitații, roluri caster/spectator și control explicit asupra canalelor audio. Este mai restrictiv în arhitectura de acces din această copie. Nu este încă o platformă pregătită pentru lansare largă și nu este demonstrat că are tracking sau calitate vocală mai bună în joc.
-
-| Aspect | LoLProxChat din arhiva locală | RiftVCS din copia curentă |
+| Aspect | LoLProxChat, în baza analizată | Voxdria |
 |---|---|---|
-| Scop | Proximity voice general, aliați și adversari | Evenimente custom cu acces controlat, jucători și comentatori |
-| Bază tehnică | Tauri/WebView2, CV pe minimapă, WebRTC, server de signaling | Refolosește acea bază; nu pretinde o rescriere integrală |
-| Voce adversari | Parte centrală a experienței, după distanță | Nu se negociază pe serverul de producție securizat; funcția nu poate fi declarată păstrată în aceeași formă |
-| Admitere și echipă | Room/name și team furnizate de client, fără invitație de organizator în handshake-ul analizat | Invitație limitată în timp și legată de nume/cameră/rol/echipă; sesiune HTTP legată de socket |
-| Fog of war | Distanța/volumul pot reprezenta un canal de informații; documentația upstream discută aceste limite | Evită livrarea fluxurilor adversare/caster către jucători; recunoaște că CV și auto-raportarea nu sunt stare Riot autoritativă |
-| Caster Mode | Nu am identificat modul dedicat în sursa arhivată | Canal separat, spectator audio receive-only, PTT/mute/deafen, niveluri de comentariu și co-casteri, ieșire nativă pentru OBS |
-| Mute individual | Exista deja; nu este o invenție RiftVCS | Păstrat și corectat pentru prioritatea Mute All; păstrat la reconectare; adăugat în interfața caster cu volum per persoană |
-| IP și releu | Force-TURN activ implicit, dar poate fi dezactivat prin preferință | Conexiuni relay-only impuse în client; accesul la credențiale TURN cere sesiune |
-| Updater | Exista deja auto-update și o restricție a URL-ului de download către upstream | Notificare automată în română/engleză pentru varianta potrivită, link fix către release RiftVoice; instalarea automată este dezactivată până la un canal semnat |
-| Interfață și efecte | Overlay și controale de voce din proiectul de bază | Interfață română/engleză și identitate RiftVoice; efectele locale Natural/Robotic existente în fork sunt păstrate, fără a pretinde voice cloning oficial |
-| Identități mascate | Reconstruire a camerei din câmpuri Riot ID în unele cazuri | Nu reconstruiește numele mascate; refuză admiterea automată în acel caz |
-| Permisiuni native | Suprafață comună de comenzi și configurație din snapshot | CSP, origine de microfon verificată, navigare externă blocată și limitarea comenzilor native pentru caster |
-| Verificări | Are deja teste automate și componente complexe de simulare; merită credit pentru acestea | Extinde testele de autentificare/izolare/mute/notificare și actualizează dependențele; probele de joc/OBS pe mai multe calculatoare rămân necesare |
-| Statut Riot | README-ul arhivat declară înregistrare/aprobare în Developer Portal, App ID 809090; afirmația nu a fost verificată independent în acest audit | Nicio aprobare declarată sau primită pentru RiftVCS; aprobarea/înregistrarea autorului nu se transferă automat fork-ului |
-| Maturitate | Proiect de bază cu implementare și istoric propriu; nu avem aici rezultate comparative din comunitatea lui | Prototip de eveniment cu hardening local; build/test nu înseamnă lansare validată |
+| Bază tehnică | Tauri/WebView2, minimap tracking, model CV, WebRTC, overlay, server și teste | Refolosește și modifică acea infrastructură; păstrează autorul, notificările și AGPL-3.0-or-later |
+| Proximity | Experiență centrală, aliați și adversari; moduri de distanță/cameră | Modul standard implicit; coechipieri în apropiere și adversari apropiați identificați vizibil în camera proprie |
+| Camera / fog of war | README-ul descrie filtrarea locală în camera mode, dar și mod de distanță | Pentru adversari, media trece prin server și este eliminată fără identitate/cameră/distanță/raport proaspăt; unmute local nu recuperează RTP eliminat |
+| Încredere în vizibilitate | Poziții și recunoaștere vizuală furnizate de client | Aceeași limită fundamentală: un client modificat poate falsifica rapoartele. Filtrarea media nu este atestare Riot |
+| Intrare în custom | Cameră deterministă și date de identificare furnizate de client în handshake-ul arhivat | Cod vocal, cerere, aprobare organizator, rezervare privată, rol/echipă impuse de server |
+| Voce înainte de meci | Nu am identificat fluxul de eveniment echivalent în arhiva analizată | Lobby vocal pe echipe după aprobare; mutare/schimb și închidere la admiterea în meci |
+| Administrare | Nu am identificat panoul nominal echivalent în arhivă | Administrator și moderatori cu parole, zece locuri/cinci pe echipă, mute/revocare, admin protejat și istoric nominal privat |
+| Caster și spectator audio | Nu am identificat aplicația dedicată echivalentă în arhivă | Voxdria Caster separat, spectator fără microfon, audio izolat de jucători, PTT/mute/deafen și controale de mix OBS |
+| Mute individual | Exista deja | Păstrat în player/Caster, cu prioritate pentru deafen și oprirea vocilor din mix |
+| Procesare voce | Infrastructura audio și controalele de bază sunt upstream | Natural/Robotic opțional, procesare locală, preview; fără înregistrări oficiale de campioni sau voice cloning |
+| TURN și confidențialitate | README-ul oferă alegerea Force TURN; media obișnuită este P2P | TURN-only în producție; gateway-ul adversarilor termină criptarea și operatorul trebuie considerat de încredere |
+| Update | Auto-update exista deja | Notificare la pornire, validare strictă a variantei/assetului și pagină fixă. Instalare manuală până la un canal semnat |
+| Discord | Nu se atribuie o integrare neverificată upstream | Link comunitate și canal privat Streamer, fără login, acordare de roluri sau punte audio automată |
+| Distribuție | README-ul descrie executabil portabil | Installere separate player/Caster, surse corespunzătoare, ghiduri și SHA-256; compatibilitate cu invitațiile/numele vechi de updater |
+| Testare | Are deja teste și componente complexe de simulare | Adaugă verificări pentru acces, rutare, moderare, lifecycle și compatibilitate; rezultatele exacte sunt în raport |
+| Riot | README-ul declară înregistrare/aprobare, App ID 809090; nu am verificat independent portalul | Nu avem aprobare Riot pentru fork; o afirmație upstream nu se transferă proiectului nostru |
 
-## Ce s-a îmbunătățit concret
+## Evaluarea mea
 
-Controlul accesului și separarea media sunt schimbările cele mai importante pentru obiectivul tău. Nu sunt doar culori și traducere. Caster Mode are un scop diferit de proximity chat, iar controalele pentru organizator oferă o bază pentru customuri comunitare.
+Voxdria are acum o direcție proprie: evenimente comunitare cu participanți aprobați, administrare și comentatori izolați. Diferența depășește redenumirea și culorile interfeței. Proximity rămâne experiența principală; controlul accesului și canalul Caster sunt extensiile noastre cele mai clare.
 
-Au fost corectate probleme verificabile: admitere fără autentificare, acces nelegat la volume, team auto-declarat, comenzi native accesibile casterului, unmute care putea trece peste Mute All și ambiguități ale actualizărilor. Rezultatele efective și limitările sunt în verification-results.ro.md și security-review.ro.md. Numărul de remedieri nu este dovadă că toate vulnerabilitățile au fost eliminate.
+Nu avem dovezi că recunoaștem mai bine campionii, că avem latență mai mică sau voce de calitate mai bună în meciuri reale. Mai multe teste ori verificări locale nu sunt un benchmark comparativ. Nu există bază pentru a spune că proiectul lui Dani este slab sau nesigur în toate versiunile, ori că putem deduce din cod dacă a folosit AI.
 
-## Ce nu pot spune că este mai bun
+Arhitectura noastră adaugă și costuri: un server media de încredere, TURN obligatoriu, configurare de eveniment și încărcare suplimentară. Pentru un 5v5, gateway-ul adversarilor poate ajunge la 25 de perechi/50 de conexiuni WebRTC pe server. Capacitatea hostului, utilizarea cu zece PC-uri și sincronizarea comentariului în stream trebuie validate. Controalele de acces limitează clienții normali; P2P deja negociat între clienți modificați și comunicațiile externe rămân limite explicite.
 
-Nu avem dovada că RiftVCS recunoaște mai bine campionii în meciuri reale, că are latență mai mică sau că rezistă mai bine la rețele diferite. Din cele 27 de cazuri vizuale anterior omise, 25 au trecut după pregătirea imaginilor publice; două încă cer înregistrări reale. Probele extinse au verificat microfonul și mixerul Windows, captura nativă în OBS, transportul TURN extern și instalare/dezinstalare izolată. Acestea susțin funcționarea locală, fără să reprezinte un benchmark comparativ în joc sau certificarea accesibilității complete.
+Ca stadiu, avem un fork de comunitate cu funcții proprii și probe locale documentate. Nu avem încă o lansare largă validată, audit independent, certificat Windows sau aprobare Riot. Comparația corectă este una de funcții și arhitectură, până când avem rezultate din aceleași meciuri/rețele/dispozitive.
 
-Ar fi incorect să spun că am păstrat toate funcțiile și am eliminat toate riscurile: vocea dintre adversari este restricționată tocmai pentru a închide o cale de informații nepermise. Dacă aceasta este experiența principală dorită, trebuie o arhitectură media potrivită și o clarificare cu Riot înainte de a o reactiva. Un proiect mai prudent poate avea temporar mai puține funcții active.
-
-## Ce contează înainte de lansare
-
-Teste în custom pe mai multe calculatoare/rețele, verificarea canalelor audio și a delay-ului în stream, ergonomia invitațiilor, upgrade pe versiuni publicate, revocare și administrare reală. Urmează clarificarea cu Riot pe o descriere tehnică exactă, fără promisiunea de risc zero. Cheile de semnare și certificatul Windows trebuie gestionate separat de surse înainte de un updater cu instalare automată.
-
-Concluzia mea: RiftVCS se diferențiază acum prin obiectiv și controlul accesului. Are potențial să devină un produs comunitar propriu, dar în starea verificată aici este un fork în dezvoltare, nu un produs matur și nici unul aprobat de Riot.
+Vezi [verificările executate](verification-results.ro.md), [inventarul funcțiilor](function-checklist.ro.md), [proximity și limitele vizuale](enemy-camera.ro.md) și [migrarea numelui](rebrand.ro.md).

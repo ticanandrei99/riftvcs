@@ -1,0 +1,9 @@
+{
+  "name": "deepmerge",
+  "version": "4.3.1-riftvoice.1",
+  "description": "Vendored deepmerge 4.3.1 with prototype-key filtering for Voxdria test tooling",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "private": true
+}

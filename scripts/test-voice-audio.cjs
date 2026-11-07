@@ -12,7 +12,7 @@ async function main() {
   await new Promise((resolve,reject)=>webpack(config,(err,stats)=>err?reject(err):stats.hasErrors()?reject(Error(stats.toString({all:false,errors:true}))):resolve()));
   const server=http.createServer((req,res)=>{
     if(req.url==='/bundle.js') {res.setHeader('Content-Type','text/javascript');res.end(fs.readFileSync(path.join(root,'verification/audio-browser/bundle.js')));}
-    else {res.setHeader('Content-Type','text/html');res.end('<html><script src="/bundle.js"></script><body>RiftVoice audio render test</body></html>');}
+    else {res.setHeader('Content-Type','text/html');res.end('<html><script src="/bundle.js"></script><body>Voxdria audio render test</body></html>');}
   });
   await new Promise(resolve=>server.listen(9340,'127.0.0.1',resolve));
   const edge=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[

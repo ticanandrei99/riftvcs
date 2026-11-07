@@ -11,11 +11,11 @@ async function main(){
   const output=path.join(root,'verification/organizer-browser');fs.mkdirSync(output,{recursive:true});
   const config=require('../webpack.config.js');config.entry=path.join(root,'tests/browser/organizer.js');
   config.output={path:output,filename:'bundle.js'};config.mode='development';config.devtool=false;
-  config.plugins=[new webpack.DefinePlugin({__PROXCHAT_SERVER__:JSON.stringify('http://127.0.0.1:'+port)})];
+  config.plugins=[new webpack.DefinePlugin({__PROXCHAT_SERVER__:JSON.stringify('http://127.0.0.1:'+port),__VOXDRIA_VERSION__:JSON.stringify(require('../package.json').version)})];
   await new Promise((yes,no)=>webpack(config,(err,stats)=>err?no(err):stats.hasErrors()?no(Error(stats.toString({all:false,errors:true}))):yes()));
   const backend=spawn(process.execPath,['dist/index.js'],{cwd:path.join(root,'server'),env:{...process.env,PORT:String(port),ORGANIZER_PASSWORD:adminPassword,MODERATOR_PASSWORD:'',MODERATOR_ACCOUNTS_JSON:JSON.stringify([{name:'Dani',password:moderatorPassword}]),ORGANIZER_STORE_PATH:'',PLAYER_GRANTS_JSON:'[]',CASTER_GRANTS_JSON:'[]',RIFTVOICE_INSECURE_TEST_MODE:'0',ENEMY_CAMERA_VOICE:'0',CAMERA_MEDIA_LOOPBACK_TEST:'0',ALLOWED_WEB_ORIGINS:'http://127.0.0.1:'+webPort},windowsHide:true,stdio:'ignore'});
   const html=fs.readFileSync(path.join(root,'src/caster/caster.html'),'utf8').replace('<script src="caster.js"></script>','<script src="/bundle.js"></script>');
-  const server=http.createServer((req,res)=>{res.setHeader('Content-Type',req.url==='/bundle.js'?'text/javascript':'text/html; charset=utf-8');res.end(req.url==='/bundle.js'?fs.readFileSync(path.join(output,'bundle.js')):html);});
+  const server=http.createServer((req,res)=>{const script=req.url==='/bundle.js',style=req.url==='/caster.css';res.setHeader('Content-Type',script?'text/javascript':style?'text/css':'text/html; charset=utf-8');res.end(script?fs.readFileSync(path.join(output,'bundle.js')):style?fs.readFileSync(path.join(root,'src/caster/caster.css')):html);});
   let edge,socket;const clients=[],results=[];
   try{
     await until(async()=>{try{return(await fetch('http://127.0.0.1:'+port+'/health')).ok;}catch{return false;}},'backend startup');
@@ -36,6 +36,8 @@ async function main(){
     await call('Runtime.enable');await wait('!!document.getElementById("organizer-create")','panel mount');
     if(!await evaluate('document.getElementById("organizer-controls").disabled&&document.getElementById("organizer-controls").hidden'))throw Error('Unauthenticated panel enabled');
     results.push('generation blocked before authentication');
+    if(!await evaluate('document.title==="Voxdria Caster"&&document.querySelector("h1").textContent.includes("Voxdria Caster")'))throw Error('Unexpected product branding');
+    results.push('Voxdria Caster title and visible heading match the new product identity');
     await field('organizer-account','Dani');await field('organizer-password','wrong-password');await click('organizer-login');
     await wait('document.getElementById("organizer-status").textContent.includes("Parolă incorectă")','wrong password');
     if(!await evaluate('document.getElementById("organizer-controls").disabled&&document.getElementById("organizer-password").value===""'))throw Error('Password retained after login attempt');
@@ -46,7 +48,10 @@ async function main(){
     results.push('named moderator generates one shared 10-player invitation');
     await evaluate('Array.from(document.querySelectorAll("#organizer-event button")).find(b=>b.textContent==="Copiază invitația completă").click()');
     if(!await evaluate('window.organizerProofClipboard.includes("https://gg.riotgames.com/LOL?joinCode=UI-test-only")&&window.organizerProofClipboard.includes('+JSON.stringify(invitation)+')'))throw Error('Combined invitation is missing Riot lobby link or voice code');
-    results.push('copied invitation combines the organizer-provided Riot lobby link with the independent voice code');
+    const copied=await evaluate('window.organizerProofClipboard');
+    const legacyCode=/\bCod vocal(?: RiftVoice)?\s*:\s*([A-Za-z0-9_-]{32,256})(?=\s|$)/i.exec(copied)?.[1];
+    if(legacyCode!==invitation||!copied.startsWith('Voxdria · '))throw Error('Rebranded invitation is not compatible with the previous client');
+    results.push('Voxdria invitation combines Riot lobby link and voice code, and remains readable by the previous RiftVoice parser');
     for(const name of ['Alice#EUNE','Bob#EUNE']){
       const ws=new NodeSocket('ws://127.0.0.1:'+port+'/registration'),messages=[];clients.push(ws);ws.on('message',raw=>messages.push(JSON.parse(raw.toString())));
       await new Promise((yes,no)=>{ws.once('open',yes);ws.once('error',no);});ws.send(JSON.stringify({type:'lobby_register',name,invitation}));
@@ -73,6 +78,12 @@ async function main(){
     await evaluate('Array.from(document.querySelectorAll("#organizer-event button")).find(b=>b.textContent==="Conectează acest Caster cu rolul meu").click()');
     await wait(section('Comentatori și moderare')+'.textContent.includes("Administrator")','administrator staff entry');
     await capture('administrator-audit.png');
+    for(const width of [800,520]){
+      await call('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:false});
+      if(!await evaluate('getComputedStyle(document.body).backgroundColor==="rgb(16, 9, 13)"&&document.documentElement.scrollWidth<=window.innerWidth&&getComputedStyle(document.getElementById("organizer-invite")).backgroundColor==="rgb(18, 11, 15)"'))throw Error('Caster layout overflow or missing Voxdria dark theme');
+      await capture('caster-layout-'+width+'.png');
+    }
+    results.push('Voxdria dark red theme loads with no horizontal overflow at 800 and 520 pixels');
     await click('organizer-logout');await field('organizer-account','Dani');await field('organizer-password',moderatorPassword);await click('organizer-login');
     await wait('Array.from(document.querySelectorAll("#organizer-event button")).some(b=>b.textContent==="Administrator protejat"&&b.disabled)','protected administrator control');
     await capture('moderator-protection.png');results.push('moderator sees protected administrator and cannot use the mute control');

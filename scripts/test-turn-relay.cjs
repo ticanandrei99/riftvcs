@@ -62,7 +62,7 @@ async function main() {
   const html = http.createServer((request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     if (request.url === '/bundle.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(fs.readFileSync(path.join(outputDir, 'bundle.js'))); }
-    else { response.setHeader('Content-Type', 'text/html'); response.end('<!doctype html><title>RiftVoice synthetic relay QA</title><script src="/bundle.js"></script>'); }
+    else { response.setHeader('Content-Type', 'text/html'); response.end('<!doctype html><title>Voxdria synthetic relay QA</title><script src="/bundle.js"></script>'); }
   });
   let browser;
   const clients = [];

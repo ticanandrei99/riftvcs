@@ -1,6 +1,6 @@
 > Current fork policy: see [security review](security-review.ro.md) and [custom rooms / Caster Mode](caster-mode.ro.md). Production now requires organizer invitations and isolates teams. Historical cross-team compatibility and upstream updater descriptions below are not production guarantees.
 
-> RiftVoice fork: the default is http://127.0.0.1:3100, not the upstream server.
+> Voxdria fork: the default is http://127.0.0.1:3100, not the upstream server.
 > Configure the shared HTTPS origin in SET -> Voice server; rebuilding the client
 > is optional. Use Node.js 22.12 or newer. Hosting, DNS and TURN credentials must
 > be supplied by the operator. Upstream hosting examples below are reference

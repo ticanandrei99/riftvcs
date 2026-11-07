@@ -1,54 +1,55 @@
-# RiftVoice — audit și pregătire pentru evaluare
+# Voxdria / Voxdria Caster 0.4.1 — verificare de securitate
 
-Data: 6 noiembrie 2026. Copie de lucru: RiftVoice-Caster, pornită din D:\Rift-voice\main-project. Nu s-a făcut deploy și nu a fost contactat Riot. Proiectul original și instalarea existentă au rămas nemodificate.
+Revizie internă a surselor, configurației native/web, rutării și dependențelor, în 6–7 noiembrie 2026. Nu este certificare, audit Riot sau garanție de absență a vulnerabilităților. Copia de lucru este Voxdria-Caster, derivată din D:\Rift-voice\main-project. Rezultatele executate sunt în [raport](verification-results.ro.md), iar funcțiile și probele lor în [inventar](function-checklist.ro.md).
 
-## Remedieri aplicate
+## Remedieri și limite verificate
 
-| Constatare | Remediere în această copie |
+| Constatare / risc | Măsură aplicată |
 |---|---|
-| Reconstruire automată a numelor mascate prin streamer mode | Numele afișate nu mai sunt reconstruite; admiterea automată este refuzată dacă identitățile sunt mascate |
-| Intrare în camere pe baza unor nume/ID-uri publice; team auto-declarat | Invitații ale organizatorului, identitate/rol/echipă impuse de server; fără invitație, acces închis implicit |
-| Prima confirmare securizată era incompletă și era refuzată de client | Serverul include role și teamIsolation și la prima intrare, ca la repetarea ei; test de regresie și probă WebRTC/TURN cu clientul real trecute. Validarea clientului rămâne strictă |
-| Endpoint de volume utilizabil pentru alte identități/poziții | Sesiune HTTP legată de socket; refuz identitate/cameră diferită; coordonata HTTP este înlocuită cu starea propriei sesiuni |
-| Flux audio adversar livrat chiar dacă volumul local era zero | Implicit echipe separate; în modul opțional 0.2.0, filtrul media elimină RTP nepermis. Raportul vizual rămâne o intrare neautoritativă |
-| Risc caster/spectator→player și date de spectator | Camere separate, fără punte audio sau date de poziție; rol spectator audio receive-only; build caster fără overlay/scanner |
-| Acces public la credențiale TURN | Endpoint protejat prin sesiune, rate limits și CORS explicit |
-| Relay opac al mesajelor | Acceptare doar audio SDP/ICE, fără data channels/video; metadate presence reconstruite și limitate |
-| Pagină externă cu permisiuni de microfon/native | CSP, navigare blocată, verificare origin pentru microfon, listă de comenzi native per fereastră |
-| Cereri locale care puteau urma redirect/proxy | Client League strict loopback, no_proxy și fără redirect |
-| Captură prea mare / overflow / altă aplicație în față | Dimensiuni validate înainte de alocare, geometrie în i64 și captură numai cu League în prim-plan |
-| Generare sintetică de Caps Lock | Eliminat SendInput; hotkey-urile produc doar evenimente interne PTT/mute |
-| Actualizare nesigură / confuzie cu upstream | Notificare la pornire pentru ambele variante; metadate stabile și installer exact din repo-ul RiftVoice; fără execuție de URL furnizat de frontend |
-| Unmute individual putea suprascrie Mute All | Mute All are prioritate; mute individual păstrat la reconectare; controale individuale și în caster |
-| Arhive cu date locale / secrete | Excludere .private.json, chei, profiluri, rapoarte locale și dependențe; documentație și canal de raportare specifice fork-ului |
-| Componente native vechi | Cargo.lock actualizat, inclusiv TLS, rădăcini certificate, Tauri/Wry și zip; scanare RustSec refăcută |
-| Dependențe dev cu probleme moderate | glob/minimatch actualizate prin overrides explicite, fără downgrade forțat la o versiune veche de Jest |
-| Generarea codurilor fără rol de organizator | Panou 0.3.0 cu parolă server, sesiuni limitate, verificatori scrypt și rate limits; rolurile/numele declarate de client sunt ignorate |
-| Înscriere înainte de meci cu acces prematur la voce | Rezervare personală fără sesiune media; aprobare manuală, maximum 10 locuri / 5 pe echipă, validare din nou la intrarea în meci |
-| Mutare pe echipă adversă în timpul meciului | Repartizare/schimb de locuri numai înainte de legarea camerei de meci; echipa detectată trebuie să corespundă aprobării |
-| Moderator care poate opri administratorul sau ascunde autorul unui mute | Identitate staff personală impusă de server, refuz mute/unmute contra administratorului, istoric nominal privat vizibil administratorului |
+| Cod RV- salvat fără cerere vizibilă înainte de meci | Panou de conectare vizibil, parsare invitație completă, Riot ID, cerere/aprobare explicită și stare precisă |
+| Lipsa vocii înainte de meci | Canal de lobby cu rezervare privată după aprobare, rol impus de server, echipe izolate și bearer separat |
+| Sesiune veche la reconnect / mutare echipă / meci | Revocare înainte de înlocuire, close terminal la takeover/moderare, cleanup și protecție împotriva callback-urilor async vechi |
+| Refolosirea cache-ului TURN după schimbarea sesiunii | Cache și cereri în curs legate de bearer; răspunsul vechi nu intră în noua sesiune; timeout și no-store |
+| Coduri sau parole în mesaje de diagnostic | Redactare pentru câmpuri sensibile, Bearer și coduri recognoscibile; bootstrap nu imprimă fragmente din JSON invalid |
+| Rol / roster Caster nevalidat înainte de media | Validare identitate, rol, bearer și listă unică/bounded; un singur ready; microfon numai după admitere validă |
+| Vulnerabilitate prototype poisoning în deepmerge din uneltele Jest | Copie locală MIT 4.3.1-riftvoice.1, filtrare recursivă a cheilor de prototip din ambele intrări și teste împotriva atacului publicat |
+| Un credential privat aleatoriu începe cu RV- | Parserul serverului distinge formatul complet al codului comun de prefixul accidental al unui token personal |
+| Mix de stream fără control colectiv | Gate pe vocile primite, independent de TX; respectă mute individual/deafen și reconectarea |
+| Acces pe baza numelor sau rolurilor pretinse | Invitație + aprobare organizator, identitate/echipă/rol din grant; numele declarat rămâne neautentificat Riot |
+| Caster/spectator către jucători sau poziții ascunse | Canale/managere separate, fără punte de semnalizare/audio; fără date sau comenzi native de spectator/captură în Caster |
+| Primirea RTP de adversar cu volum local zero | Rutele directe rămân separate pe echipe; gateway standard care elimină RTP fără permisiune vizuală proaspătă, distanță și sesiuni valide |
+| Acces HTTP la alt jucător / credențiale TURN | Bearer legat de socket și expirare; volume doar pentru rol player și identitatea/camera proprie |
+| Video, data channel, payload arbitrar | SDP/ICE audio-only, limite de mărime, tipuri permise și țintă în același canal |
+| Flood / încercări de parolă / blocare proces | Limite IP/concurență, timeouts, scrypt bounded, cozi limitate, heartbeat și tratarea erorilor WS |
+| Client lent care acumulează răspunsuri WebSocket | Limită comună de 512 KiB pentru coada de ieșire și mesaj, închidere la depășire/eroare; toate rutele serverului folosesc aceeași funcție de trimitere |
+| Moderator pretins admin / mute administrator | Autoritate numai din credențialele serverului, refuz server și audit nominal al încercării |
+| Invitații private în roster / stocare neprotejată | Rezervări private ascunse din roster, sessionStorage, fișier explicit .private.json cu scriere atomică și permisiuni restrictive unde OS le aplică |
+| Navigare externă / IPC folosit din altă fereastră | CSP, origine locală, navigare blocată, listă de comenzi nativă pentru fiecare fereastră |
+| URL de update arbitrar / installer greșit | Endpoint fix, HTTPS fără redirect, limită timp/mărime, semver și asset exact pentru player/Caster; fără execuție automată |
+| Redenumire care rupe invitațiile sau notificarea clienților vechi | Parser pentru etichetele vechi/noi, invitație generică compatibilă, identificatori/preferințe stabile și aliasuri de installer identice prin SHA-256; instalarea/migrarea Windows rămân probe distincte |
+| Buton Discord folosit pentru o destinație arbitrară | Comandă nativă cu două valori enum și URL-uri fixe; destinația privată refuzată în player, fără token, login, roluri sau transport audio Discord |
 
-## Limite care rămân
+## Dependențe și avertismente
 
-Nu este o enumerare garantată a tuturor vulnerabilităților. Auditul este de sursă/configurație/dependențe, cu teste locale; nu include un pentest independent, infrastructura publică, certificatele operatorului sau conturi Riot reale.
+Auditul npm curent și verificarea RustSec sunt consemnate cu rezultatele exacte în raport. Zero alerte cunoscute nu înseamnă zero vulnerabilități.
 
-În 0.2.0, adversarii apropiați, identificați în imaginea curentă din cameră, pot fi auziți dacă organizatorul activează ENEMY_CAMERA_VOICE. Conexiunile sunt terminate și filtrate la fiecare pachet pe server; adversarii nu primesc direct SDP/ICE unul de la altul. Vizibilitatea rămâne raportată de client și poate fi falsificată. Nu se declară o garanție anti-cheat sau aprobare Riot. Configurare, model de încredere al operatorului și limite: [enemy-camera.ro.md](enemy-camera.ro.md).
+[GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4) nu oferea o versiune upstream reparată la această revizie. Remedierea din vendor/deepmerge este o modificare locală explicită, testată, nu o versiune oficială și nu o simplă ignorare a alertei. Codul, tipurile și licența sunt incluse în surse; npm ci îl instalează reproductibil. Instrumentele de testare nu intră în bundle-urile aplicației.
 
-Invitațiile nu dovedesc identitatea Riot sau participarea într-un custom; organizatorul trebuie să verifice manual lobby-ul. Din 0.3.0, camerele create în aplicație au panou de moderare și revocare fără restart. Mute de moderare suspendă transmisia și ascultarea, cu reconectare manuală după reactivare. Camerele și istoricul sunt temporare dacă nu există stocare privată persistentă. Invitațiile statice se revocă în configurația operatorului urmată de restart. Clienții modificați pot păstra media P2P deja negociată între participanți care aveau acces; vezi threat-model.md și organizer.ro.md.
+Cargo.lock include și dependențele Linux ale Tauri: glib 0.18.5 (RUSTSEC-2024-0429, unsound) și proc-macro-error 1.0.4 (RUSTSEC-2024-0370, unmaintained). Ambele sunt absente din arborele țintei Windows x86_64 verificat. Avertismentele rămân documentate, nu sunt ascunse și nu se declară un build Linux verificat. Actualizarea lor cere o combinație compatibilă din ecosistemul Tauri/GTK; eliminarea arbitrară din lockfile ar strica reproductibilitatea.
 
-Scanarea npm pentru codul livrat și scanarea RustSec sunt consemnate separat de avertismentele dependențelor de dezvoltare și de cele pentru alte platforme. Un rezultat zero nu este o certificare de securitate. Nu se ascund sau ignoră advisories pentru a obține un rezultat favorabil.
+Build-ul frontend păstrează bugete explicite pentru resurse desktop instalate local: 768 KiB per intrare și 32 MiB per asset offline. Acestea includ motorul ONNX/WASM; nu sunt pagini descărcate în timpul unui apel. Compilarea de producție eșuează la avertismente webpack, în loc să le ignore. Compilatorul/linterul nativ și testele sunt raportate separat.
 
-Updaterul face verificare automată și notificare, nu instalare silențioasă. Instalarea automată necesită un canal semnat criptografic, cheia publică în aplicație și test de update/rollback cu artifact real; acestea nu au fost provisionate. Nu au fost generate chei de producție și nu a fost publicată o versiune în GitHub.
+## Riscuri care nu pot fi eliminate prin această revizie
 
-## Verificare Riot
+- Riot ID, echipa și vizibilitatea sunt raportate de client, apoi aprobate/verificate în limitele aplicației. Un client modificat le poate falsifica. Nu există atestare Riot sau acces autorizat presupus la poziții ascunse.
+- Doi clienți modificați pot continua media P2P deja negociată între aliați/lobby/casteri. Revocarea închide aplicațiile normale, bearer-ul și semnalizarea, fără a constitui revocare criptografică a unui transport extern deja stabilit.
+- Parolele/granturile împărțite, administratorul hostului, TURN și comunicațiile externe sunt relații de încredere. Nu se blochează Discord, urmărirea streamului sau alte programe.
+- Izolarea casterilor nu depinde de delay. Delay-ul și sincronizarea OBS se configurează manual; un spectator întârziat nu primește dreptul de a transmite către jucători.
+- Installerele Windows sunt nesemnate. Updaterul notifică și deschide pagina fixă de release; instalarea automată cere un canal semnat și o probă reală de update/rollback.
+- Proximitatea depinde de minimapă și poate greși. Nu există garanție de absență a sancțiunilor și nici de acceptare Riot. Custom games nu sunt tratate ca excepție automată.
 
-Surse primare consultate la data auditului:
-- https://developer.riotgames.com/docs/lol — Game Integrity și cerințele pentru produse.
-- https://support.riotgames.com/en-us/riot/events/third-party-applications — informații ascunse, avantaj nepermis, skin hacks.
-- https://www.riotgames.com/en/DevRel/vanguard-faq — instrumente third-party și Vanguard.
-- https://v2.tauri.app/plugin/updater/ — semnarea updaterului.
-- https://v2.tauri.app/security/csp/ — politica paginilor native.
+## Referințe și pregătire pentru Riot
 
-Dosarul pentru Riot trebuie să descrie exact API-urile League folosite, captura vizuală locală, datele care părăsesc calculatorul, autentificarea de eveniment, topologia audio, limitările și rezultatele testelor. Custom games nu sunt considerate automat o excepție de la regulile Riot. Nu se afirmă aprobare, compatibilitate garantată sau risc zero de sancțiuni.
+[Politicile generale Riot](https://developer.riotgames.com/policies/general) cer înregistrarea și evaluarea produsului și a modificărilor prin Developer Portal, precum și evitarea avantajului nepermis. [Documentația League](https://developer.riotgames.com/docs/lol) descrie serviciile/API-urile relevante. Trebuie prezentate exact API-urile locale folosite, captura vizuală locală, topologia audio, ce date părăsesc calculatorul, limitele raportării clientului și rezultatele din custom real. Nu a fost trimisă o cerere de evaluare către Riot în această sesiune. Codul nu încearcă să ocolească Vanguard.
 
-Rezultatele executării testelor/build-urilor sunt în docs/verification-results.ro.md, după încheierea verificărilor. Pentru OBS și probele manuale: caster-mode.ro.md.
+Pentru configurație și limite practice: [organizare](organizer.ro.md), [OBS/caster](caster-mode.ro.md), [model de amenințări](threat-model.md). Capturile și arhivele de debug pot conține nume sau cadre de minimapă; inspectează-le înainte de partajare.
