@@ -1,6 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod audio_out;
+#[path = "player_original_capture.rs"]
+// Keep upstream bytes intact on Rust 1.99: these are stylistic suggestions,
+// not runtime checks. All other lints remain errors in the verification build.
+#[allow(clippy::chunks_exact_to_as_chunks, clippy::unnecessary_cast)]
 mod capture;
 mod discord;
 mod game_bundle;

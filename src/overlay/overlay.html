@@ -34,7 +34,7 @@
     </div>
     <section id="voice-invitation-panel" aria-label="Conectare la custom"></section>
     <div id="settings-panel" class="settings-panel hidden">
-      <section id="voice-panel" aria-label="Champion Voice Engine"></section>
+      <section id="voice-panel" aria-label="Champion Voice Engine" hidden></section>
       <div class="setting-row">
         <label data-i18n="settings.language">Language</label>
         <select id="language"></select>
@@ -89,11 +89,10 @@
         <label data-i18n="settings.allyProximity" data-i18n-title="settings.allyProximityHint" title="When ON (default), teammates fade with distance just like enemies. When OFF, teammates are always at full volume. Takes effect on the next position update.">Ally proximity</label>
         <button id="btn-ally-proximity" class="icon-btn">ON</button>
       </div>
-      <div class="setting-row">
-        <label id="enemy-camera-label">Inamici apropiați în cameră</label>
+      <div class="setting-row" hidden><label id="enemy-camera-label">Inamici apropiați în cameră</label>
         <button id="btn-enemy-camera" class="icon-btn">ON</button>
       </div>
-      <p id="enemy-camera-status" role="status" style="font-size:11px;padding:0 14px;opacity:.8">Necesită activarea de către organizator pe server.</p>
+      <p hidden id="enemy-camera-status" role="status" style="font-size:11px;padding:0 14px;opacity:.8">Necesită activarea de către organizator pe server.</p>
       <div class="setting-row">
         <label data-i18n="settings.cameraListen" data-i18n-title="settings.cameraListenHint" title="When ON, you also hear the champions inside your camera's white box on the minimap — what is on your screen — not just those near your champion. Enemies only while their icon is on your minimap, as everywhere: one in a brush or in the fog stays silent. One-way: the people you listen in on only hear you if they are near your champion or looking at you themselves. Only works between players who BOTH have it on: leave it off and nobody's Voice on camera can reach you. (Players in Camera mode still hear you while your icon is inside their camera box.) On by default.">Voice on camera</label>
         <button id="btn-camera-listen" class="icon-btn">ON</button>

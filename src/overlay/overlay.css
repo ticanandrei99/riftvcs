@@ -351,3 +351,6 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline-color:#f
 #voice-invitation-panel p {line-height:1.45;margin:7px 0}
 #voice-invitation-status,#lobby-registration-status {color:#ffcd87}
 #lobby-voice-peers>div {display:flex;justify-content:space-between;align-items:center;gap:6px}
+
+/* Unsupported custom processor/gateway controls are hidden in the original player variant. */
+[hidden] { display: none !important; }

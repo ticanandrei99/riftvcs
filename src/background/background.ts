@@ -1,12 +1,11 @@
-import { applyNearbyOnlySettings } from '../services/audio-prefs';
 import { setLoggingEnabled } from '../core/logging';
+import {applyOriginalPlayerDefaults} from '../player-original/preferences';
 // Silence verbose logs by default — the overlay's Debug toggle flips this on.
 setLoggingEnabled(false);
 
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { Orchestrator } from '../services/orchestrator';
-import { LobbyVoiceController } from '../services/lobby-voice';
+import { PlayerController as Orchestrator } from '../player-original/controller';
 import { applyAudioDefaultsOnce } from '../services/audio-prefs';
 import '../core/window-globals';
 
@@ -17,12 +16,13 @@ if (applyAudioDefaultsOnce()) {
 
 console.log('[Voxdria] Background script loading...');
 
-applyNearbyOnlySettings();
-const lobbyVoice=new LobbyVoiceController();
+
+
+applyOriginalPlayerDefaults();
 const orchestrator = new Orchestrator();
 orchestrator.start();
 window.addEventListener('riftvoice:invitation-changed',()=>orchestrator.refreshVoiceInvitation());
-window.addEventListener('beforeunload',()=>lobbyVoice.stop(),{once:true});
+
 
 console.log('[Voxdria] Orchestrator started');
 
@@ -109,11 +109,9 @@ listen<string>('global_shortcut', (event) => {
       break;
     case 'pttDown':
       orchestrator.setPTTState(true);
-      lobbyVoice.setPTTState(true);
       break;
     case 'pttUp':
       orchestrator.setPTTState(false);
-      lobbyVoice.setPTTState(false);
       break;
   }
 }).catch((e) => console.warn('[Voxdria] global_shortcut listen failed:', e));
@@ -121,5 +119,5 @@ listen<string>('global_shortcut', (event) => {
 console.log('LoLProxChat background service started');
 
 // Update checks are owned by the overlay and run only at application startup.
-window.addEventListener('riftvoice:close', () => { lobbyVoice.stop();orchestrator.stop(); });
+window.addEventListener('riftvoice:close', () => { orchestrator.stop(); });
 

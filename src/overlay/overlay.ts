@@ -1,7 +1,7 @@
 import { mountInvitationPanel } from './invitation-panel';
 import { getEnemyCameraEnabled, setEnemyCameraEnabled } from '../core/enemy-camera';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { mountVoicePanel } from '../voice/panel';
+import {applyOriginalPlayerDefaults} from '../player-original/preferences';
 import { setLoggingEnabled } from '../core/logging';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
@@ -39,6 +39,7 @@ import '../core/window-globals';
 // Before any panel button reads them. The background window does the same; it
 // runs once per install whichever window gets there first.
 applyAudioDefaultsOnce();
+applyOriginalPlayerDefaults();
 
 // v0.3 (#11): dynamic overlay-window resize so the panel grows to fit
 // debug-thumbnail / settings content and shrinks back when they collapse.
@@ -935,7 +936,7 @@ console.log('LoLProxChat overlay loaded');
 
 export {};
 
-mountVoicePanel();
+// This player variant uses the upstream microphone/audio path without processors.
 window.addEventListener('riftvoice:hybrid', () => {
   for (const id of ['btn-ally-proximity', 'btn-camera-listen', 'btn-camera-only']) {
     const button = document.getElementById(id);

@@ -58,7 +58,7 @@ export class SignalingService {
   private cameraNonce = '';
   private awaitingApproval = false;
   /** Legacy is enabled explicitly by local test fixtures only; production never falls back. */
-  constructor(private readonly permitLegacyTestProtocol = false) {}
+  constructor(private readonly permitLegacyTestProtocol = false,private readonly transport: {endpoint?:string;originalPlayer?:boolean} = {}) {}
   private localName: string = '';
   // Saved so reconnect can rejoin the same room with the same identity
   private currentRoomId: string | null = null;
@@ -107,7 +107,7 @@ export class SignalingService {
     const roomId = this.currentRoomId;
     const localName = this.localName;
 
-    const ws = new WebSocket(WS_URL);
+    const ws = new WebSocket(this.transport.endpoint || WS_URL);
     this.ws = ws;
     this.authenticated = false;
     this.enemyCameraVoice = false;
@@ -159,16 +159,17 @@ export class SignalingService {
           break;
         }
         case 'room_state': {
-          if (!this.permitLegacyTestProtocol && (typeof msg.sessionToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(msg.sessionToken) || msg.role !== 'player' || msg.teamIsolation !== true)) {
+          if (!this.permitLegacyTestProtocol && (typeof msg.sessionToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(msg.sessionToken) || msg.role !== 'player' || (this.transport.originalPlayer ? msg.originalPlayerProtocol !== 1 : msg.teamIsolation !== true))) {
             this.leaveRoom();
             if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-error', { detail: 'Serverul necesită versiunea securizată Voxdria. Vocea a fost oprită.' }));
+            if(this.transport.originalPlayer&&typeof window!=='undefined')window.dispatchEvent(new Event('voxdria:player-access-stopped'));
             return;
           }
           this.authenticated = true;
           this.awaitingApproval = false;
           if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-status',{detail:'Conectat la camera vocală aprobată.'}));
-          this.enemyCameraVoice = msg.enemyCameraVoice === true && !this.permitLegacyTestProtocol;
-          if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:enemy-camera-availability', { detail: this.enemyCameraVoice }));
+          this.enemyCameraVoice = msg.enemyCameraVoice === true && !this.permitLegacyTestProtocol && !this.transport.originalPlayer;
+          if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:enemy-camera-availability', { detail: this.enemyCameraVoice || this.transport.originalPlayer === true }));
           setVoiceSessionToken(msg.sessionToken);
           // Existing peers already in the room
           const peers: string[] = Array.isArray(msg.peers) ? msg.peers.filter((p: unknown): p is string => typeof p === 'string' && p.length > 0 && p.length <= 64).slice(0, 20) : [];
@@ -216,7 +217,7 @@ export class SignalingService {
           if (msg.from !== this.localName) {
             try {
               const broadcast: PositionBroadcast = JSON.parse(msg.blob);
-              if (!this.permitLegacyTestProtocol && (!this.knownPeers.has(msg.from) || broadcast.summonerName !== msg.from || (!this.enemyCameraVoice && broadcast.team !== this.currentTeam))) return;
+              if (!this.permitLegacyTestProtocol && (!this.knownPeers.has(msg.from) || broadcast.summonerName !== msg.from || (!this.transport.originalPlayer && !this.enemyCameraVoice && broadcast.team !== this.currentTeam))) return;
               onPeerPosition(broadcast);
             } catch {
               console.warn('[Signaling] Failed to parse position blob from:', msg.from);
@@ -242,6 +243,10 @@ export class SignalingService {
         case 'error': {
           console.error('[Signaling] Server error:', msg.message);
           if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-error', { detail: String(msg.message || 'Voice unavailable') }));
+          if(this.transport.originalPlayer&&!this.authenticated){
+            this.leaveRoom();
+            if(typeof window!=='undefined')window.dispatchEvent(new Event('voxdria:player-access-stopped'));
+          }
           break;
         }
       }
@@ -259,10 +264,11 @@ export class SignalingService {
       console.log('[Signaling] WebSocket disconnected (code ' + event.code +
         (event.reason ? ', ' + event.reason : '') + ')');
       if (this.intentionallyClosed) return;
-      if (event.code === TAKEOVER_CLOSE_CODE || event.code === 4003) {
-        const reason=event.code===4003?'Acces vocal oprit de organizator. Cere reactivarea sau aprobarea și reconectează manual.':'Această identitate s-a conectat din altă sesiune. Reconectează manual.';
+      if (event.code === TAKEOVER_CLOSE_CODE || event.code === 4003 || (this.transport.originalPlayer && event.code === 1008)) {
+        const reason=event.code===1008?'Serverul nu acceptă motorul original. Actualizează serverul Voxdria la 0.4.3 și reconectează.':event.code===4003?'Acces vocal oprit de organizator. Cere reactivarea sau aprobarea și reconectează manual.':'Această identitate s-a conectat din altă sesiune. Reconectează manual.';
         console.error('[Signaling] '+reason);
         if(typeof window!=='undefined'&&typeof CustomEvent!=='undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-status',{detail:reason}));
+        if(this.transport.originalPlayer&&typeof window!=='undefined')window.dispatchEvent(new Event('voxdria:player-access-stopped'));
         this.intentionallyClosed = true;
         if (this.reconnectTimer !== null) {
           clearTimeout(this.reconnectTimer);
