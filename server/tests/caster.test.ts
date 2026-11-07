@@ -13,6 +13,11 @@ class Socket extends EventEmitter {
   message(msg: unknown) { this.emit('message', Buffer.from(JSON.stringify(msg))); }
 }
 describe('caster authorization and routing', () => {
+  it('does not reflect credentials from malformed JSON into the error shown on stream',()=>{
+    const ws=new Socket();handleCasterConnection(ws as any,grants);
+    ws.emit('message',Buffer.from('{"password":"test-sensitive-fragment" broken'));
+    expect(ws.messages.at(-1)).toEqual({type:'error',message:'Invalid JSON message'});expect(JSON.stringify(ws.messages)).not.toContain('test-sensitive-fragment');ws.close();
+  });
   it('fails closed for missing, expired, short or unknown invitations', () => {
     for (const token of [undefined, '', 'x', 'z'.repeat(40)]) expect(authorizeCaster(grants, token)).toBeUndefined();
     expect(authorizeCaster(grants, grants[0].token, grants[0].expiresAt)).toBeUndefined();

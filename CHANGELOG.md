@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Format adapted from [Ke
 
 ## [Unreleased] — RiftVoice
 
+## [v0.4.1] — 2026-11-07
+
+### Changed
+- Voxdria and Voxdria Caster branding; compatible invitations and update migration.
+- Proximity is the standard player mode, including visible nearby enemy media with server enforcement.
+
+## [v0.4.0] — 2026-11-07
+
+### Added
+- Approved team-isolated player voice before the match, with a separate lobby audio role and no caster bridge.
+- Participant playback gates for the captured OBS mix, independent of the local microphone.
+### Fixed
+- One invitation flow now shows saved, pending and approved states without reloading the app.
+- Team moves and match handoff revoke lobby audio, preserve permission boundaries and close old peers.
+- Personal tokens beginning with RV- are no longer mistaken for shared event codes.
+- Server switching clears old credentials; malformed/closed registration errors remain visible.
+- Server startup diagnostics identify configuration, module-loading and port-binding stages without logging secrets.
+
 ## [v0.3.0] — 2026-11-06
 
 ### Added
@@ -633,3 +651,7 @@ Initial public iteration: Overwolf → Tauri 2 migration, Supabase-stack → cus
 [v0.2.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.2.0
 
 [v0.3.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.3.0
+
+[v0.4.0]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.4.0
+
+[v0.4.1]: https://github.com/ticanandrei99/riftvcs/releases/tag/v0.4.1

@@ -23,6 +23,9 @@ function request(h:ReturnType<typeof setup>,event:any,name:string,team='ORDER',r
 }
 afterEach(()=>{for(const manager of managers.splice(0))manager.stop();});
 describe('organizer event admission',()=>{
+  it('does not intercept a valid private credential merely because its random bytes begin with RV-',()=>{
+    const h=setup(),ws=new Socket();expect(h.events.requestJoin(ws as any,{room:'custom-game',name:'Player',team:'ORDER',invitation:'RV-'+'a'.repeat(40),eventInviteProtocol:1})).toBe(false);expect(ws.sent).toEqual([]);
+  });
   it('generates a real shared code but no player grant before approval',()=>{
     const h=setup();h.events.create('Custom','Comentator',8);const event=snapshot(h.events)[0];
     expect(event.invite).toMatch(/^RV-[A-Za-z0-9_-]{43}$/);expect(h.players).toHaveLength(0);expect(h.casters[0].role).toBe('caster');

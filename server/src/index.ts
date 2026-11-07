@@ -1,8 +1,11 @@
 import { loadGrants, SessionRegistry } from './access.js';
+import {sendJson} from './send.js';
+import { SERVER_VERSION } from './version.js';
 import { OrganizerEvents } from './organizer-events.js';
 import { OrganizerController, OrganizerPassword, moderatorAccounts } from './organizer.js';
-import { CameraMedia } from './camera-media.js';
+import type { CameraMedia } from './camera-media.js';
 import { enemyCameraVolume } from './enemy-camera.js';
+import { enemyProximityEnabled } from './media-policy.js';
 import { handleCasterConnection, type CasterGrant } from './caster.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { WebSocketServer } from 'ws';
@@ -22,7 +25,9 @@ import {
   RejectionCounters,
 } from './rate-limit.js';
 
-const PORT = parseInt(process.env.PORT || '3100');
+const rawPort=process.env.PORT||'3100',PORT=Number(rawPort);
+if(!/^\d+$/.test(rawPort)||!Number.isInteger(PORT)||PORT<1||PORT>65535)throw Error('Invalid PORT configuration');
+console.info('[startup] Modules loaded; validating server configuration');
 // Which addresses in front of us are our own reverse proxies. Deployment
 // topology, not limit tuning — it can't be a compile-time constant because the
 // same build runs behind one Caddy, behind a CDN→Caddy chain, or on a bare
@@ -54,7 +59,7 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
 
 // Legacy protocol is available only on a loopback-bound test server.
 const development = process.env.RIFTVOICE_INSECURE_TEST_MODE === '1';
-const cameraEnabled = process.env.ENEMY_CAMERA_VOICE === '1' && !development;
+const cameraEnabled = enemyProximityEnabled(process.env.ENEMY_CAMERA_VOICE, development);
 const cameraLoopbackTest = process.env.CAMERA_MEDIA_LOOPBACK_TEST === '1';
 if (cameraLoopbackTest && !cameraEnabled) throw Error('Loopback media requires ENEMY_CAMERA_VOICE=1');
 if (cameraLoopbackTest && process.env.NODE_ENV === 'production') throw Error('Loopback media tests are not allowed in production');
@@ -62,6 +67,7 @@ const playerGrants = loadGrants(process.env.PLAYER_GRANTS_JSON, ['player']);
 const casterGrants = loadGrants(process.env.CASTER_GRANTS_JSON, ['caster', 'spectator']) as CasterGrant[];
 const sessions = new SessionRegistry();
 const rooms = new RoomManager(!development, cameraEnabled);
+const lobbyRooms = new RoomManager(true);
 const organizerEvents = !development && process.env.ORGANIZER_PASSWORD
   ? new OrganizerEvents(playerGrants,casterGrants,sessions,rooms,process.env.ORGANIZER_STORE_PATH) : undefined;
 const configuredModerators=moderatorAccounts(process.env.MODERATOR_ACCOUNTS_JSON,process.env.ORGANIZER_PASSWORD||'',process.env.MODERATOR_PASSWORD);
@@ -69,11 +75,12 @@ if(configuredModerators.length&&!process.env.ORGANIZER_PASSWORD)throw Error('Con
 const organizerController = organizerEvents
   ? new OrganizerController(new OrganizerPassword(process.env.ORGANIZER_PASSWORD!),organizerEvents,sessions,
     configuredModerators) : undefined;
+console.info('[startup] Authorization configured; organizer='+!!organizerController+'; enemy media='+cameraEnabled);
 const iceCredentials = () => TURN_KEY_ID && TURN_KEY_API_TOKEN
   ? generateCloudflareIceServers(TURN_KEY_ID, TURN_KEY_API_TOKEN)
   : TURN_URLS ? Promise.resolve(generateStaticIceServers(TURN_URLS, TURN_USERNAME, TURN_PASSWORD))
   : generateTurnCredentials(TURN_SERVER, TURN_SECRET);
-const cameraMedia = cameraEnabled ? new CameraMedia(rooms, sessions, {
+const cameraMedia:CameraMedia|undefined = cameraEnabled ? new (await import('./camera-media.js')).CameraMedia(rooms, sessions, {
   iceServers: async () => (await iceCredentials()).iceServers,
   loopbackTest: cameraLoopbackTest,
 }) : undefined;
@@ -146,7 +153,7 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, protocolVersion: 2 }));
+    res.end(JSON.stringify({ status: 'ok', serverVersion:SERVER_VERSION, rooms: rooms.roomCount, strictProximity: true, authenticationRequired: !development, teamIsolation: !development, enemyCameraVoice: cameraEnabled, organizerAvailable: !!organizerController, lobbyVoiceAvailable:!!organizerController, lobbyVoiceProtocol:1, eventInviteProtocol:1, protocolVersion: 2 }));
     return;
   }
 
@@ -271,7 +278,7 @@ wss.on('connection', (ws, req) => {
   // and every room in it.
   ws.on('error', (err) => console.warn('[ws] socket error:', (err as Error).message));
 
-  if (req.url !== '/ws' && req.url !== '/caster' && req.url !== '/organizer' && req.url !== '/registration' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
+  if (req.url !== '/ws' && req.url !== '/caster' && req.url !== '/organizer' && req.url !== '/registration' && req.url !== '/lobby-voice' && !(development && req.url === '/')) { ws.close(1008, 'Unknown voice endpoint'); return; }
   if (wss.clients.size > 500) { ws.close(1013, 'Server capacity reached'); return; }
   const origin = req.headers.origin;
   const allowedOrigins = ['http://tauri.localhost', 'https://tauri.localhost', 'tauri://localhost', ...(process.env.ALLOWED_WEB_ORIGINS || '').split(',')];
@@ -295,6 +302,10 @@ wss.on('connection', (ws, req) => {
     ws.on('close', () => clearTimeout(authDeadline));
   }
   ws.on('pong', () => heartbeat.markAlive(ws));
+  if(req.url==='/lobby-voice'){
+    if(!organizerEvents){ws.close(1008,'Organizarea nu este activată pe server.');return;}
+    handleCasterConnection(ws,[],sessions,()=>organizerEvents.playerChanged(),{rooms:lobbyRooms,authorize:token=>organizerEvents.authorizeLobbyVoice(token)});return;
+  }
   if (req.url === '/registration') {
     const limiter = new TokenBucket({capacity:4,refillPerSec:0.1});
     ws.on('message', raw => {
@@ -304,7 +315,7 @@ wss.on('connection', (ws, req) => {
         const msg = JSON.parse(raw.toString());
         if (!msg || msg.type !== 'lobby_register') throw Error('Comandă de înscriere invalidă.');
         organizerEvents.registerLobby(ws,msg);
-      } catch (err) { if(ws.readyState===ws.OPEN)ws.send(JSON.stringify({type:'error',message:err instanceof Error?err.message:'Înscriere indisponibilă.'})); }
+      } catch (err) { sendJson(ws,{type:'error',message:err instanceof SyntaxError?'Mesaj JSON invalid.':err instanceof Error?err.message:'Înscriere indisponibilă.'}); }
     });
     ws.once('close',()=>sessions.revoke(ws));return;
   }
@@ -328,6 +339,8 @@ setInterval(() => {
 httpServer.requestTimeout = 15_000;
 httpServer.headersTimeout = 10_000;
 httpServer.maxHeadersCount = 50;
+httpServer.on('error',(error:NodeJS.ErrnoException)=>{console.error('[startup] HTTP listener failed: '+(error.code||'unknown'));process.exit(1);});
+console.info('[startup] Binding HTTP listener on port '+PORT);
 httpServer.listen(PORT, development || cameraLoopbackTest ? '127.0.0.1' : '0.0.0.0', () => {
   console.log(`proxchat-server listening on :${PORT}`);
   // Printed so an operator can confirm in `docker logs` what the running

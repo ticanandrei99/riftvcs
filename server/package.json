@@ -1,11 +1,11 @@
 {
-  "name": "proxchat-server",
-  "version": "1.0.0",
+  "name": "voxdria-server",
+  "version": "0.4.1",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/bootstrap.js",
     "test": "vitest",
     "pretest": "npm run build"
   },

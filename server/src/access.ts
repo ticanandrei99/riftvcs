@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { WebSocket } from 'ws';
 import { validateJoin } from './validate.js';
-export type VoiceRole = 'player' | 'caster' | 'spectator' | 'organizer' | 'moderator' | 'pending';
+export type VoiceRole = 'player' | 'caster' | 'spectator' | 'organizer' | 'moderator' | 'pending' | 'lobby-player';
 export interface VoiceGrant {
   token: string; room: string; name: string; role: VoiceRole;
   team?: 'ORDER' | 'CHAOS'; expiresAt: number;
@@ -51,9 +51,9 @@ export class SessionRegistry {
   revoke(ws: WebSocket): void {
     for (const [token, session] of this.sessions) if (session.ws === ws) this.sessions.delete(token);
   }
-  closeIdentity(room: string, name: string, role: VoiceRole): void {
+  closeIdentity(room: string, name: string, role: VoiceRole, code = 4003): void {
     for (const session of [...this.sessions.values()]) if (session.room === room && session.name === name && session.role === role) {
-      this.revoke(session.ws); session.ws.close(4003,'Access revoked by organizer');
+      this.revoke(session.ws); session.ws.close(code,code===4004?'Voice channel changed':'Access revoked by organizer');
     }
   }
 }

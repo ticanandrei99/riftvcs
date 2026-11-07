@@ -1,5 +1,6 @@
 services:
   - type: web
+    # Existing deployment identity; the product is now Voxdria.
     name: riftvoice-server
     runtime: node
     plan: free
@@ -22,7 +23,7 @@ services:
       - key: ALLOWED_WEB_ORIGINS
         value: ""
       - key: ENEMY_CAMERA_VOICE
-        value: "0"
+        value: "1"
       - key: ORGANIZER_PASSWORD
         sync: false
       - key: MODERATOR_ACCOUNTS_JSON

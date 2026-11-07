@@ -1,6 +1,6 @@
-# RiftVoice — security policy
+# Voxdria — security policy
 
-Report security issues privately to the maintainer of this RiftVoice fork through the repository's Security tab, if private reporting is enabled. Do not post tokens, raw logs, minimap captures or exploit details publicly. If private reporting is unavailable, contact the organizer/maintainer privately first.
+Report security issues privately to the maintainer of this Voxdria fork through the repository's Security tab, if private reporting is enabled. Do not post tokens, raw logs, minimap captures or exploit details publicly. If private reporting is unavailable, contact the organizer/maintainer privately first.
 
 The source repository configured in this fork is https://github.com/ticanandrei99/riftvcs. Upstream LoLProxChat is credited in NOTICE.md; it does not operate this fork's releases or invitation service.
 

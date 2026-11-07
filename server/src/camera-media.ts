@@ -1,4 +1,5 @@
 import { isIP } from 'node:net';
+import {sendJson} from './send.js';
 import { MediaStreamTrack, RTCPeerConnection, RTCRtpCodecParameters, type RTCIceServer, type RtpPacket } from 'werift';
 import type { WebSocket } from 'ws';
 import type { ClientInfo } from './types.js';
@@ -35,7 +36,7 @@ export class CameraMedia {
   private id(info: ClientInfo): number { let id = this.ids.get(info.ws); if (!id) { id = ++this.serial; this.ids.set(info.ws, id); } return id; }
   private live(info: ClientInfo): boolean { return this.rooms.getClientInfo(info.ws) === info && this.sessions.has(info.ws) && info.ws.readyState === info.ws.OPEN; }
   private emit(leg: Leg, type: string, payload: unknown): void {
-    if (this.live(leg.owner)) leg.owner.ws.send(JSON.stringify({ type: 'signal', from: leg.other.name, payload: { type, payload } }));
+    if (this.live(leg.owner)) sendJson(leg.owner.ws,{ type: 'signal', from: leg.other.name, payload: { type, payload } });
   }
   private close(pair: Pair): void {
     if (pair.closed) return; pair.closed = true; this.pairs.delete(pair);

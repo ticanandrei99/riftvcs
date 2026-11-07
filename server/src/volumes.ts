@@ -447,7 +447,7 @@ export function computeTieredVolumes(
       if (DEBUG_VOLUMES) trace.push(peer.name + '[cross team=' + peer.team + ' STALE]=skip');
       continue;
     }
-    // RiftVoice reports visible minimap icons. Never infer enemy presence
+    // Voxdria reports visible minimap icons. Never infer enemy presence
     // from distance alone. Legacy clients without reports retain their protocol.
     if (!ally && me.visibility !== undefined) {
       const visible = me.visibility;

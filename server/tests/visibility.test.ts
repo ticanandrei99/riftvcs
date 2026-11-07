@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { computeTieredVolumes, TieredRoomClient } from '../src/volumes.js';
 import { RoomManager } from '../src/rooms.js';
 import type { WebSocket } from 'ws';
-describe('RiftVoice fog-of-war reports', () => {
+describe('Voxdria fog-of-war reports', () => {
   const volumes = (visibility: TieredRoomClient['visibility']) => {
     const now=Date.now();
     const clients: TieredRoomClient[] = [

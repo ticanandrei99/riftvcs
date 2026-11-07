@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 
 // Load .env if present (fall back to empty strings)
-try { require('dotenv').config(); } catch (_) { /* dotenv optional */ }
+try { require('dotenv').config({ quiet: true }); } catch (_) { /* dotenv optional */ }
 
 module.exports = {
   mode: 'development',
@@ -32,14 +32,18 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
+  // Installed desktop resources: the offline ONNX/WASM engine is intentionally
+  // larger than a web download. Keep explicit budgets instead of disabling hints.
+  performance: { maxAssetSize: 32 * 1024 * 1024, maxEntrypointSize: 768 * 1024 },
   plugins: [
     new webpack.DefinePlugin({
-      __RIFTVOICE_VERSION__: JSON.stringify(require('./package.json').version),
+      __VOXDRIA_VERSION__: JSON.stringify(require('./package.json').version),
       __PROXCHAT_SERVER__: JSON.stringify(process.env.PROXCHAT_SERVER || 'https://riftvoice-server.onrender.com'),
     }),
     new CopyPlugin({
       patterns: [
         { from: 'src/caster/caster.html', to: 'caster/' },
+        { from: 'src/caster/caster.css', to: 'caster/' },
         { from: 'icons', to: 'icons' },
         { from: 'src/background/background.html', to: 'background/' },
         { from: 'src/overlay/overlay.html', to: 'overlay/' },

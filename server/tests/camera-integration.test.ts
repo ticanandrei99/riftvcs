@@ -7,7 +7,9 @@ const caster={name:'Caster',room:'camera-custom',role:'caster',token:'z'.repeat(
 const sockets:WebSocket[]=[],inboxes=new Map<WebSocket,any[]>();let child:ChildProcess;
 const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 beforeAll(async()=>{
-  child=spawn(process.execPath,['dist/index.js'],{cwd:process.cwd(),env:{...process.env,PORT:String(port),ENEMY_CAMERA_VOICE:'1',CAMERA_MEDIA_LOOPBACK_TEST:'0',RIFTVOICE_INSECURE_TEST_MODE:'0',PLAYER_GRANTS_JSON:JSON.stringify(grants),CASTER_GRANTS_JSON:JSON.stringify([caster]),TURN_KEY_ID:'',TURN_KEY_API_TOKEN:'',TURN_URLS:'turn:unused.invalid:3478',TURN_USERNAME:'test',TURN_PASSWORD:'test'},stdio:['ignore','pipe','pipe']});
+  const env:NodeJS.ProcessEnv={...process.env,PORT:String(port),CAMERA_MEDIA_LOOPBACK_TEST:'0',RIFTVOICE_INSECURE_TEST_MODE:'0',PLAYER_GRANTS_JSON:JSON.stringify(grants),CASTER_GRANTS_JSON:JSON.stringify([caster]),TURN_KEY_ID:'',TURN_KEY_API_TOKEN:'',TURN_URLS:'turn:unused.invalid:3478',TURN_USERNAME:'test',TURN_PASSWORD:'test'};
+  delete env.ENEMY_CAMERA_VOICE;
+  child=spawn(process.execPath,['dist/index.js'],{cwd:process.cwd(),env,stdio:['ignore','pipe','pipe']});
   await new Promise<void>((yes,no)=>{const timer=setTimeout(()=>no(Error('camera server startup timeout')),10000);child.stdout!.on('data',data=>{if(data.toString().includes('listening on')){clearTimeout(timer);yes();}});child.once('exit',()=>{clearTimeout(timer);no(Error('camera server exited'));});});
 },15000);
 afterAll(()=>{sockets.forEach(ws=>ws.terminate());child?.kill();});
@@ -22,6 +24,12 @@ async function send(ws:WebSocket,msg:any,type:string){
 const join=(ws:WebSocket,i:number,capable=true)=>send(ws,{type:'join',name:grants[i].name,room:grants[i].room,invitation:grants[i].token,enemyCameraProtocol:capable?1:undefined},'room_state');
 const camera=(ws:WebSocket,visible=true,sequence=1)=>ws.send(JSON.stringify({type:'enemy_camera',nonce:inboxes.get(ws)!.filter(m=>m.type==='camera_challenge').at(-1)?.nonce,enabled:true,report:{sequence,ageMs:0,self:{x:1000,y:1000},camera:{x:1400,y:1000,w:1600,h:1000},visible:visible?[{name:'Enemy',x:1500,y:1000}]:[]}}));
 describe('authenticated camera feature policy over real HTTP and WebSocket',()=>{
+  it('provides visible-enemy proximity by default without an extra feature flag',async()=>{
+    const health=await(await fetch(base+'/health')).json();
+    expect(health.enemyCameraVoice).toBe(true);
+    expect(health.authenticationRequired).toBe(true);
+    expect(health.teamIsolation).toBe(true);
+  });
   it('keeps old clients isolated and sends challenges only to capable players',async()=>{
     const old=await connect(),a=await connect();const legacy=await join(old,2,false),ready=await join(a,0);
     expect(legacy.enemyCameraVoice).toBe(false);expect(ready.enemyCameraVoice).toBe(true);expect(ready.peers).not.toContain('OldClient');

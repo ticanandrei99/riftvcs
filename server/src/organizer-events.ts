@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import {sendJson as send} from './send.js';
 import { existsSync, readFileSync, writeFileSync, renameSync, unlinkSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { WebSocket } from 'ws';
@@ -8,7 +9,6 @@ import { validateJoin } from './validate.js';
 import { normalizeLobbyLink } from './lobby-link.js';
 
 const token = () => randomBytes(32).toString('base64url');
-const send = (ws: WebSocket, msg: unknown) => { if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg)); };
 const key = (name: string) => name.trim().normalize('NFKC').toLowerCase();
 type Team = 'ORDER' | 'CHAOS';
 export interface StaffIdentity { id: string; name: string; role: 'organizer' | 'moderator' }
@@ -134,7 +134,7 @@ export class OrganizerEvents implements PlayerEventAccess {
       if (key(reserved.name) !== key(name)) throw Error('Înscrierea aparține altui Riot ID.');
       this.attachRegistration(ws, event, reserved); return;
     }
-    if (event.gameRoom) throw Error('Meciul a început. Conectează-te din RiftVoice după identificarea meciului.');
+    if (event.gameRoom) throw Error('Meciul a început. Conectează-te din Voxdria după identificarea meciului.');
     if (this.allSlots(event).some(p => key(p.name) === key(name))) throw Error('Acest nume este deja înscris. Folosește sesiunea aprobată sau cere organizatorului să elimine înscrierea veche.');
     if (this.slotCount(event) >= 10) throw Error('Camera are deja 10 jucători aprobați.');
     this.addPending(ws, event, name, event.id, 'ORDER', 'lobby');
@@ -147,16 +147,27 @@ export class OrganizerEvents implements PlayerEventAccess {
   }
   private sendLobbyState(ws: WebSocket, event: VoiceEvent, slotId: string): void {
     const slot = event.roster.find(p => p.id === slotId);
-    if (slot) send(ws, { type: 'lobby_state', name: slot.name, team: slot.team, muted: slot.voiceMuted, started: !!event.gameRoom });
+    if (slot) send(ws, { type: 'lobby_state', name: slot.name, team: slot.team, muted: slot.voiceMuted, started: !!event.gameRoom, lobbyVoiceAvailable:!event.gameRoom });
+  }
+  authorizeLobbyVoice(invitation:unknown):VoiceGrant|undefined {
+    if(typeof invitation!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(invitation))return;
+    for(const event of this.events.values()){
+      if(event.gameRoom||event.expiresAt<=Date.now())continue;
+      const slot=event.roster.find(p=>p.token===invitation&&!p.voiceMuted);
+      if(slot)return {token:slot.token,room:event.id+'-lobby',name:slot.name,team:slot.team,role:'lobby-player',expiresAt:event.expiresAt};
+    }
+  }
+  private closeLobbyVoice(event:VoiceEvent,name?:string,code=4003):void {
+    for(const slot of event.roster)if(!name||key(slot.name)===key(name))this.sessions.closeIdentity(event.id+'-lobby',slot.name,'lobby-player',code);
   }
   requestJoin(ws: WebSocket, input: { room: string; name: string; team?: unknown; invitation?: unknown; eventInviteProtocol?: number }): boolean {
     const reservedEvent = [...this.events.values()].find(e => e.expiresAt > Date.now() && e.roster.some(p => p.token === input.invitation));
-    if (!reservedEvent && (typeof input.invitation !== 'string' || !input.invitation.startsWith('RV-'))) return false;
+    if (!reservedEvent && (typeof input.invitation !== 'string' || !/^RV-[A-Za-z0-9_-]{43}$/.test(input.invitation))) return false;
     const event = reservedEvent || this.sharedEvent(input.invitation);
     const error = (message: string) => send(ws, { type: 'error', message });
-    if (!event) { error('Cod vocal RiftVoice expirat sau invalid. Cere codul nou administratorului.'); return true; }
+    if (!event) { error('Cod vocal Voxdria expirat sau invalid. Cere codul nou administratorului.'); return true; }
     if (this.rooms.getClientInfo(ws)) { error('Această conexiune este deja într-o cameră vocală.'); return true; }
-    if (input.eventInviteProtocol !== 1) { error('Actualizează RiftVoice la 0.3.0 pentru invitația comună.'); return true; }
+    if (input.eventInviteProtocol !== 1) { error('Actualizează Voxdria la 0.3.0 pentru invitația comună.'); return true; }
     if (input.team !== 'ORDER' && input.team !== 'CHAOS') { error('Echipa jucătorului nu poate fi identificată.'); return true; }
     if (event.gameRoom && event.gameRoom !== input.room) { error('Această cameră vocală este legată de alt meci. Intră în customul organizatorului.'); return true; }
     const reserved = reservedEvent?.roster.find(p => p.token === input.invitation);
@@ -215,6 +226,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     const personal: VoiceGrant = { token: token(), room: pending.room, name: pending.name, role: 'player', team, expiresAt: event.expiresAt };
     const old = event.players.find(p => key(p.name) === key(pending.name));
     this.commit({ ...event, gameRoom: pending.room, players: [...event.players.filter(p => p !== old), personal] });
+    if(!event.gameRoom)this.closeLobbyVoice(event,undefined,4004);
     if (old) this.sessions.closeIdentity(old.room, old.name, 'player');
     this.forgetPending(pending.id); send(pending.ws, { type: 'join_approved', invitation: personal.token }); this.playerChanged();
   }
@@ -226,6 +238,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     if (slot.team === team) return;
     if (this.teamCount(event, team) >= 5) throw Error('Echipa are deja 5 locuri ocupate.');
     this.commit({ ...event, roster: event.roster.map(p => p === slot ? { ...p, team } : p) });
+    this.closeLobbyVoice(event,slot.name,4004);
   }
   swap(eventId: unknown, first: unknown, second: unknown): void {
     const event = this.event(eventId);
@@ -233,6 +246,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     const a = event.roster.find(p => p.name === first), b = event.roster.find(p => p.name === second);
     if (!a || !b || a === b) throw Error('Alege doi jucători înscriși diferiți.');
     this.commit({ ...event, roster: event.roster.map(p => p === a ? { ...p, team: b.team } : p === b ? { ...p, team: a.team } : p) });
+    this.closeLobbyVoice(event,a.name,4004);this.closeLobbyVoice(event,b.name,4004);
   }
   reject(id: unknown, message = 'Cerere respinsă de organizator.'): void {
     const pending = typeof id === 'string' ? this.forgetPending(id) : undefined; if (!pending) return;
@@ -243,6 +257,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     if (!member && !slot) throw Error('Jucătorul nu există în cameră.');
     this.commit({ ...event, players: event.players.filter(p => p !== member), roster: event.roster.filter(p => p !== slot) });
     if (member) this.sessions.closeIdentity(member.room, member.name, 'player');
+    this.closeLobbyVoice(event,typeof name==='string'?name:undefined);
     for (const [ws, info] of this.registrations) if (info.eventId === event.id && info.slotId === slot?.id) { this.sessions.revoke(ws); ws.close(4003, 'Registration removed'); }
     this.playerChanged();
   }
@@ -271,6 +286,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     this.commit({ ...event, players: event.players.map(p => p === player ? { ...p, voiceMuted: muted } : p), roster: event.roster.map(p => p === slot ? { ...p, voiceMuted: muted } : p),
       staff: event.staff.map(p => p === grant ? { ...p, voiceMuted: muted } : p), caster: event.caster === grant ? { ...event.caster, voiceMuted: muted } : event.caster }, audit);
     if (muted && grant) this.sessions.closeIdentity(grant.room, grant.name, grant.role);
+    if(muted&&kind==='player')this.closeLobbyVoice(event,targetId);
     this.playerChanged();
   }
   rotate(eventId: unknown): void {
@@ -278,6 +294,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     for (const p of [...this.pending.values()]) if (p.eventId === event.id) this.reject(p.id, 'Invitația a fost schimbată. Cere codul nou organizatorului.');
   }
   private revokeEvent(event: VoiceEvent): void {
+    this.closeLobbyVoice(event);
     for (const p of [...this.pending.values()]) if (p.eventId === event.id) this.reject(p.id, 'Camera a fost închisă.');
     for (const p of [...event.players, event.caster, ...event.staff]) this.sessions.closeIdentity(p.room, p.name, p.role);
     for (const [ws, info] of this.registrations) if (info.eventId === event.id) { this.sessions.revoke(ws); ws.close(4003, 'Event closed'); }
@@ -292,6 +309,7 @@ export class OrganizerEvents implements PlayerEventAccess {
     return { type: 'organizer_state', persistent: this.persistent, ...(actor?.role === 'organizer' ? { audit: this.audit.slice(-200).reverse() } : {}), events: [...this.events.values()].filter(e => e.expiresAt > now).map(e => ({
       id: e.id, title: e.title, invite: e.invite, expiresAt: e.expiresAt, bound: !!e.gameRoom, capacity: 10, lobbyLink:e.lobbyLink, casterInvitation: e.caster.token, casterName: e.caster.name,
       players: this.allSlots(e).map(p => ({ name: p.name, team: p.team, connected: this.sessions.connected(e.gameRoom || '', e.players.find(g=>key(g.name)===key(p.name))?.name||p.name, 'player'),
+        lobbyVoice:this.sessions.connected(e.id+'-lobby',p.name,'lobby-player'),
         lobby: e.roster.some(s => key(s.name) === key(p.name) && [...this.registrations.values()].some(r => r.eventId === e.id && r.slotId === s.id)),
         muted: e.roster.some(s => key(s.name) === key(p.name) && s.voiceMuted) || e.players.some(g => key(g.name) === key(p.name) && g.voiceMuted) })),
       staff: [e.caster, ...e.staff].map(g => ({ id: g.subjectId || g.name, kind: g.subjectId ? 'staff' : 'caster', name: g.name, role: g.authority || 'caster', muted: g.voiceMuted === true, connected: this.sessions.connected(g.room, g.name, 'caster') })),

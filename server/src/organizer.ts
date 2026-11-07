@@ -1,4 +1,5 @@
 import { randomBytes, scrypt, scryptSync, timingSafeEqual } from 'node:crypto';
+import {sendJson} from './send.js';
 import { promisify } from 'node:util';
 import type { WebSocket } from 'ws';
 import type { SessionRegistry } from './access.js';
@@ -42,7 +43,7 @@ export class OrganizerController {
     let actor: StaffIdentity | undefined;
     let expiry:ReturnType<typeof setTimeout>|undefined;
     const messages=new TokenBucket({capacity:12,refillPerSec:1});let queue=Promise.resolve();
-    const send=(msg:unknown)=>{if(ws.readyState===ws.OPEN)ws.send(JSON.stringify(msg));};
+    const send=(msg:unknown)=>{sendJson(ws,msg);};
     ws.on('message',raw=>{
       if(queued>=8){ws.close(1008,'Organizer queue limit');return;}queued++;
       queue=queue.then(async()=>{

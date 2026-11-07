@@ -1,4 +1,5 @@
 import { audioSignal } from './audio-signal.js';
+import {sendJson} from './send.js';
 import { randomBytes } from 'node:crypto';
 import type { CameraMedia } from './camera-media.js';
 import { CAMERA_LEASE_MS, readEnemyCamera } from './enemy-camera.js';
@@ -32,16 +33,11 @@ const EVICT_TERMINATE_MS = 1000;
 /** Returns false when the message was dropped because the socket isn't open. */
 function send(ws: WebSocket, msg: ServerMessage): boolean {
   if (ws.readyState !== ws.OPEN) {
-    // A silent drop here is how a stale room entry black-holes signaling, so
-    // make it greppable. `position` is excluded: it relays at 10 Hz per peer
-    // and would flood the log from a single dead socket.
-    if (msg.type !== 'position') {
-      console.warn('[ws] dropped', msg.type, 'to a non-OPEN socket (readyState=' + ws.readyState + ')');
-    }
+    // Close notifications race during normal multi-player shutdown. They are
+    // expected drops; liveness/rejection counters track actual failures.
     return false;
   }
-  ws.send(JSON.stringify(msg));
-  return true;
+  return sendJson(ws,msg);
 }
 
 function sendError(ws: WebSocket, message: string): void {
