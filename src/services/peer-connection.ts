@@ -224,7 +224,7 @@ export class PeerConnection {
   }
 
   /**
-   * Play this voice through lolproxchat.exe (app audio) instead of the browser, or
+   * Play this voice through voxdria.exe (app audio) instead of the browser, or
    * back through the browser with null. The element keeps playing either way —
    * Chromium only delivers a remote track's audio while an element plays it —
    * but muted while app audio has the voice.

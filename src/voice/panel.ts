@@ -1,4 +1,4 @@
-declare const __RIFTVOICE_VERSION__: string;
+declare const __VOXDRIA_VERSION__: string;
 import { diagnosticReport, safeQuality, qualityGrade, ConnectionQuality } from '../services/connection-quality';
 import { SERVER_URL } from '../core/config';
 import { validateServerAddress } from '../core/server-address';
@@ -7,6 +7,8 @@ import { MicrophoneTest } from './mic-test';
 import { getAllyProximity, getCameraOnly, getCameraListen, setAllyProximity, setCameraListen, setCameraOnly } from '../services/audio-prefs';
 import { applyTranslations, t } from '../overlay/i18n';
 import { checkVoiceConnection, VoiceConnectionState } from '../services/connection-status';
+import { clearVoiceCredentials } from '../services/voice-access';
+import { lobbyState } from '../services/lobby-state';
 
 export function mountVoicePanel(): void {
   const container = document.getElementById('voice-panel');
@@ -38,7 +40,7 @@ export function mountVoicePanel(): void {
     <input id="voice-server" type="url" aria-label="Voice server URL">
     <button id="voice-server-save" class="voice-test" data-i18n="voice.saveServer"></button>
     <p id="voice-server-status" class="voice-detail"></p>
-    <p class="voice-credit" data-i18n="voice.credit">Source base: LoLProxChat · Modified by RiftVoice</p>`;
+    <p class="voice-credit" data-i18n="voice.credit">Source base: LoLProxChat · Modified by Voxdria</p>`;
   const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const server = el<HTMLInputElement>('voice-server'); server.value = SERVER_URL;
   const enabled = el<HTMLInputElement>('voice-enabled'); enabled.checked = settings.enabled;
@@ -66,7 +68,7 @@ export function mountVoicePanel(): void {
   };
   const syncHybrid = showQuality;
   const showPrivacy = () => {
-    const keys = { checking: 'voice.privateChecking', ready: 'voice.privateReady', offline: 'voice.offline', update: 'voice.serverUpdate', unavailable: 'voice.privateBlocked', invitation: 'voice.invitation' } as const;
+    const keys = { checking: 'voice.privateChecking', ready: 'voice.privateReady', offline: 'voice.offline', update: 'voice.serverUpdate', unavailable: 'voice.privateBlocked', invitation: 'voice.invitation', saved:'voice.saved',pending:'voice.pending',approved:'voice.approved',organizer:'voice.organizerUnavailable' } as const;
     el('voice-privacy-status').textContent = t(keys[connection]);
     const card = el('voice-privacy-status').parentElement!;
     card.classList.toggle('unavailable', connection !== 'ready');
@@ -122,7 +124,7 @@ export function mountVoicePanel(): void {
   el('voice-server-save').onclick = () => {
     const url = validateServerAddress(server.value);
     if (!url) { el('voice-server-status').textContent = t('voice.invalidServer'); return; }
-    try { localStorage.setItem('riftvoice.server', url); preview.stop(); window.location.reload(); }
+    try { localStorage.setItem('riftvoice.server', url); clearVoiceCredentials();preview.stop(); window.location.reload(); }
     catch { el('voice-server-status').textContent = t('voice.saveFailed'); }
   };
   window.addEventListener('riftvoice:identity', ((event: CustomEvent) => {
@@ -130,9 +132,10 @@ export function mountVoicePanel(): void {
   }) as EventListener);
   window.addEventListener('riftvoice:language', relabel);
   window.addEventListener('overlayUpdate', ((event: CustomEvent) => { quality = safeQuality(event.detail?.quality); showQuality(); }) as EventListener);
+  window.addEventListener('riftvoice:lobby-quality',((event:CustomEvent)=>{if(lobbyState().media==='ready'){quality=safeQuality(event.detail);showQuality();}}) as EventListener);
   for (const id of ['btn-camera-only','btn-camera-listen','btn-ally-proximity']) el(id)?.addEventListener('click', showQuality);
   el('copy-diagnostic').onclick = async () => {
-    const version = typeof __RIFTVOICE_VERSION__ === 'undefined' ? 'development' : __RIFTVOICE_VERSION__;
+    const version = typeof __VOXDRIA_VERSION__ === 'undefined' ? 'development' : __VOXDRIA_VERSION__;
     const report = diagnosticReport({ version, connection, quality, mode: mode(), voice: settings.selection, enabled: settings.enabled, strength: settings.mix });
     try { await navigator.clipboard.writeText(report); el('diagnostic-copy-status').textContent = t('diagnostic.copied'); }
     catch {
@@ -158,11 +161,15 @@ export function mountVoicePanel(): void {
   window.addEventListener('offline', offline);
   window.addEventListener('online', refreshConnection);
   window.addEventListener('riftvoice:session-changed', refreshConnection);
+  window.addEventListener('riftvoice:invitation-changed',refreshConnection);
+  window.addEventListener('riftvoice:lobby-state',refreshConnection);
   const poll = setInterval(refreshConnection, 30_000);
   const dispose = () => {
     disposed = true; request?.abort(); clearInterval(poll);
     window.removeEventListener('offline', offline); window.removeEventListener('online', refreshConnection);
     window.removeEventListener('riftvoice:session-changed', refreshConnection);
+    window.removeEventListener('riftvoice:invitation-changed',refreshConnection);
+    window.removeEventListener('riftvoice:lobby-state',refreshConnection);
   };
   window.addEventListener('beforeunload', dispose, { once: true });
   window.addEventListener('riftvoice:close', dispose, { once: true });

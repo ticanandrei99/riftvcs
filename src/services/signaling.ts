@@ -161,7 +161,7 @@ export class SignalingService {
         case 'room_state': {
           if (!this.permitLegacyTestProtocol && (typeof msg.sessionToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(msg.sessionToken) || msg.role !== 'player' || msg.teamIsolation !== true)) {
             this.leaveRoom();
-            if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-error', { detail: 'Serverul necesită versiunea securizată RiftVoice. Vocea a fost oprită.' }));
+            if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('riftvoice:join-error', { detail: 'Serverul necesită versiunea securizată Voxdria. Vocea a fost oprită.' }));
             return;
           }
           this.authenticated = true;
@@ -392,6 +392,12 @@ export class SignalingService {
    *  (volume-client's /compute-volumes uses both in the v0.2 request body). */
   getCurrentRoom(): string | null { return this.currentRoomId; }
   getLocalName(): string { return this.localName; }
+  refreshInvitation():void {
+    if(!this.currentRoomId||!this.currentHandlers)return;
+    if(this.reconnectTimer!==null){clearTimeout(this.reconnectTimer);this.reconnectTimer=null;}
+    for(const name of this.knownPeers)this.currentHandlers.onPeerLeave(name);
+    this.knownPeers.clear();this.intentionallyClosed=false;this.authenticated=false;setVoiceSessionToken(null);this.openSocket();
+  }
 
   sendSignal(signal: SignalMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) {

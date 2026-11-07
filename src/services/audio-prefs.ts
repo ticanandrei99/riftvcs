@@ -23,7 +23,7 @@ function writeToggle(key: string, enabled: boolean): void {
 // out of the box the whole lobby is positional; turning it off trades that for
 // hearing your whole team everywhere.
 export function getAllyProximity(): boolean {
-  return localStorage.getItem(ALLY_PROXIMITY_KEY) === '1';
+  try { return readToggle(ALLY_PROXIMITY_KEY); } catch { return true; }
 }
 
 export function setAllyProximity(enabled: boolean): void {
@@ -46,7 +46,7 @@ const AUDIO_DEFAULTS_VERSION = 'riftvoice-1';
 export function applyAudioDefaultsOnce(): boolean {
   try {
     if (localStorage.getItem(AUDIO_DEFAULTS_KEY) === AUDIO_DEFAULTS_VERSION) return false;
-    writeToggle(ALLY_PROXIMITY_KEY, false);
+    writeToggle(ALLY_PROXIMITY_KEY, true);
     writeToggle(CAMERA_LISTEN_KEY, false);
     writeToggle(CAMERA_ONLY_KEY, false);
     writeToggle(SHARED_RESET_KEY, true);
@@ -74,7 +74,7 @@ export function applyAudioDefaultsOnce(): boolean {
 // boundary docs/compliance.md draws; the mutual rule above is what still lets
 // one player opt out unilaterally.
 export function getCameraListen(): boolean {
-  return localStorage.getItem(CAMERA_LISTEN_KEY) === '1';
+  try { return localStorage.getItem(CAMERA_LISTEN_KEY) === '1'; } catch { return false; }
 }
 
 export function setCameraListen(enabled: boolean): void {
@@ -93,7 +93,7 @@ export function getCameraOnly(): boolean {
   try {
     return localStorage.getItem(CAMERA_ONLY_KEY) === '1';
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -123,7 +123,7 @@ export function setSharedReset(enabled: boolean): void {
   writeToggle(SHARED_RESET_KEY, enabled);
 }
 
-// App audio (app-audio-output.ts): voices played by lolproxchat.exe itself, so OBS's
+// App audio (app-audio-output.ts): voices played by voxdria.exe itself, so OBS's
 // Application Audio Capture can take them on their own track. On by default
 // since 2026-10-16, stored like the toggles above (a missing key is on). With
 // speakers it can bring echo back (the browser's echo canceller no longer

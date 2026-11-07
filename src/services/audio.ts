@@ -124,16 +124,17 @@ export class AudioService {
   setVoiceSettings(settings: VoiceSettings): void {
     this.voiceSettings = sanitizeVoice(settings);
     if (this.audioContext?.state === 'suspended') {
-      void this.audioContext.resume().catch(error => console.error('[RiftVoice] Transmit context resume failed', error));
+      void this.audioContext.resume().catch(error => console.error('[Voxdria] Transmit context resume failed', error));
     }
     this.voiceEngine?.configure(this.voiceSettings, this.voiceChampion, this.voiceSkin);
   }
   private localStream: MediaStream | null = null;
   private peers: Map<string, PeerConnection> = new Map();
-  private signaling: SignalingService;
+  private signaling: Pick<SignalingService,'sendSignal'>;
   private localName: string;
   private selfMuted = false;
   private muteAll = false;
+  private incomingMuted = false;
   private mutedPlayers: Set<string> = new Set();
   // Track last reported volume state per peer so we only log transitions
   private lastAppliedVolume: Map<string, string> = new Map();
@@ -205,7 +206,7 @@ export class AudioService {
   private peerFactory: (remoteName: string) => Promise<PeerConnection>;
 
   constructor(
-    signaling: SignalingService,
+    signaling: Pick<SignalingService,'sendSignal'>,
     localName: string,
     peerFactory: (remoteName: string) => Promise<PeerConnection> = PeerConnection.create,
   ) {
@@ -406,7 +407,7 @@ export class AudioService {
       }
       void peer.setOutputDevice(getStoredOutputDeviceId());
       this.peers.set(remoteName, peer);
-      if (this.muteAll || this.mutedPlayers.has(remoteName)) peer.mute();
+      if (this.muteAll || this.incomingMuted || this.mutedPlayers.has(remoteName)) peer.mute();
       if (this.appOut) peer.setAppOutput(this.appOut);
 
       if (this.outputStream) {
@@ -652,7 +653,7 @@ export class AudioService {
       // finalVol === 0 — the smoothed gain ramp handles it without a click,
       // and it lets brief proximity zeros (CV tracking glitches) fade gracefully.
       peer.setVolume(finalVol);
-      const muteNow = this.muteAll || this.mutedPlayers.has(name);
+      const muteNow = this.muteAll || this.incomingMuted || this.mutedPlayers.has(name);
       if (muteNow) {
         peer.mute();
       } else {
@@ -684,12 +685,17 @@ export class AudioService {
     this.setMuteAll(!this.muteAll);
     return this.muteAll;
   }
+  /** Local playback/mix gate. Does not alter microphone transmission or other participants. */
+  setIncomingMuted(value:boolean):void {
+    this.incomingMuted=value;
+    for(const [name,peer] of this.peers){if(value||this.muteAll||this.mutedPlayers.has(name))peer.mute();else peer.unmute();}
+  }
 
   setMuteAll(value: boolean): void {
     if (this.muteAll === value) return;
     this.muteAll = value;
     for (const [name, peer] of this.peers) {
-      if (this.muteAll || this.mutedPlayers.has(name)) {
+      if (this.muteAll || this.incomingMuted || this.mutedPlayers.has(name)) {
         peer.mute();
       } else {
         peer.unmute();
@@ -705,7 +711,7 @@ export class AudioService {
     }
     const peer = this.peers.get(name);
     if (peer) {
-      if (this.muteAll || this.mutedPlayers.has(name)) {
+      if (this.muteAll || this.incomingMuted || this.mutedPlayers.has(name)) {
         peer.mute();
       } else {
         peer.unmute();
@@ -734,7 +740,7 @@ export class AudioService {
    */
   getHeardVoiceLevels(): Map<string, number> {
     const out = new Map<string, number>();
-    if (this.muteAll) return out;
+    if (this.muteAll || this.incomingMuted) return out;
     for (const [name, peer] of this.peers) {
       if (this.mutedPlayers.has(name)) continue;
       const vol = computeFinalPeerVolume(this.lastProximityVolumes.get(name) ?? 0, this.settings.playerVolumes[name] ?? 1.0);
@@ -855,14 +861,14 @@ export class AudioService {
     }
   }
 
-  // ---- App audio: voices played by lolproxchat.exe (app-audio-output.ts) ----
+  // ---- App audio: voices played by voxdria.exe (app-audio-output.ts) ----
 
   private appOut: AppAudioOutput | null = null;
   private appOutStarting: Promise<void> | null = null;
 
   /**
    * Turn app audio on or off, live: every peer moves between playing in the
-   * browser and playing through lolproxchat.exe. If app audio cannot start, or fails
+   * browser and playing through voxdria.exe. If app audio cannot start, or fails
    * later, the voices stay in (or go back to) the browser, so nobody is left
    * hearing nothing.
    */

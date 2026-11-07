@@ -2956,25 +2956,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "riftvoice"
-version = "0.3.0"
-dependencies = [
- "chrono",
- "cpal",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tokio",
- "webview2-com",
- "windows 0.58.0",
- "windows-core 0.62.2",
- "zip",
-]
-
-[[package]]
 name = "ring"
 version = "0.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4273,6 +4254,25 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "voxdria"
+version = "0.4.1"
+dependencies = [
+ "chrono",
+ "cpal",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "webview2-com",
+ "windows 0.58.0",
+ "windows-core 0.62.2",
+ "zip",
+]
 
 [[package]]
 name = "vswhom"

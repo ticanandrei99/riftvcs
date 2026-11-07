@@ -21,10 +21,12 @@ export const ICE_SERVERS: RTCIceServer[] = [
 interface IceServerCache {
   servers: RTCIceServer[];
   expiresAtMs: number;
+  session:string;
 }
 
 let iceCache: IceServerCache | null = null;
 let iceInFlight: Promise<RTCIceServer[]> | null = null;
+let iceInFlightSession='';
 
 // Every peer in a lobby is connected within a few seconds of game start, so a
 // short TTL is enough to collapse that whole burst (~9 requests per client)
@@ -48,33 +50,37 @@ const ICE_CACHE_TTL_MS = 60 * 1000;
  * callers share one request.
  */
 export function getIceServers(): Promise<RTCIceServer[]> {
-  if (iceCache && Date.now() < iceCache.expiresAtMs) {
+  const session=voiceAuthorization().Authorization||'';
+  if (iceCache && iceCache.session===session && Date.now() < iceCache.expiresAtMs) {
     return Promise.resolve(iceCache.servers);
   }
-  if (iceInFlight) return iceInFlight;
-  const inFlight = fetchIceServers().finally(() => {
+  if (iceInFlight&&iceInFlightSession===session) return iceInFlight;
+  const inFlight = fetchIceServers(session).finally(() => {
     if (iceInFlight === inFlight) iceInFlight = null;
   });
   iceInFlight = inFlight;
+  iceInFlightSession=session;
   return inFlight;
 }
 
-async function fetchIceServers(): Promise<RTCIceServer[]> {
+async function fetchIceServers(session:string): Promise<RTCIceServer[]> {
   try {
-    const resp = await fetch(`${SERVER_URL}/turn-credentials`, { headers: voiceAuthorization() });
+    const resp = await fetch(`${SERVER_URL}/turn-credentials`, { headers: session?{Authorization:session}:{},cache:'no-store',signal:AbortSignal.timeout(8000) });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    if (data.iceServers && data.iceServers.length > 0) {
-      iceCache = { servers: data.iceServers, expiresAtMs: Date.now() + ICE_CACHE_TTL_MS };
+    // A late response from a revoked/lobby session must not seed the next game.
+    if(session!==(voiceAuthorization().Authorization||''))return [];
+    if (Array.isArray(data.iceServers) && data.iceServers.length > 0 && data.iceServers.length<=16) {
+      iceCache = { servers: data.iceServers, expiresAtMs: Date.now() + ICE_CACHE_TTL_MS,session };
       return data.iceServers;
     }
     // A 200 carrying an empty list is what the server returns when TURN isn't
     // configured at all, and when Cloudflare is unreachable with no usable
     // cache. Until now that was silent — it reads as "working, just quiet" but
     // means no relay, i.e. no voice behind a symmetric NAT.
-    console.warn('[Config] Server returned no TURN servers, using STUN only');
+    console.warn('[Config] Server returned no TURN relay; private voice cannot connect.');
   } catch (e) {
-    console.warn('[Config] Failed to fetch TURN credentials, using STUN only:', e);
+    console.warn('[Config] TURN credentials unavailable; private voice cannot connect:', e);
   }
   // Nothing is cached on this path on purpose. An ICE server list is frozen
   // into each RTCPeerConnection at construction and never re-read (not even by
@@ -89,5 +95,6 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
 export function _resetIceServerCacheForTests(): void {
   iceCache = null;
   iceInFlight = null;
+  iceInFlightSession='';
 }
 

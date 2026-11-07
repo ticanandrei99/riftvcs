@@ -212,7 +212,7 @@ unsafe fn process_name(hwnd: HWND) -> Option<String> {
 /// Last path segment of a Win32 image path (`C:\...\League of Legends.exe`).
 fn exe_file_name(full_path: &str) -> String {
     full_path
-        .rsplit(|c| c == '\\' || c == '/')
+        .rsplit(['\\', '/'])
         .next()
         .unwrap_or(full_path)
         .to_string()

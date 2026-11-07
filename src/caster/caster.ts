@@ -3,10 +3,13 @@ import { mountOrganizer } from './organizer';
 import { AppAudioOutput, type AppTap } from '../services/app-audio-output';
 import { setVoiceSessionToken } from '../services/voice-access';
 import { checkForUpdate, openUpdateDownloads, startStartupUpdateCheck, type UpdateInfo } from '../services/updater';
-import { casterTransmitAllowed } from './routing';
+import { casterTransmitAllowed,validCasterPeer,validCasterReady } from './routing';
 import { PeerConnection } from '../services/peer-connection';
 import { WS_URL } from '../core/config';
+import {bindDiscordLinks} from '../services/discord';
 const input = (id: string) => document.getElementById(id) as HTMLInputElement;
+declare const __VOXDRIA_VERSION__:string;
+document.getElementById('caster-version')!.textContent='v'+__VOXDRIA_VERSION__;
 const status = (s: string) => { document.getElementById('status')!.textContent = s; };
 let ws: WebSocket | null = null, ctx: AudioContext | null = null;
 let mic: MediaStream | null = null, output: MediaStreamAudioDestinationNode | null = null;
@@ -42,7 +45,7 @@ function update() {
   commentaryTap?.setGain(audible && input('monitor').checked ? Number(input('commentary').value) : 0);
   for (const [remote, peer] of peers) {
     peer.setVolume(input('deafen').checked ? 0 : Number(input('rx').value) * (peerVolumes.get(remote) ?? 1));
-    if (input('deafen').checked || mutedPeers.has(remote)) peer.mute(); else peer.unmute();
+    if (input('deafen').checked || input('stream-mute-peers').checked || mutedPeers.has(remote)) peer.mute(); else peer.unmute();
   }
 }
 function leave() {
@@ -80,16 +83,18 @@ input('join').onclick = async () => {
   await audioCleanup;
   if (epoch !== generation) return;
   const socket = new WebSocket(WS_URL.replace(/\/ws$/, '/caster')); ws = socket;
-  socket.onopen = () => socket.send(JSON.stringify({ type: 'caster_join', token: input('token').value }));
+  socket.onopen = () => {if(ws===socket&&epoch===generation)socket.send(JSON.stringify({ type: 'caster_join', token: input('token').value }));};
   socket.onclose = event => { if (ws === socket) { leave(); if(event.code===4003)status('Acces vocal oprit de organizator. Reconectează manual după reactivare.'); } };
-  socket.onerror = () => status('Conexiune eșuată');
+  socket.onerror = () => {if(ws===socket&&epoch===generation)status('Conexiune eșuată');};
   // Serialize async messages so ICE cannot overtake the authenticated media setup.
-  let queue = Promise.resolve();
+  let queue = Promise.resolve(),accepted=false;
   socket.onmessage = event => { queue = queue.then(async () => {
     if (epoch !== generation) return;
     const msg = JSON.parse(event.data);
     if (msg.type === 'error') { status(msg.message); return; }
     if (msg.type === 'caster_ready') {
+      if(accepted||!validCasterReady(msg))throw Error('Invalid caster admission');
+      accepted=true;
       setVoiceSessionToken(msg.sessionToken);
       name = msg.name; role = msg.role; input('token').value = '';
       if (isTauri() && input('native-output').checked) {
@@ -112,31 +117,33 @@ input('join').onclick = async () => {
       renderRoster();
       update(); status(`Conectat: ${name} · ${role} · canal izolat`);
       for (const remote of msg.peers) { const peer = await peerFor(remote.name); send(remote.name, 'offer', await peer.createOffer()); }
-    } else if (msg.type === 'caster_peer') {
+    } else if (accepted&&msg.type === 'caster_peer') {
+      if(!validCasterPeer(msg)||msg.name===name||roster.has(msg.name)||roster.size>=24)return;
       roster.set(msg.name, { role: msg.role }); renderRoster();
-    } else if (msg.type === 'caster_signal') {
+    } else if (accepted&&msg.type === 'caster_signal'&&roster.has(msg.from)&&['offer','answer','ice-candidate'].includes(msg.payload?.type)) {
       const peer = await peerFor(msg.from);
       if (msg.payload.type === 'offer') send(msg.from, 'answer', await peer.handleOffer(msg.payload.payload));
       if (msg.payload.type === 'answer') await peer.handleAnswer(msg.payload.payload);
       if (msg.payload.type === 'ice-candidate') await peer.addIceCandidate(msg.payload.payload);
-    } else if (msg.type === 'caster_left') { peers.get(msg.name)?.close(); peers.delete(msg.name); pending.delete(msg.name); roster.delete(msg.name); renderRoster(); }
+    } else if (accepted&&msg.type === 'caster_left') { peers.get(msg.name)?.close(); peers.delete(msg.name); pending.delete(msg.name); roster.delete(msg.name); renderRoster(); }
   }).catch(() => { leave(); status('Sesiune oprită: eroare audio/conexiune. Reconectează manual.'); }); };
 };
 input('leave').onclick = leave;
-for (const id of ['mute','deafen','ptt','tx','rx','monitor','commentary']) input(id).oninput = update;
+for (const id of ['mute','deafen','stream-mute-peers','ptt','tx','rx','monitor','commentary']) input(id).oninput = update;
 window.onkeydown = e => { if (e.code === 'Space' && !(e.target instanceof HTMLElement && e.target.closest('input,textarea,select,button,[contenteditable]')) && !e.repeat) { e.preventDefault(); held = true; update(); } };
 window.onkeyup = e => { if (e.code === 'Space') { held = false; update(); } };
 window.onblur = () => { held = false; update(); };
 document.onvisibilitychange = () => { if (document.hidden) { held = false; update(); } };
 window.addEventListener('beforeunload', leave);
 mountOrganizer(invitation=>{input('token').value=invitation;input('join').click();});
+bindDiscordLinks(true);
 
 setInterval(() => { for (const peer of peers.values()) peer.stepVolume(performance.now()); }, 50);
 
 function showUpdate(info: UpdateInfo): void {
   const available = info.update_available && info.channel_ready !== false;
   document.getElementById('caster-update')!.hidden = !available;
-  document.getElementById('caster-update-text')!.textContent = available ? 'Versiune nouă disponibilă: RiftVoice Caster ' + info.latest_version + '.' : '';
+  document.getElementById('caster-update-text')!.textContent = available ? 'Versiune nouă disponibilă: Voxdria Caster ' + info.latest_version + '.' : '';
   document.getElementById('caster-update-status')!.textContent = available ? '' : info.channel_ready === false ? 'Canalul Caster nu are încă un installer publicat.' : 'Ești la zi: ' + info.current_version;
 }
 const stopUpdateCheck = startStartupUpdateCheck(info => { if (info.update_available) showUpdate(info); });

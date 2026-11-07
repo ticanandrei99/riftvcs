@@ -16,8 +16,8 @@ export function voiceInvitation(): string {
   try { return sessionStorage.getItem('riftvoice.invitation') || ''; } catch { return ''; }
 }
 export function voiceInvitationError(token:string):string|null{
-  if(/^(?:https?:\/\/)?gg\.riotgames\.com\//i.test(token)||/joinCode=/i.test(token))return 'Acesta este un link de lobby LoL. Introdu codul vocal RiftVoice generat în Caster.';
-  if(!token||!/^[A-Za-z0-9_-]{32,256}$/.test(token))return 'Cod vocal invalid. Copiază codul RiftVoice din invitația organizatorului, fără text suplimentar.';
+  if(/^(?:https?:\/\/)?gg\.riotgames\.com\//i.test(token)||/joinCode=/i.test(token))return 'Acesta este un link de lobby LoL. Introdu codul vocal Voxdria generat în Caster.';
+  if(!token||!/^[A-Za-z0-9_-]{32,256}$/.test(token))return 'Cod vocal invalid. Copiază codul Voxdria din invitația organizatorului, fără text suplimentar.';
   return null;
 }
 export function saveVoiceInvitation(token: string): boolean {
@@ -27,4 +27,9 @@ export function saveVoiceInvitation(token: string): boolean {
     else sessionStorage.removeItem('riftvoice.invitation');
     return true;
   } catch { return false; }
+}
+export function clearVoiceCredentials():void{
+  setVoiceSessionToken(null);
+  try{for(const name of ['riftvoice.invitation','riftvoice.lobby-name','riftvoice.lobby-reservation'])sessionStorage.removeItem(name);}catch{}
+  if(typeof window!=='undefined')window.dispatchEvent(new Event('riftvoice:credentials-cleared'));
 }

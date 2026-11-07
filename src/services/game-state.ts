@@ -182,7 +182,7 @@ export class GameStateService {
       // Until v0.5.9 this exclusion was completely invisible; the next real-game
       // log is what tells us what streamer mode actually writes into these
       // fields.
-      console.log('[LoLProxChat] Streamer-mode exclusions: ' +
+      console.log('[Voxdria] Streamer-mode exclusions: ' +
         excluded.map((p) => p.summonerName).join(', ') +
         ' (roster tag lines available: ' + hasTagLines + ')');
     }
@@ -195,13 +195,13 @@ export class GameStateService {
     let proximityDisabledReason: string | null = null;
     if (detection.supported) {
       mapType = detection.mapType;
-      console.log('[LoLProxChat] Map: ' + detection.mapType + ' (via ' + detection.via + ')');
+      console.log('[Voxdria] Map: ' + detection.mapType + ' (via ' + detection.via + ')');
     } else {
       // Voice stays on and proximity goes off, rather than either refusing the
       // session or scaling coordinates with Summoner's Rift dimensions on a map
       // that is not Summoner's Rift.
       proximityDisabledReason = 'Proximity is off — ' + gameMode + ' is not a supported map';
-      console.warn('[LoLProxChat] Unsupported map, proximity disabled (voice stays on): ' +
+      console.warn('[Voxdria] Unsupported map, proximity disabled (voice stays on): ' +
         detection.detail);
     }
 
@@ -215,7 +215,7 @@ export class GameStateService {
       proximityDisabledReason,
     };
 
-    console.log('[LoLProxChat] Matched local player "' + localPlayer.summonerName +
+    console.log('[Voxdria] Matched local player "' + localPlayer.summonerName +
       '" on ' + match.matchedOn);
 
     return { ok: true, session: this.session };

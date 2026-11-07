@@ -61,7 +61,7 @@ export class MicrophoneTest {
   configure(settings: VoiceSettings, champion: string, skinName?: string): void {
     this.engine?.configure(settings, champion, skinName);
     if (this.context?.state === 'suspended') {
-      void this.context.resume().catch(error => { this.stop(); console.error('[RiftVoice] Preview resume failed', error); });
+      void this.context.resume().catch(error => { this.stop(); console.error('[Voxdria] Preview resume failed', error); });
     }
   }
   get status(): string {

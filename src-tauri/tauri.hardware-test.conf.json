@@ -1,5 +1,5 @@
 {
-  "productName": "RiftVoice Hardware QA",
+  "productName": "Voxdria Hardware QA",
   "identifier": "com.riftvoice.hardware-qa",
   "build": {
     "beforeBuildCommand": "node scripts/build-hardware-qa.cjs",
@@ -9,7 +9,7 @@
     "windows": [
       {
         "label": "caster",
-        "title": "RiftVoice Hardware QA",
+        "title": "Voxdria Hardware QA",
         "url": "index.html",
         "width": 850,
         "height": 850,

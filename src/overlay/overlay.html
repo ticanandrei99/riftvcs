@@ -2,18 +2,18 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>RiftVoice</title>
+  <title>Voxdria</title>
   <link rel="stylesheet" href="overlay.css">
 </head>
 <body>
   <!-- Panel window. Scanner/calibration region lives in a separate Tauri window. -->
   <div id="panel" class="panel">
     <div id="drag-handle" class="widget-header" data-tauri-drag-region>
-      <span class="widget-title" data-tauri-drag-region title="RiftVoice" aria-label="RiftVoice">
-        <svg class="rift-mark" viewBox="0 0 24 28" aria-hidden="true" focusable="false">
-          <path d="M12 2 3 9 6 14 3 21 12 26 21 19 18 13 21 7Z" fill="#340b16" stroke="#f45a75" stroke-width="1.4" stroke-linejoin="round"/>
-          <path d="m14 4-6 8 5 2-3 10 7-12-5-2Z" fill="#ffd2dc"/>
-          <path d="m4 8 3-3M19 23l2-3" fill="none" stroke="#ff8098" stroke-width="1.2" stroke-linecap="round"/>
+      <span class="widget-title" data-tauri-drag-region title="Voxdria" aria-label="Voxdria">
+        <svg class="voxdria-mark" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+          <path d="M14 1 25 7v14l-11 6-11-6V7Z" fill="#340b16" stroke="#f45a75" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M7 7h4l3 10 3-10h4l-5 15h-4Z" fill="#ffd2dc"/>
+          <path d="M1 10v8M27 10v8" fill="none" stroke="#ff8098" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
       </span>
       <div class="header-controls">
@@ -22,7 +22,7 @@
         <button id="btn-reset-header" class="icon-btn" data-i18n="header.posLabel" data-i18n-title="header.pos" title="Wrong position? If people next to you can't hear you, click this, then walk somewhere: the app finds your champion on the minimap again. Until it does, only your team hears you.">POS</button>
         <button id="btn-settings" class="icon-btn" data-i18n-title="header.settings" title="Settings"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2-1 3-3 1-3-1-2 4 2 2v2l-2 2 2 4 3-1 3 1 1 3h4l1-3 3-1 3 1 2-4-2-2v-2l2-2-2-4-3 1-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button id="btn-minimize" class="icon-btn" data-i18n-title="header.minimize" aria-label="Minimize" title="Minimize">&minus;</button>
-        <button id="btn-close" class="icon-btn close-btn" data-i18n-title="header.close" aria-label="Close RiftVoice" title="Close RiftVoice">&times;</button>
+        <button id="btn-close" class="icon-btn close-btn" data-i18n-title="header.close" aria-label="Close Voxdria" title="Close Voxdria">&times;</button>
         <button id="btn-collapse" class="icon-btn" title="Collapse"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg></button>
       </div>
     </div>
@@ -32,17 +32,8 @@
     <div id="player-list" class="player-list">
       <div class="empty-state" data-i18n="players.waiting">Waiting for nearby players...</div>
     </div>
+    <section id="voice-invitation-panel" aria-label="Conectare la custom"></section>
     <div id="settings-panel" class="settings-panel hidden">
-      <div style="padding:8px">
-        <label for="voice-invitation">Cod vocal RiftVoice</label>
-        <input id="voice-invitation" type="password" autocomplete="off" maxlength="256" style="width:95%">
-        <label for="lobby-riot-id">Riot ID pentru înscriere (Nume#EUNE)</label>
-        <input id="lobby-riot-id" autocomplete="off" maxlength="64" style="width:95%">
-        <button id="lobby-register" class="icon-btn">Înscrie-te înainte de meci</button>
-        <p id="lobby-registration-status" role="status" style="font-size:11px">Numele este declarat de tine și verificat manual de organizator. Nu introdu parola Riot.</p>
-        <button id="voice-invitation-save" class="icon-btn">Conectează vocea în meci</button>
-        <p id="voice-invitation-status" role="status" style="font-size:11px">Primești codul din Caster, separat de linkul LoL. Poți trimite înscrierea din aplicație înainte de start.</p>
-      </div>
       <section id="voice-panel" aria-label="Champion Voice Engine"></section>
       <div class="setting-row">
         <label data-i18n="settings.language">Language</label>
@@ -61,7 +52,7 @@
         </select>
       </div>
       <div class="setting-row">
-        <label data-i18n="settings.appAudio" data-i18n-title="settings.appAudioHint" title="When ON, the voices are played by lolproxchat.exe itself instead of the built-in browser, so OBS can capture them with Application Audio Capture → [lolproxchat.exe] on their own track. Output Device then lists the devices lolproxchat.exe sees. Use headphones: with speakers the others may hear themselves back. On by default.">App audio (OBS)</label>
+        <label data-i18n="settings.appAudio" data-i18n-title="settings.appAudioHint" title="When ON, the voices are played by voxdria.exe itself instead of the built-in browser, so OBS can capture them with Application Audio Capture → [voxdria.exe] on their own track. Output Device then lists the devices voxdria.exe sees. Use headphones: with speakers the others may hear themselves back. On by default.">App audio (OBS)</label>
         <button id="btn-app-audio" class="icon-btn">ON</button>
       </div>
       <div class="setting-row">

@@ -33,8 +33,8 @@ export function qualityGrade(value: ConnectionQuality): 'idle' | 'connecting' | 
 }
 /** A deliberate allow-list: no names, room IDs, URLs, candidates or credentials. */
 export function diagnosticReport(input: { version: string; connection: string; quality?: Partial<ConnectionQuality>; mode: string; voice: string; enabled: boolean; strength: number }): string {
-  return JSON.stringify({ app: 'RiftVoice', version: /^\d+\.\d+\.\d+$/.test(input.version) ? input.version : 'development',
-    server: ['checking','ready','offline','update','unavailable'].includes(input.connection) ? input.connection : 'checking',
+  return JSON.stringify({ app: 'Voxdria', version: /^\d+\.\d+\.\d+$/.test(input.version) ? input.version : 'development',
+    server: ['checking','ready','offline','update','unavailable','invitation','saved','pending','approved','organizer'].includes(input.connection) ? input.connection : 'checking',
     transport: 'TURN only', quality: safeQuality(input.quality),
     mode: ['nearby','camera','nearby-camera','team'].includes(input.mode) ? input.mode : 'nearby',
     voice: input.voice === 'robot' ? 'robot' : 'clean', effects: input.enabled === true,

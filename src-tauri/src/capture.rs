@@ -109,7 +109,7 @@ fn capture_frame(bounds: &CaptureBounds) -> Result<Vec<u8>, String> {
 /// the classifier's putImageData -> drawImage round trip premultiplies, so an
 /// alpha of 0 would zero out every channel it reads.
 fn bgra_to_rgba_in_place(px: &mut [u8]) {
-    for p in px.chunks_exact_mut(4) {
+    for p in px.as_chunks_mut::<4>().0 {
         p.swap(0, 2);
         p[3] = 255;
     }
@@ -168,7 +168,7 @@ fn capture_screen_region_into(
                 biHeight: -height, // negative = top-down
                 biPlanes: 1,
                 biBitCount: 32,
-                biCompression: BI_RGB.0 as u32,
+                biCompression: BI_RGB.0,
                 ..Default::default()
             },
             ..Default::default()

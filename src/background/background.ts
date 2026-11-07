@@ -6,26 +6,30 @@ setLoggingEnabled(false);
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Orchestrator } from '../services/orchestrator';
+import { LobbyVoiceController } from '../services/lobby-voice';
 import { applyAudioDefaultsOnce } from '../services/audio-prefs';
 import '../core/window-globals';
 
 // Every panel toggle back on, once per install (see audio-prefs). Before the orchestrator, whose first session logs them.
 if (applyAudioDefaultsOnce()) {
-  console.warn('[LoLProxChat] Panel toggles set back to on (one time, for this version)');
+  console.warn('[Voxdria] Panel toggles set back to on (one time, for this version)');
 }
 
-console.log('[LoLProxChat] Background script loading...');
+console.log('[Voxdria] Background script loading...');
 
 applyNearbyOnlySettings();
+const lobbyVoice=new LobbyVoiceController();
 const orchestrator = new Orchestrator();
 orchestrator.start();
+window.addEventListener('riftvoice:invitation-changed',()=>orchestrator.refreshVoiceInvitation());
+window.addEventListener('beforeunload',()=>lobbyVoice.stop(),{once:true});
 
-console.log('[LoLProxChat] Orchestrator started');
+console.log('[Voxdria] Orchestrator started');
 
 // Listen for messages from overlay (Tauri uses window events instead of Overwolf messaging)
 window.addEventListener('overlayAction', ((event: CustomEvent) => {
   const { action, payload } = event.detail;
-  console.log('[LoLProxChat] Received action from overlay:', action);
+  console.log('[Voxdria] Received action from overlay:', action);
   switch (action) {
     case 'toggleSelfMute':
       orchestrator.toggleSelfMute();
@@ -91,7 +95,7 @@ window.addEventListener('overlayAction', ((event: CustomEvent) => {
       break;
     case 'openLogFolder':
       invoke('open_log_folder')
-        .catch((e) => console.warn('[LoLProxChat] open_log_folder failed:', e));
+        .catch((e) => console.warn('[Voxdria] open_log_folder failed:', e));
       break;
   }
 }) as EventListener);
@@ -105,15 +109,17 @@ listen<string>('global_shortcut', (event) => {
       break;
     case 'pttDown':
       orchestrator.setPTTState(true);
+      lobbyVoice.setPTTState(true);
       break;
     case 'pttUp':
       orchestrator.setPTTState(false);
+      lobbyVoice.setPTTState(false);
       break;
   }
-}).catch((e) => console.warn('[LoLProxChat] global_shortcut listen failed:', e));
+}).catch((e) => console.warn('[Voxdria] global_shortcut listen failed:', e));
 
 console.log('LoLProxChat background service started');
 
 // Update checks are owned by the overlay and run only at application startup.
-window.addEventListener('riftvoice:close', () => orchestrator.stop());
+window.addEventListener('riftvoice:close', () => { lobbyVoice.stop();orchestrator.stop(); });
 

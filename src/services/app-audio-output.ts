@@ -1,5 +1,5 @@
 // "App audio" (Settings → "App audio (OBS)"): the peers' voices played by
-// lolproxchat.exe itself instead of by WebView2.
+// voxdria.exe itself instead of by WebView2.
 //
 // WebView2 plays everything from a separate msedgewebview2.exe audio process,
 // which OBS's Application Audio Capture cannot pick up. With this on, each
@@ -95,7 +95,7 @@ export class AppAudioOutput {
     try {
       const st = await invoke<OutStatus>('audio_out_start', { device });
       await this.buildGraph(st.sampleRate);
-      console.log('[AppAudio] Voices play from lolproxchat.exe on "' + st.device + '" at ' + st.sampleRate + ' Hz');
+      console.log('[AppAudio] Voices play from voxdria.exe on "' + st.device + '" at ' + st.sampleRate + ' Hz');
       this.statusTimer = window.setInterval(() => { void this.checkStatus(); }, STATUS_POLL_MS) as unknown as number;
       return true;
     } catch (e) {

@@ -225,7 +225,7 @@ export class Orchestrator {
   }
 
   start(): void {
-    console.log('[LoLProxChat] Orchestrator.start() called');
+    console.log('[Voxdria] Orchestrator.start() called');
 
     // Poll Tauri backend for game state (3s by default — see defaultDeps)
     this.gameStatePollId = window.setInterval(
@@ -260,10 +260,11 @@ export class Orchestrator {
     try {
       const state: TauriGameState = await this.gameState.pollGameState();
       this.lastGameState = state;
+      window.dispatchEvent(new CustomEvent('riftvoice:game-active',{detail:state.isInGame===true}));
 
       if (!state.isLeagueRunning) {
         if (this.session) {
-          console.log('[LoLProxChat] LoL closed, ending session');
+          console.log('[Voxdria] LoL closed, ending session');
           this.endSession();
         }
         this.clearSessionAttemptState();
@@ -294,7 +295,7 @@ export class Orchestrator {
       }
 
       if (!state.isInGame && this.session) {
-        console.log('[LoLProxChat] Game ended (phase: ' + state.gameFlowPhase + ')');
+        console.log('[Voxdria] Game ended (phase: ' + state.gameFlowPhase + ')');
         this.endSession();
       }
 
@@ -306,7 +307,7 @@ export class Orchestrator {
         this.broadcastOverlayState();
       }
     } catch (e) {
-      console.error('[LoLProxChat] pollGameState failed:', e);
+      console.error('[Voxdria] pollGameState failed:', e);
     } finally {
       this.gameStatePollRunning = false;
     }
@@ -353,7 +354,7 @@ export class Orchestrator {
     this.lastMicRetryAt = now;
     void Promise.resolve(audio.applyInputDevice(null)).then(() => {
       if (this.audio === audio && !audio.getMicError()) {
-        console.log('[LoLProxChat] Microphone available — no longer listening only');
+        console.log('[Voxdria] Microphone available — no longer listening only');
         this.broadcastOverlayState();
       }
     });
@@ -369,7 +370,7 @@ export class Orchestrator {
         this.processLiveClientData(lcd);
       }
     } catch (e) {
-      console.error('[LoLProxChat] pollForLiveClientData failed:', e);
+      console.error('[Voxdria] pollForLiveClientData failed:', e);
     }
   }
 
@@ -388,7 +389,7 @@ export class Orchestrator {
           // one field yields '' and every diagnostic below becomes unreachable.
           this.localIdentity = readIdentity(active);
           if (this.localIdentity) {
-            console.log('[LoLProxChat] Local summoner: ' + this.localIdentity.display +
+            console.log('[Voxdria] Local summoner: ' + this.localIdentity.display +
               ' (key=' + this.localIdentity.key + ')');
           }
         }
@@ -400,7 +401,7 @@ export class Orchestrator {
         ? JSON.parse(lcd.allPlayers)
         : lcd.allPlayers;
       const players = this.gameState.parsePlayerList({ players: playersData });
-      console.log('[LoLProxChat] Parsed players:', players.length);
+      console.log('[Voxdria] Parsed players:', players.length);
 
       if (!this.localIdentity) {
         this.reportSessionFailure('identity-unreadable',
@@ -429,7 +430,7 @@ export class Orchestrator {
       // unique for the server's one-entry-per-name rule.
       this.localSummonerName = this.localIdentity.display;
       if (this.localSummonerName !== session.localPlayer.summonerName) {
-        console.log('[LoLProxChat] activePlayer and allPlayers spell this player' +
+        console.log('[Voxdria] activePlayer and allPlayers spell this player' +
           ' differently: "' + this.localSummonerName + '" vs "' +
           session.localPlayer.summonerName + '"');
       }
@@ -438,10 +439,10 @@ export class Orchestrator {
         return identity ? [{ player, identity }] : [];
       });
       this.session = session;
-      console.log('[LoLProxChat] Session created! Room:', session.roomId);
+      console.log('[Voxdria] Session created! Room:', session.roomId);
       this.startSession(session);
     } catch (e) {
-      console.error('[LoLProxChat] Failed to process live client data:', e);
+      console.error('[Voxdria] Failed to process live client data:', e);
     }
   }
 
@@ -457,7 +458,7 @@ export class Orchestrator {
     this.lastSessionFailure = { sig, reason, detail, at: quiet ? previous!.at : now };
     if (quiet) return;
 
-    const line = '[LoLProxChat] Not joining proximity chat (' + reason + '): ' + detail;
+    const line = '[Voxdria] Not joining proximity chat (' + reason + '): ' + detail;
     if (reason === 'streamer-mode') console.warn(line);
     else console.error(line);
   }
@@ -480,13 +481,13 @@ export class Orchestrator {
   }
 
   private async startSession(session: GameSession): Promise<void> {
-    console.log('[LoLProxChat] Starting session: room=' + session.roomId + ' team=' + session.localPlayer.team);
+    console.log('[Voxdria] Starting session: room=' + session.roomId + ' team=' + session.localPlayer.team);
     // None of these toggles reach the log any other way (the panel writes them
     // straight to storage), and the 2026-10-07 test could only infer that
     // everyone had both opt-ins on from how the volumes behaved.
     // A diagnostic must never be what stops a session, storage or no storage.
     try {
-      console.log('[LoLProxChat] Settings: cameraMode=' + getCameraOnly() +
+      console.log('[Voxdria] Settings: cameraMode=' + getCameraOnly() +
         ' allyProximity=' + getAllyProximity() +
         ' voiceOnCamera=' + getCameraListen() +
         ' sharedReset=' + getSharedReset() +
@@ -496,7 +497,7 @@ export class Orchestrator {
         ' appAudio=' + getAppAudio() + (getAppAudio() ? ' appAudioDevice=' + (getAppAudioDevice() ? 'chosen' : 'default') : ''));
       this.lastAudioToggles = this.audioToggles();
     } catch (e) {
-      console.warn('[LoLProxChat] Settings unreadable:', e);
+      console.warn('[Voxdria] Settings unreadable:', e);
     }
 
     // Debug on: this game's log lines and what the tracker saw go into one
@@ -509,7 +510,7 @@ export class Orchestrator {
     try {
       await this.audio.initMicrophone();
     } catch (e) {
-      console.error('[LoLProxChat] Audio init failed — aborting session:', e);
+      console.error('[Voxdria] Audio init failed — aborting session:', e);
       this.audio = null;
       return;
     }
@@ -520,7 +521,7 @@ export class Orchestrator {
     if (this.audio.getMicError?.()) {
       this.lastMicRetryAt = Date.now();
     } else {
-      console.log('[LoLProxChat] Microphone initialized');
+      console.log('[Voxdria] Microphone initialized');
     }
     // Carry over the panel's settings and mute toggles from before/between sessions.
     if (Object.keys(this.audioSettings).length) this.audio.updateSettings?.(this.audioSettings as any);
@@ -549,7 +550,7 @@ export class Orchestrator {
       // everyone — which is both closer to Riot's line than broadcasting
       // Summoner's Rift-scaled coordinates for a map that isn't Summoner's
       // Rift, and better for the user than losing voice chat outright.
-      console.warn('[LoLProxChat] ' + session.proximityDisabledReason);
+      console.warn('[Voxdria] ' + session.proximityDisabledReason);
       this.volumeTickId = this.startVolumeTick();
       this.broadcastOverlayState();
       return;
@@ -571,7 +572,7 @@ export class Orchestrator {
       });
       const resolved = resolveGameRect(info);
       this.geometryWarning = resolved.warning;
-      console.log('[LoLProxChat] Game geometry: source=' + resolved.source +
+      console.log('[Voxdria] Game geometry: source=' + resolved.source +
         ' rect=' + rectStr(resolved.rect) +
         ' matchedBy=' + (info.matchedBy ?? 'none') +
         ' title="' + (info.windowTitle ?? '') + '"' +
@@ -579,7 +580,7 @@ export class Orchestrator {
         ' virtual=' + rectStr(info.virtualScreen) +
         ' primary=' + rectStr(info.primaryScreen) +
         (info.error ? ' error=' + info.error : ''));
-      if (resolved.warning) console.warn('[LoLProxChat] ' + resolved.warning);
+      if (resolved.warning) console.warn('[Voxdria] ' + resolved.warning);
 
       // Note: League install dir is resolved Rust-side via the
       // read_league_config_file command (computes the path from the running
@@ -611,10 +612,10 @@ export class Orchestrator {
         if (classifier && this.tracking === tracking) {
           scorer.setInner(classifier);
           tracking.setClassifier(scorer);
-          console.log('[LoLProxChat] Champion classifier loaded');
+          console.log('[Voxdria] Champion classifier loaded');
         }
       }).catch(err => {
-        console.warn('[LoLProxChat] Champion classifier failed to load (tracking continues without it):', err);
+        console.warn('[Voxdria] Champion classifier failed to load (tracking continues without it):', err);
       });
       // Matched against each teammate's BASE icon, whatever skin League says
       // they wear: the minimap draws the base icon (2026-10-12 recordings:
@@ -632,7 +633,7 @@ export class Orchestrator {
           scorer.setTemplates(sets);
         }).catch(err => {
           if (iconsAbort.signal.aborted) return;
-          console.warn('[LoLProxChat] Teammate icons failed to load (the classifier carries on alone):', err);
+          console.warn('[Voxdria] Teammate icons failed to load (the classifier carries on alone):', err);
         });
       }
 
@@ -705,7 +706,7 @@ export class Orchestrator {
       ) as unknown as number;
 
     } catch (e) {
-      console.error('[LoLProxChat] Tracking initialization failed:', e);
+      console.error('[Voxdria] Tracking initialization failed:', e);
     }
 
     // Overlay is managed by Tauri window configuration — no manual window open needed
@@ -915,7 +916,7 @@ export class Orchestrator {
       || Math.abs(position.y - this.lastLoggedPosition.y) > 500;
     if (moved) {
       this.lastLoggedPosition = { x: position.x, y: position.y };
-      console.log('[LoLProxChat] My position: (' + Math.round(position.x) + ', ' + Math.round(position.y) + ')');
+      console.log('[Voxdria] My position: (' + Math.round(position.x) + ', ' + Math.round(position.y) + ')');
     }
 
     try {
@@ -929,7 +930,7 @@ export class Orchestrator {
       );
       this.audio.applyPeerVolumes(result.peerVolumes);
     } catch (e) {
-      console.error('[LoLProxChat] Volume computation failed:', e);
+      console.error('[Voxdria] Volume computation failed:', e);
       // Network failure must not freeze audible enemies at their last location.
       const safe: Record<string, number> = {};
       for (const [name, peer] of this.peerStates) safe[name] = !getStrictProximity() && !getAllyProximity() && peer.team === this.session.localPlayer.team ? 1 : 0;
@@ -1088,13 +1089,13 @@ export class Orchestrator {
     const session = this.session;
     const seen = getAllyProximity() ? this.tracking?.getLastSeenPosition(LOST_ALLY_ANCHOR_MS) ?? null : null;
     if (!seen || !session || !this.volumeClient) {
-      if (this.lostAnchor) console.log('[LoLProxChat] Still lost: teammates back at full volume');
+      if (this.lostAnchor) console.log('[Voxdria] Still lost: teammates back at full volume');
       this.lostAnchor = null;
       this.applyTeamOnlyVolumes();
       return;
     }
     if (seen !== this.lostAnchor) {
-      console.log('[LoLProxChat] Lost: scoring teammates from where we were last seen (' +
+      console.log('[Voxdria] Lost: scoring teammates from where we were last seen (' +
         Math.round(seen.x) + ', ' + Math.round(seen.y) + ')');
       this.lostAnchor = seen;
     }
@@ -1103,7 +1104,7 @@ export class Orchestrator {
       result = await this.volumeClient.computeVolumes(
         seen, session.roomId, this.localSummonerName, /*allyProximity*/ true, /*alliesOnly*/ true);
     } catch (e) {
-      console.error('[LoLProxChat] Volume computation failed:', e);
+      console.error('[Voxdria] Volume computation failed:', e);
       this.applyTeamOnlyVolumes();
       return;
     }
@@ -1152,7 +1153,7 @@ export class Orchestrator {
       return;
     }
     if (this.lastAudioToggles !== null && now !== this.lastAudioToggles) {
-      console.log('[LoLProxChat] Settings changed: ' + now + ' (was ' + this.lastAudioToggles + ')');
+      console.log('[Voxdria] Settings changed: ' + now + ' (was ' + this.lastAudioToggles + ')');
     }
     this.lastAudioToggles = now;
   }
@@ -1172,7 +1173,7 @@ export class Orchestrator {
     const state = listenPosition ? 'camera' : 'fallback-champion:' + (miss ? miss.reason : 'unknown');
     if (state === this.lastCameraListenState) return;
     this.lastCameraListenState = state;
-    console.log('[LoLProxChat] Voice on camera: hearing from ' + state +
+    console.log('[Voxdria] Voice on camera: hearing from ' + state +
       (listenPosition
         ? ' (' + Math.round(listenPosition.x) + ', ' + Math.round(listenPosition.y) + ')'
         : ' — camera rectangle not readable on the minimap (' +
@@ -1194,7 +1195,7 @@ export class Orchestrator {
     const existing = this.peerStates.get(peer.summonerName);
     if (!existing) {
       const sameTeam = peer.team === this.session.localPlayer.team;
-      console.log('[LoLProxChat] Peer joined: ' + peer.summonerName +
+      console.log('[Voxdria] Peer joined: ' + peer.summonerName +
         ' (' + (sameTeam ? 'ALLY' : 'ENEMY') + ', ' + peer.championName + ')');
     }
     const peerState: PeerState = {
@@ -1214,7 +1215,7 @@ export class Orchestrator {
         await this.audio.connectToPeer(peer.summonerName, isInitiator);
       }
     } catch (e) {
-      console.error('[LoLProxChat] Failed to connect to peer:', peer.summonerName, e);
+      console.error('[Voxdria] Failed to connect to peer:', peer.summonerName, e);
       this.peerStates.delete(peer.summonerName);
     }
   }
@@ -1323,7 +1324,7 @@ export class Orchestrator {
           y: mb.screenY,
           width: mb.screenWidth,
           height: mb.screenHeight,
-        }).catch((e) => console.warn('[LoLProxChat] position_scanner failed:', e));
+        }).catch((e) => console.warn('[Voxdria] position_scanner failed:', e));
       }
     }
 
@@ -1362,12 +1363,12 @@ export class Orchestrator {
   resetPosition(): void {
     if (!this.tracking) return;
     if (!this.tracking.resetPosition()) {
-      console.log('[LoLProxChat] Position reset ignored — dead; we stay at the body until respawn');
+      console.log('[Voxdria] Position reset ignored — dead; we stay at the body until respawn');
     }
     // Shared RESET on: ask everyone else in the game who has it on to re-find
     // their icon too. A no-op with it off (see SignalingService).
     if (getSharedReset() && this.signaling.requestResetAll()) {
-      console.log('[LoLProxChat] Shared RESET: asked the others in the game to rescan too');
+      console.log('[Voxdria] Shared RESET: asked the others in the game to rescan too');
     }
   }
 
@@ -1381,13 +1382,13 @@ export class Orchestrator {
    */
   private handleRemoteReset(from: string): void {
     if (!getSharedReset()) {
-      console.warn('[LoLProxChat] Shared RESET received with the setting off — ignored');
+      console.warn('[Voxdria] Shared RESET received with the setting off — ignored');
       return;
     }
     if (!this.tracking) return;
     const now = performance.now();
     if (now - this.lastRemoteResetMs < SHARED_RESET_RECEIVE_MS) {
-      console.log('[LoLProxChat] Shared RESET ignored — one was acted on under ' +
+      console.log('[Voxdria] Shared RESET ignored — one was acted on under ' +
         SHARED_RESET_RECEIVE_MS / 1000 + 's ago');
       return;
     }
@@ -1396,11 +1397,11 @@ export class Orchestrator {
     if (!this.tracking.rescan()) {
       // Dead, holding, merged with a teammate or already scanning: either
       // there is nothing to re-find, or the tracker is re-finding us already.
-      console.log('[LoLProxChat] Shared RESET ignored — not on a clean lock (' + this.tracking.getState() + ')');
+      console.log('[Voxdria] Shared RESET ignored — not on a clean lock (' + this.tracking.getState() + ')');
       return;
     }
     this.lastRemoteResetMs = now;
-    console.log('[LoLProxChat] Shared RESET from ' + (known ?? 'another player') + ' — rescanning');
+    console.log('[Voxdria] Shared RESET from ' + (known ?? 'another player') + ' — rescanning');
     this.remoteReset = { from: known, untilMs: now + SHARED_RESET_NOTICE_MS };
     this.broadcastOverlayState();
   }
@@ -1414,13 +1415,14 @@ export class Orchestrator {
     // has ~50 setScanRate in one second). The overlay debounces the drag; this
     // is the backstop for any caller that doesn't.
     if (clamped === this.tracking.getScanFps()) return;
-    console.log('[LoLProxChat] Scan rate changed to ' + clamped + ' FPS');
+    console.log('[Voxdria] Scan rate changed to ' + clamped + ' FPS');
     this.tracking.stop();
     this.tracking.start(() => {
       // Position updates handled by volume tick
     }, clamped);
   }
   setPTTState(held: boolean): void { this.audio?.setPTTState(held); }
+  refreshVoiceInvitation():void { this.signaling.refreshInvitation?.(); }
   /** Remembered so each new session's AudioService starts with them: the
    *  panel sends a setting once, and a new game used to get the defaults. */
   private audioSettings: Record<string, unknown> = {};
@@ -1430,7 +1432,7 @@ export class Orchestrator {
   }
   applyInputDevice(id: string | null): Promise<void> | void { return this.audio?.applyInputDevice(id); }
   applyOutputDevice(id: string | null): Promise<void> | void { return this.audio?.applyOutputDevice(id); }
-  /** Settings → "App audio (OBS)": voices played by lolproxchat.exe itself. */
+  /** Settings → "App audio (OBS)": voices played by voxdria.exe itself. */
   applyAppAudio(enabled: boolean): Promise<void> | void { return this.audio?.setAppAudio(enabled); }
   applyAppAudioDevice(name: string | null): Promise<void> | void { return this.audio?.setAppAudioDevice(name); }
 
@@ -1449,7 +1451,7 @@ export class Orchestrator {
    */
   setMinimapCalibration(bounds: { screenX: number; screenY: number; screenWidth: number; screenHeight: number }): void {
     if (!this.tracking) {
-      console.warn('[LoLProxChat] setMinimapCalibration called but no tracking service');
+      console.warn('[Voxdria] setMinimapCalibration called but no tracking service');
       return;
     }
     const capture = this.tracking.captureBounds;
@@ -1460,8 +1462,8 @@ export class Orchestrator {
       width: bounds.screenWidth,
       height: bounds.screenHeight,
     };
-    console.log('[LoLProxChat] Calibration bounds (screen):', JSON.stringify(bounds));
-    console.log('[LoLProxChat] Calibration region (capture-relative):', JSON.stringify(region));
+    console.log('[Voxdria] Calibration bounds (screen):', JSON.stringify(bounds));
+    console.log('[Voxdria] Calibration region (capture-relative):', JSON.stringify(region));
     this.tracking.setMinimapRegion(region);
   }
 
@@ -1477,7 +1479,7 @@ export class Orchestrator {
     invoke<string>('read_league_config_file')
       .then(text => this.parseMinimapScale(text, callback))
       .catch(err => {
-        console.warn('[LoLProxChat] Failed to read game.cfg:', err);
+        console.warn('[Voxdria] Failed to read game.cfg:', err);
         callback(null);
       });
   }
@@ -1495,12 +1497,12 @@ export class Orchestrator {
         const rawVal = trimmed.split('=')[1].trim();
         const val = parseFloat(rawVal);
         if (!isNaN(val)) {
-          console.log('[LoLProxChat] MinimapScale raw="' + rawVal + '" parsed=' + val);
+          console.log('[Voxdria] MinimapScale raw="' + rawVal + '" parsed=' + val);
           // Applied anyway: a Riot range change should show up in the log as a
           // wrong-looking minimap region we can explain, not be clamped into a
           // wrong region silently.
           if (val < 0 || val > 3) {
-            console.warn('[LoLProxChat] MinimapScale ' + val +
+            console.warn('[Voxdria] MinimapScale ' + val +
               ' is outside the expected 0.0-3.0 range — minimap region may be wrong');
           }
           callback(val);
@@ -1508,7 +1510,7 @@ export class Orchestrator {
         }
       }
     }
-    console.warn('[LoLProxChat] MinimapScale not found in game.cfg, text length=' + text.length);
+    console.warn('[Voxdria] MinimapScale not found in game.cfg, text length=' + text.length);
     callback(null);
   }
 
@@ -1534,7 +1536,7 @@ export class Orchestrator {
         try {
           info = await invoke<GameWindowInfoDto>('get_game_window_info');
         } catch (e) {
-          console.warn('[LoLProxChat] get_game_window_info failed:', e);
+          console.warn('[Voxdria] get_game_window_info failed:', e);
         }
         const decision = decideGameRectUpdate(current, info);
         this.geometryWarning = decision.warning;
@@ -1542,7 +1544,7 @@ export class Orchestrator {
           const moved = rectStr(decision.rect);
           if (moved !== this.loggedMovedRect) {
             this.loggedMovedRect = moved;
-            console.warn('[LoLProxChat] League window moved to ' + moved +
+            console.warn('[Voxdria] League window moved to ' + moved +
               ' — capture stays on ' + rectStr(current) + ' until the next game');
           }
         }
@@ -1550,7 +1552,7 @@ export class Orchestrator {
 
       const scale = await new Promise<number | null>((resolve) => this.readMinimapScale(resolve));
       if (scale !== null && this.tracking && scale !== this.lastMinimapScale) {
-        console.log('[LoLProxChat] MinimapScale changed:', this.lastMinimapScale, '->', scale);
+        console.log('[Voxdria] MinimapScale changed:', this.lastMinimapScale, '->', scale);
         this.lastMinimapScale = scale;
         this.tracking.setMinimapScaleFromConfig(scale);
       }
@@ -1586,7 +1588,7 @@ export class Orchestrator {
       local.isDead = true;
       local.respawnTimer = death.respawnTimer;
       this.tracking?.onDeath();
-      console.log('[LoLProxChat] Died — respawn in ' + death.respawnTimer.toFixed(1) +
+      console.log('[Voxdria] Died — respawn in ' + death.respawnTimer.toFixed(1) +
         's; holding position where we died until then');
       this.scheduleRespawn(death.respawnTimer);
     } else if (death.isDead && local.isDead) {
@@ -1636,7 +1638,7 @@ export class Orchestrator {
     this.session.localPlayer.respawnTimer = 0;
     this.respawnedAtMs = performance.now();
     this.tracking?.onRespawn();
-    console.log('[LoLProxChat] Respawned (' + source + ') — rescanning from the fountain');
+    console.log('[Voxdria] Respawned (' + source + ') — rescanning from the fountain');
   }
 
   private endSession(): void {

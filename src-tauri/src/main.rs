@@ -2,6 +2,7 @@
 
 mod audio_out;
 mod capture;
+mod discord;
 mod game_bundle;
 mod game_window;
 mod global_keys;
@@ -142,8 +143,8 @@ fn hide_scanner(app: tauri::AppHandle) {
 }
 
 /// Marks a helper window (scanner, speaking overlay) as a tool window: OBS's
-/// window lists and Alt+Tab leave those out, so a streamer picking lolproxchat.exe
-/// in "Application Audio Capture" sees only the panel, "[lolproxchat.exe]: LoLProxChat".
+/// window lists and Alt+Tab leave those out, so a streamer picking voxdria.exe
+/// in "Application Audio Capture" sees only the panel, "[voxdria.exe]: LoLProxChat".
 fn make_tool_window(window: &tauri::WebviewWindow) {
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::WindowsAndMessaging::{
@@ -183,7 +184,7 @@ fn hide_speakers(app: tauri::AppHandle) {
 fn command_allowed(window: &str, command: &str) -> bool {
     match window {
         "overlay" => true,
-        "caster" => matches!(command, "check_for_update" | "open_release_page" | "audio_out_devices" | "audio_out_start" | "audio_out_push" | "audio_out_stop" | "audio_out_status"),
+        "caster" => matches!(command, "check_for_update" | "open_release_page" | "open_discord_link" | "audio_out_devices" | "audio_out_start" | "audio_out_push" | "audio_out_stop" | "audio_out_status"),
         _ => false,
     }
 }
@@ -369,6 +370,7 @@ tauri::Builder::default()
             open_log_folder,
             updater::check_for_update,
             updater::open_release_page,
+            discord::open_discord_link,
             global_keys::set_ptt_key,
             game_bundle::bundle_start,
             game_bundle::bundle_add_file,

@@ -1,8 +1,11 @@
 [package]
-name = "riftvoice"
-version = "0.3.0"
+name = "voxdria"
+version = "0.4.1"
 edition = "2021"
 license = "AGPL-3.0-or-later"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }

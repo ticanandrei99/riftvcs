@@ -1,21 +1,48 @@
-<!doctype html><html lang="ro"><meta charset="utf-8"><title>RiftVoice Caster</title>
-<style>body{background:#171321;color:#f3eaf3;font:16px system-ui;max-width:720px;margin:32px auto;padding:20px}label{display:block;margin:18px 0}button,input,select{font:inherit;padding:8px;max-width:100%;box-sizing:border-box}button{margin:8px;cursor:pointer}button:disabled{cursor:default;opacity:.5}input[type=password],input[type=url]{width:100%}fieldset{border:1px solid #64526e;border-radius:8px;padding:14px}.organizer-person{border-top:1px solid #64526e;padding:8px 0}#organizer-invite{width:100%;font-size:13px}#status,#organizer-status{color:#ffcb78}</style>
-<div id="caster-update" role="status" hidden><span id="caster-update-text"></span> <button id="caster-download">Actualizează</button> <button id="caster-later">Mai târziu</button></div>
-<button id="caster-check-update">Verifică actualizările</button><span id="caster-update-status" role="status"></span>
-<h1>RiftVoice · Caster Mode</h1><p>Canal izolat pentru custom games. Jucătorii nu primesc acest audio. Nu se colectează date de spectator sau poziții.</p>
-<section id="organizer-panel" aria-label="Administrare custom"></section>
-<h2>Canal comentatori</h2>
-<label><input id="native-output" type="checkbox" checked> Ieșire audio dedicată OBS (aplicația Windows; alegerea se aplică la conectare)</label>
-<label>Cod vocal de caster / spectator <input id="token" type="password" autocomplete="off"></label>
-<button id="join">Conectează</button><button id="leave">Deconectează</button><p id="status" role="status">Deconectat</p>
-<label><input id="mute" type="checkbox" checked> Microfon oprit</label>
-<label><input id="deafen" type="checkbox"> Deafen — oprește ascultarea și microfonul</label>
-<label><input id="ptt" type="checkbox" checked> Push-to-talk: ține Space (doar cu această fereastră activă)</label>
-<label>Microfon către co-casteri <input id="tx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
-<label>Ascultare co-casteri / mix OBS <input id="rx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
-<label>Monitor local comentariu pentru OBS <input id="monitor" type="checkbox"> Activează numai cu căști și captură audio dedicată în OBS</label>
-<label>Comentariu local / mix OBS <input id="commentary" type="range" min="0" max="1" step="0.01" value="0.8"></label>
-<section aria-label="Participanți"><h2>Participanți</h2><p>Mute oprește persoana doar pentru tine și mixul capturat din aplicația ta.</p><div id="caster-peers"></div></section>
-<p>Team voice: OPRIT · Proximity: OPRIT · Transmisie către jucători: INTERZISĂ</p>
-<p>Aliniază manual comentariul cu imaginea spectatorului. Configurează delay-ul final în OBS; RiftVoice nu sincronizează automat jocul și streamul.</p>
-<script src="caster.js"></script></html>
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voxdria Caster</title>
+  <link rel="stylesheet" href="caster.css">
+</head>
+<body>
+  <header class="app-header">
+    <div><span class="eyebrow">VOXDRIA</span><h1>Voxdria Caster <span id="caster-version" class="badge"></span></h1><p>Organizează customul. Pregătește comentariul.</p></div>
+    <div class="update-actions"><button id="caster-check-update" class="quiet">Verifică actualizările</button><span id="caster-update-status" role="status"></span></div>
+  </header>
+  <div id="caster-update" class="notice" role="status" hidden><span id="caster-update-text"></span><button id="caster-download">Actualizează</button><button id="caster-later" class="quiet">Mai târziu</button></div>
+  <p class="isolation-note"><span class="live-dot"></span> Canal separat de jucători · Comentariul rămâne între casteri și în mixul tău.</p>
+  <nav class="actions" aria-label="Discord"><button id="discord-community" class="quiet">Comunitate Discord</button><button id="discord-streamer" class="quiet">Discord · Streamer / comentator</button></nav>
+  <p id="discord-status" class="muted small" role="status">Canalul league-comentator este privat. Rolul Streamer se acordă în Discord și nu oferă administrare în Voxdria.</p>
+  <main>
+    <section id="organizer-panel" aria-label="Administrare custom"></section>
+    <section class="panel audio-panel" aria-labelledby="audio-heading">
+      <div class="section-heading"><div><span class="eyebrow">AUDIO &amp; OBS</span><h2 id="audio-heading">Canal comentatori</h2></div><p id="status" class="status-pill" role="status">Deconectat</p></div>
+      <p class="muted">Conectează-te din camera organizată mai sus sau folosește invitația personală de caster / spectator.</p>
+      <div class="connection-row"><label>Invitație personală <input id="token" type="password" autocomplete="off" placeholder="Cod de caster / spectator"></label><div class="actions"><button id="join">Conectează</button><button id="leave" class="quiet">Deconectează</button></div></div>
+      <div class="audio-controls">
+        <div class="control-card"><h3>Microfon și ascultare</h3>
+          <label class="check"><input id="mute" type="checkbox" checked> Microfon oprit</label>
+          <label class="check"><input id="deafen" type="checkbox"> Deafen · oprește ascultarea și microfonul</label>
+          <label class="check"><input id="ptt" type="checkbox" checked> Push-to-talk · ține Space cu fereastra activă</label>
+          <label>Microfon către co-casteri <input id="tx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+          <label>Volum co-casteri <input id="rx" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+        </div>
+        <div class="control-card"><h3>Mix pentru OBS</h3>
+          <label class="check stream-gate"><input id="stream-mute-peers" type="checkbox"> Oprește vocile participanților în mix</label>
+          <p class="muted small">Oprește și ascultarea lor locală. Microfonul tău rămâne separat. În acest canal sunt doar co-casteri și spectatori.</p>
+          <label class="check"><input id="native-output" type="checkbox" checked> Ieșire audio dedicată OBS</label>
+          <p class="muted small">Alegerea ieșirii se aplică la conectare.</p>
+          <label class="check"><input id="monitor" type="checkbox"> Include comentariul meu în mixul aplicației</label>
+          <label>Volum comentariu local <input id="commentary" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+        </div>
+      </div>
+      <section class="staff-card" aria-label="Participanți"><h3>Participanți în canalul audio</h3><p class="muted small">Mute pentru mine se aplică ascultării tale și mixului capturat din aplicație.</p><div id="caster-peers"></div></section>
+      <details class="help"><summary>Configurare OBS și delay</summary><p>Folosește căști. În OBS capturează audio din Voxdria Caster printr-o sursă dedicată. Dacă incluzi comentariul în mixul aplicației, evită capturarea lui încă o dată prin sursa de microfon.</p><p>Aliniază manual comentariul cu imaginea spectatorului și configurează delay-ul final în OBS. Aplicația nu obține automat date de spectator și nu sincronizează streamul.</p></details>
+    </section>
+  </main>
+  <footer>Team voice oprit · Proximity oprit · Audio către jucătorii activi blocat<p>Proiect independent, fără aprobarea sau susținerea Riot Games.</p></footer>
+  <script src="caster.js"></script>
+</body>
+</html>

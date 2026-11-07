@@ -1,5 +1,4 @@
-import { saveVoiceInvitation, voiceInvitation, voiceInvitationError } from '../services/voice-access';
-import { registerLobby } from '../services/lobby-registration';
+import { mountInvitationPanel } from './invitation-panel';
 import { getEnemyCameraEnabled, setEnemyCameraEnabled } from '../core/enemy-camera';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { mountVoicePanel } from '../voice/panel';
@@ -209,7 +208,7 @@ async function refreshDeviceLists(): Promise<void> {
   }
 }
 
-/** App audio on: Output Device lists what lolproxchat.exe itself can play on
+/** App audio on: Output Device lists what voxdria.exe itself can play on
  *  (Rust's own list, by name), so what is picked is exactly what plays. */
 async function populateAppOutputs(): Promise<void> {
   const { devices } = await listAppOutputDevices();
@@ -264,8 +263,8 @@ outputDeviceSelect.addEventListener('change', () => {
   sendToBackground('setOutputDevice', { id });
 });
 
-// App audio (OBS): voices played by lolproxchat.exe itself. Applied live; the
-// output picker switches to lolproxchat.exe's own device list while on.
+// App audio (OBS): voices played by voxdria.exe itself. Applied live; the
+// output picker switches to voxdria.exe's own device list while on.
 const btnAppAudio = document.getElementById('btn-app-audio') as HTMLButtonElement;
 function syncAppAudioButton(): void {
   const on = getAppAudio();
@@ -400,12 +399,12 @@ function syncEnemyCamera(): void {
   const enabled = getEnemyCameraEnabled(), ro = document.documentElement.lang === 'ro';
   enemyCameraButton.textContent = onOff(enabled);
   enemyCameraButton.classList.toggle('active', enabled);
-  document.getElementById('enemy-camera-label')!.textContent = ro ? 'Inamici apropiați în cameră' : 'Nearby enemies in camera';
+  document.getElementById('enemy-camera-label')!.textContent = ro ? 'Proximity — adversari vizibili' : 'Proximity — visible enemies';
   document.getElementById('enemy-camera-status')!.textContent = !enabled
     ? (ro ? 'Vocea adversarilor este oprită.' : 'Enemy voice is off.')
     : !enemyCameraAvailable
-      ? (ro ? 'Necesită activarea de către organizator pe server.' : 'Requires organizer activation on the voice server.')
-      : (ro ? 'Cel mult 1.350 unități, icon vizibil în cameră. Dacă imaginea sau identificarea lipsesc, vocea se oprește.' : 'Within 1,350 units and visibly identified inside camera. Missing image or identity stops voice.');
+      ? (ro ? 'Serverul nu oferă momentan proximity pentru adversari. Actualizează serverul și verifică setarea operatorului.' : 'This server is not currently providing enemy proximity. Update the server and check its operator setting.')
+      : (ro ? 'Activ implicit: cel mult 1.350 unități și icon identificat vizibil în cameră. Dacă imaginea sau identificarea lipsesc, vocea se oprește.' : 'On by default: within 1,350 units and visibly identified inside camera. Missing image or identity stops voice.');
 }
 enemyCameraButton.onclick = () => { setEnemyCameraEnabled(!getEnemyCameraEnabled()); syncEnemyCamera(); };
 window.addEventListener('riftvoice:enemy-camera-availability', event => { enemyCameraAvailable = (event as CustomEvent).detail === true; syncEnemyCamera(); });
@@ -956,38 +955,4 @@ document.getElementById('btn-minimize')!.addEventListener('click', async () => {
   await getCurrentWindow().minimize();
 });
 
-// Session-only invitation: never persisted across app restarts or copied into logs.
-document.getElementById('voice-invitation-save')!.onclick = () => {
-  const field = document.getElementById('voice-invitation') as HTMLInputElement;
-  const token = field.value.trim()||voiceInvitation();
-  const formatError=voiceInvitationError(token);
-  if(formatError){document.getElementById('voice-invitation-status')!.textContent=formatError;return;}
-  if (!saveVoiceInvitation(token)) {
-    document.getElementById('voice-invitation-status')!.textContent = 'Codul nu poate fi păstrat în sesiunea aplicației. Repornește RiftVoice.';
-    return;
-  }
-  field.value = '';
-  window.location.reload();
-};
-window.addEventListener('riftvoice:join-error', ((event: CustomEvent<string>) => {
-  document.getElementById('voice-invitation-status')!.textContent = event.detail;
-}) as EventListener);
-window.addEventListener('riftvoice:join-status', ((event: CustomEvent<string>) => {
-  document.getElementById('voice-invitation-status')!.textContent = event.detail;
-}) as EventListener);
-let stopRegistration: (()=>void)|undefined;
-const lobbyName=document.getElementById('lobby-riot-id') as HTMLInputElement;
-const lobbyStatus=(text:string)=>{document.getElementById('lobby-registration-status')!.textContent=text;};
-const enroll=(name:string,code:string)=>{
-  stopRegistration?.();
-  stopRegistration=registerLobby(name,code,lobbyStatus,()=>window.location.reload());
-};
-document.getElementById('lobby-register')!.onclick=()=>{
-  const field=document.getElementById('voice-invitation') as HTMLInputElement;
-  const name=lobbyName.value.trim(),code=field.value.trim()||voiceInvitation(),error=voiceInvitationError(code);
-  if(error){lobbyStatus(error);return;}
-  if(!name||name.length>64||/[\x00-\x1f\x7f]/.test(name)){lobbyStatus('Introdu Riot ID-ul complet pentru verificarea organizatorului.');return;}
-  field.value='';enroll(name,code);
-};
-try{const saved=sessionStorage.getItem('riftvoice.lobby-name'),reservation=sessionStorage.getItem('riftvoice.lobby-reservation');if(saved&&reservation){lobbyName.value=saved;enroll(saved,reservation);}}catch{}
-window.addEventListener('beforeunload',()=>stopRegistration?.(),{once:true});
+mountInvitationPanel();

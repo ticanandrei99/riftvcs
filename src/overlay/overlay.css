@@ -243,7 +243,7 @@ html, body {
 .player-list::-webkit-scrollbar-track { background: transparent; }
 .player-list::-webkit-scrollbar-thumb { background: rgba(100, 120, 160, 0.3); border-radius: 2px; }
 
-/* RiftVoice audio studio, compact enough to keep the game visible. */
+/* Voxdria audio studio, compact enough to keep the game visible. */
 .panel { border: 1px solid #304660; border-radius: 12px; background: rgba(10,17,29,.96); }
 .widget-header { background: linear-gradient(110deg,#172b43,#25203f); border-radius: 12px 12px 0 0; }
 .widget-title { color: #77e4df; letter-spacing: 1px; }
@@ -258,7 +258,7 @@ html, body {
 .voice-test:hover { background: #29475e; }
 .voice-credit { color: #8492ac; font-size: 9px; line-height: 1.5; margin-top: 8px; }
 
-/* RiftVoice compact studio */
+/* Voxdria compact studio */
 .panel { background: linear-gradient(160deg,rgba(14,24,43,.98),rgba(8,15,29,.98)); border:1px solid #314761; border-radius:14px; box-shadow:0 12px 36px #0005; }
 .widget-header { padding:8px; background:linear-gradient(110deg,#153b49,#202947); border-radius:13px 13px 0 0; border-bottom:1px solid #43627a66; }
 .widget-title { font-size:12px; color:#a8f6eb; letter-spacing:1px; }
@@ -324,7 +324,7 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline-color:#f
 .voice-detail:empty { display:none; }
 #btn-minimize { font-size:16px; line-height:14px; min-width:22px; }
 .widget-title { display:flex; align-items:center; justify-content:center; width:22px; height:26px; flex-shrink:0; }
-.rift-mark { width:22px; height:26px; pointer-events:none; filter:drop-shadow(0 0 4px #ed355c55); }
+.voxdria-mark { width:22px; height:26px; pointer-events:none; filter:drop-shadow(0 0 4px #ed355c55); }
 
 .voice-mode { color:#ffd1db; font-size:10px; padding:7px 0; }
 .voice-quality { color:#b6a1aa; font-size:10px; line-height:1.6; margin:8px 0; }
@@ -342,3 +342,12 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline-color:#f
 .empty-state { position:relative; margin:10px; padding:16px 12px 16px 42px; text-align:left; border:1px solid #59202e; border-radius:12px; background:linear-gradient(120deg,#2b1119,#140d10); color:#f4cbd3; font-size:12px; font-weight:600; letter-spacing:.15px; }
 .empty-state::before { content:''; position:absolute; left:17px; top:50%; width:10px; height:10px; margin-top:-5px; border-radius:50%; background:#ec4468; box-shadow:0 0 0 5px #ec446819,0 0 15px #ec446840; }
 #audio-state-notice { margin:8px 10px; padding:9px 12px; border-radius:9px; background:#4a1020; color:#ffd3dc; font-size:12px; border:1px solid #a72b49; }
+
+#voice-invitation-panel {padding:10px 12px;border-top:1px solid #65233a;font-size:12px}
+#voice-invitation-panel summary {cursor:pointer;color:#ffd2dc;margin-bottom:8px}
+#voice-invitation-panel label {display:block;margin:7px 0 3px}
+#voice-invitation-panel input,#voice-invitation-panel textarea {width:100%;box-sizing:border-box;background:#24131b;color:#fff;border:1px solid #713449;border-radius:5px;padding:7px;font:inherit}
+#voice-invitation-panel button {white-space:normal;height:auto;min-height:28px;padding:6px;margin:5px 3px 2px 0}
+#voice-invitation-panel p {line-height:1.45;margin:7px 0}
+#voice-invitation-status,#lobby-registration-status {color:#ffcd87}
+#lobby-voice-peers>div {display:flex;justify-content:space-between;align-items:center;gap:6px}

@@ -1,4 +1,4 @@
-//! "App audio" output: the peers' voices played by THIS process (lolproxchat.exe),
+//! "App audio" output: the peers' voices played by THIS process (voxdria.exe),
 //! not by WebView2's own audio service process.
 //!
 //! Why: everything WebView2 plays comes out of a separate msedgewebview2.exe
@@ -6,7 +6,7 @@
 //! streamer could not put the voice chat on its own track. With app audio on,
 //! the page mixes the voices in a silent Web Audio graph and sends the mix here
 //! in 10 ms chunks of mono f32; this module plays it on the chosen output
-//! device through WASAPI (cpal), so Windows and OBS see lolproxchat.exe playing it.
+//! device through WASAPI (cpal), so Windows and OBS see voxdria.exe playing it.
 //!
 //! The audio runs on a thread of its own because a cpal stream must stay on the
 //! thread that made it. Between the page and the device sits a small jitter
@@ -164,7 +164,7 @@ fn audio_thread(rx: mpsc::Receiver<Cmd>, shared: Arc<Shared>, app: tauri::AppHan
                 });
                 match &result {
                     Ok(st) => crate::rust_log(&app, format!(
-                        "[AppAudio] Playing from lolproxchat.exe on \"{}\" at {} Hz",
+                        "[AppAudio] Playing from voxdria.exe on \"{}\" at {} Hz",
                         st.device.as_deref().unwrap_or("?"), st.sample_rate)),
                     Err(e) => crate::rust_log(&app, format!("[AppAudio] Could not open output: {e}")),
                 }
@@ -288,7 +288,7 @@ pub struct DeviceList {
     default: Option<String>,
 }
 
-/// Output devices as lolproxchat.exe sees them, for the panel's picker.
+/// Output devices as voxdria.exe sees them, for the panel's picker.
 #[tauri::command]
 pub fn audio_out_devices() -> DeviceList {
     let host = cpal::default_host();
@@ -319,7 +319,7 @@ pub fn audio_out_push(app: tauri::AppHandle, request: tauri::ipc::Request<'_>) -
     };
     if bytes.len() > 64 * 1024 || bytes.len() % 4 != 0 { return Err("Invalid audio chunk size".into()); }
     let samples: Vec<f32> = bytes
-        .chunks_exact(4)
+        .as_chunks::<4>().0.iter()
         .map(|b| { let sample = f32::from_le_bytes([b[0], b[1], b[2], b[3]]); if sample.is_finite() { sample.clamp(-1.0, 1.0) } else { 0.0 } })
         .collect();
     controller(&app).shared.jitter.lock().map_err(|e| e.to_string())?.push(&samples);
@@ -415,7 +415,10 @@ mod tests {
         let chunk = rate / 100;
         let mut phase = 0f32;
         let step = 440.0 * std::f32::consts::TAU / rate as f32;
-        for _ in 0..300 {
+        // Pace against a single clock. Sleeping 10 ms after doing the work
+        // accumulates scheduler/work overhead and artificially starves the device.
+        let started = std::time::Instant::now();
+        for tick in 0..300 {
             let samples: Vec<f32> = (0..chunk)
                 .map(|_| {
                     phase = (phase + step) % std::f32::consts::TAU;
@@ -423,7 +426,8 @@ mod tests {
                 })
                 .collect();
             shared.jitter.lock().unwrap().push(&samples);
-            std::thread::sleep(Duration::from_millis(10));
+            let deadline = started + Duration::from_millis((tick + 1) * 10);
+            std::thread::sleep(deadline.saturating_duration_since(std::time::Instant::now()));
         }
         let j = shared.jitter.lock().unwrap();
         println!("device {:?} rate {} underruns {} dropped {}", st.device, st.sample_rate, j.underruns, j.dropped);

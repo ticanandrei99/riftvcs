@@ -12,6 +12,7 @@
 // fire-and-forget per-line invoke never guaranteed.
 
 import { invoke } from '@tauri-apps/api/core';
+import {safeLogArguments} from './redact';
 
 const noop = (): void => { /* swallowed */ };
 
@@ -133,8 +134,9 @@ function writeToFile(level: string, args: any[]): void {
 
 function makeWrapper(orig: ConsoleWriter, level: string) {
   return (...args: any[]) => {
-    orig(...args);
-    writeToFile(level, args);
+    const safe=safeLogArguments(args);
+    orig(...safe);
+    writeToFile(level, safe);
   };
 }
 
@@ -166,7 +168,7 @@ export function setLoggingEnabled(value: boolean): void {
     console.warn = noop;
     console.info = noop;
     // console.error always passes through to the real console, just not to the file
-    console.error = state.originals.error;
+    console.error = (...args:unknown[])=>state.originals.error(...safeLogArguments(args));
     console.debug = noop;
     // Tail first, or it sits in the buffer until logging is re-enabled.
     void flushLogBuffer();

@@ -101,7 +101,7 @@ export class ChampionVoiceEngine {
       this.clear(); this.activeVoice = 'clean'; this.current = '';
       this.lastError = error instanceof Error ? error.message : String(error);
       this.input.connect(this.output);
-      console.warn('[RiftVoice] Voice effects unavailable; using natural voice', error);
+      console.warn('[Voxdria] Voice effects unavailable; using natural voice', error);
     }
   }
   private clear(): void {

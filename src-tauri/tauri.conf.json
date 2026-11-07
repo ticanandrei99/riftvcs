@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "RiftVoice",
+  "productName": "Voxdria",
   "identifier": "com.riftvoice.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "overlay",
-        "title": "RiftVoice",
+        "title": "Voxdria",
         "width": 260,
         "height": 400,
         "decorations": false,
@@ -26,7 +26,7 @@
       },
       {
         "label": "scanner",
-        "title": "RiftVoice Scanner",
+        "title": "Voxdria Scanner",
         "width": 250,
         "height": 250,
         "decorations": false,
@@ -42,7 +42,7 @@
       },
       {
         "label": "speakers",
-        "title": "RiftVoice Speakers",
+        "title": "Voxdria Speakers",
         "width": 380,
         "height": 480,
         "decorations": false,

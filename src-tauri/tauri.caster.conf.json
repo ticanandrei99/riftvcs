@@ -1,11 +1,11 @@
 {
-  "productName": "RiftVoice Caster",
+  "productName": "Voxdria Caster",
   "identifier": "com.riftvoice.caster",
   "app": {
     "windows": [
       {
         "label": "caster",
-        "title": "RiftVoice Caster",
+        "title": "Voxdria Caster",
         "url": "caster/caster.html",
         "width": 800,
         "height": 900,

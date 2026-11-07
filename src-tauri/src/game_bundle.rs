@@ -196,7 +196,7 @@ fn prune(games: &Path) {
         .filter(|p| p.extension().is_some_and(|x| x == "zip"))
         .filter_map(|p| Some((fs::metadata(&p).ok()?.modified().ok()?, p)))
         .collect();
-    zips.sort_by(|a, b| b.0.cmp(&a.0));
+    zips.sort_by_key(|entry| std::cmp::Reverse(entry.0));
     for (_, path) in zips.into_iter().skip(KEEP_ZIPS) {
         let _ = fs::remove_file(path);
     }

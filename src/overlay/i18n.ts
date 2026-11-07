@@ -3,7 +3,7 @@ export type Lang = 'en' | 'ro';
 export const LANGUAGES: ReadonlyArray<{ code: Lang; name: string }> = [{code:'en',name:'English'},{code:'ro',name:'Română'}];
 const LANG_KEY='lolproxchat.language';
 const STRINGS={
-  "voice.credit": {"en":"Source base: LoLProxChat · Modified by RiftVoice","ro":"Cod de bază: LoLProxChat · Modificat de RiftVoice"},
+  "voice.credit": {"en":"Source base: LoLProxChat · Modified by Voxdria","ro":"Cod de bază: LoLProxChat · Modificat de Voxdria"},
   "audio.allMuted": {"en":"All voices are muted","ro":"Toate vocile au fost oprite"},
   "audio.micMuted": {"en":"Your microphone is muted","ro":"Microfonul tău este oprit"},
   "header.selfMute": {
@@ -144,8 +144,8 @@ const STRINGS={
     "ro": "Audio pentru OBS"
   },
   "settings.appAudioHint": {
-    "en": "When ON, the voices are played by lolproxchat.exe itself instead of the built-in browser, so OBS can capture them with Application Audio Capture → [lolproxchat.exe] on their own track. Output Device then lists the devices lolproxchat.exe sees. Use headphones: with speakers the others may hear themselves back. On by default.",
-    "ro": "Redă vocile prin RiftVoice pentru capturarea separată în OBS. Folosește căști pentru a evita ecoul."
+    "en": "When ON, the voices are played by voxdria.exe itself instead of the built-in browser, so OBS can capture them with Application Audio Capture → [voxdria.exe] on their own track. Output Device then lists the devices voxdria.exe sees. Use headphones: with speakers the others may hear themselves back. On by default.",
+    "ro": "Redă vocile prin Voxdria pentru capturarea separată în OBS. Folosește căști pentru a evita ecoul."
   },
   "settings.cameraOnly": {
     "en": "Camera mode",
@@ -260,8 +260,8 @@ const STRINGS={
     "ro": "Verificarea a eșuat: {error}"
   },
   "header.close": {
-    "en": "Close RiftVoice",
-    "ro": "Închide RiftVoice"
+    "en": "Close Voxdria",
+    "ro": "Închide Voxdria"
   },
   "voice.heading": {
     "en": "VOICE",
@@ -329,8 +329,8 @@ const STRINGS={
     "ro": "Activează modul hibrid"
   },
   "voice.hybridHint": {
-    "en": "Hear your team everywhere and enemies nearby. All participants need RiftVoice.",
-    "ro": "Auzi echipa oriunde și inamicii din apropiere. Toți participanții au nevoie de RiftVoice."
+    "en": "Hear your team everywhere and enemies nearby. All participants need Voxdria.",
+    "ro": "Auzi echipa oriunde și inamicii din apropiere. Toți participanții au nevoie de Voxdria."
   },
   "voice.server": {
     "en": "Voice server",
@@ -385,10 +385,14 @@ const STRINGS={
   "diagnostic.manualCopy": {"en":"Select and copy the report below.","ro":"Selectează și copiază raportul de mai jos."},
   "update.later": {"en":"Later","ro":"Mai târziu"},
   "update.retry": {"en":"Try again later.","ro":"Încearcă din nou mai târziu."},
-  "update.channelPending": {"en":"No RiftVoice releases are published yet.","ro":"Nu există încă versiuni publicate pe canalul RiftVoice."},
-  "update.manualAvailable": {"en":"New version available: RiftVoice {version}.","ro":"Versiune nouă disponibilă: RiftVoice {version}."},
-  "update.downloadPage": {"en":"Open RiftVoice downloads","ro":"Actualizează"},
-  "voice.invitation": {"en":"Enter the organizer invitation in Settings to connect.","ro":"Introdu invitația organizatorului în Setări pentru conectare."},
+  "update.channelPending": {"en":"No Voxdria releases are published yet.","ro":"Nu există încă versiuni publicate pe canalul Voxdria."},
+  "update.manualAvailable": {"en":"New version available: Voxdria {version}.","ro":"Versiune nouă disponibilă: Voxdria {version}."},
+  "update.downloadPage": {"en":"Open Voxdria downloads","ro":"Actualizează"},
+  "voice.invitation": {"en":"Enter the organizer invitation in the connection panel.","ro":"Introdu invitația organizatorului în panoul de conectare."},
+  "voice.saved": {"en":"Voice code saved. Complete check-in or wait for the game connection.","ro":"Cod vocal salvat. Finalizează înscrierea sau așteaptă conectarea la meci."},
+  "voice.pending": {"en":"Check-in sent. Waiting for organizer approval in Caster.","ro":"Cerere trimisă. Se așteaptă aprobarea în Caster."},
+  "voice.approved": {"en":"Approved. Connect lobby voice or wait for the match.","ro":"Înscriere aprobată. Conectează vocea în lobby sau așteaptă meciul."},
+  "voice.organizerUnavailable": {"en":"The server needs organizer configuration or an update for this shared code.","ro":"Serverul necesită configurarea organizatorului sau actualizare pentru acest cod comun."},
   "voice.clean": {
     "en": "Natural",
     "ro": "Naturală"
